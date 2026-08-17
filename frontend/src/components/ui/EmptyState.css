@@ -1,0 +1,28 @@
+.fs-empty-state {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: start;
+  padding: 1.15rem 1.25rem; /* ~18–20px */
+  border: 1px solid #30363d;
+  border-radius: 0.75rem;
+  background: #22272b;
+}
+
+.fs-empty-state__title {
+  margin: 0;
+  color: #f4f6f8;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.fs-empty-state__description {
+  margin: 0;
+  color: #a7adb4;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+.fs-empty-state__action {
+  margin-top: 0.65rem;
+}

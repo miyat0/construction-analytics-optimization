@@ -1,0 +1,54 @@
+.fortesite-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+  color: #f4f7fa;
+  line-height: 1;
+}
+
+.fortesite-mark__icon {
+  display: block;
+  flex-shrink: 0;
+  width: 1.85rem;
+  height: 1.85rem;
+}
+
+.fortesite-mark__word {
+  font-family: "Space Grotesk", "Archivo", sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.fortesite-mark--sm .fortesite-mark__icon {
+  width: 1.65rem;
+  height: 1.65rem;
+}
+
+.fortesite-mark--sm .fortesite-mark__word {
+  font-size: 0.95rem;
+  letter-spacing: 0.055em;
+}
+
+.fortesite-mark--md .fortesite-mark__icon {
+  width: 2rem;
+  height: 2rem;
+}
+
+.fortesite-mark--md .fortesite-mark__word {
+  font-size: 1.125rem;
+  letter-spacing: 0.06em;
+}
+
+.fortesite-mark:hover {
+  color: #f4f7fa;
+}
+
+.fortesite-mark:focus-visible {
+  outline: 2px solid rgba(127, 164, 201, 0.55);
+  outline-offset: 4px;
+  border-radius: 0.25rem;
+}

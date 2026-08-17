@@ -1,0 +1,55 @@
+.role-dashboard-placeholder {
+  width: 100%;
+}
+
+.role-dashboard-placeholder__card {
+  width: min(100%, 56rem);
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  border: 1px solid var(--brand-border);
+  border-radius: 1.7rem;
+  background: rgba(18, 18, 18, 0.94);
+  box-shadow: 0 20px 42px rgba(31, 17, 6, 0.08);
+}
+
+.role-dashboard-placeholder__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.2rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  color: var(--brand-accent);
+  background: var(--brand-accent-soft);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.role-dashboard-placeholder__card h1 {
+  margin: 1rem 0 0.85rem;
+  color: var(--brand-ink);
+  font-size: clamp(2rem, 4vw, 2.85rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+}
+
+.role-dashboard-placeholder__card p,
+.role-dashboard-placeholder__note {
+  color: var(--brand-muted);
+  font-size: 1.02rem;
+  line-height: 1.8;
+}
+
+.role-dashboard-placeholder__card p {
+  margin: 0;
+}
+
+.role-dashboard-placeholder__note {
+  margin-top: 1.15rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 90, 20, 0.08);
+  border-radius: 1rem;
+  background: rgba(255, 243, 232, 0.88);
+}
+

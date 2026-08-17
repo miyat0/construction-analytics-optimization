@@ -1,0 +1,42 @@
+﻿# Dependencies / build
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+backend/.venv/
+.venv/
+venv/
+env/
+dist/
+build/
+*.egg-info/
+
+# Secrets — never commit
+.env
+**/.env
+!.env.example
+!**/.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+*.sqlite3
+db.sqlite3
+*.log
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Local tooling / temp
+tmp_video_frames/
+.codex-*.log
+*.tsbuildinfo
+frontend/tsconfig.tsbuildinfo
+frontend/tsconfig.node.tsbuildinfo

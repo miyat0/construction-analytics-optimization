@@ -1,0 +1,67 @@
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.75rem; /* 28px */
+  padding: 0 0.7rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-transform: capitalize;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.status-badge--compact {
+  height: 1.625rem; /* 26px */
+  padding: 0 0.65rem;
+  font-size: 0.75rem;
+}
+
+.status-badge--planning,
+.status-badge--planned {
+  color: #bfdbfe;
+  border-color: rgba(59, 130, 246, 0.35);
+  background: rgba(59, 130, 246, 0.14);
+}
+
+.status-badge--active,
+.status-badge--in_progress {
+  color: #bbf7d0;
+  border-color: rgba(61, 155, 106, 0.4);
+  background: rgba(61, 155, 106, 0.14);
+}
+
+.status-badge--completed {
+  color: #bbf7d0;
+  border-color: rgba(61, 155, 106, 0.4);
+  background: rgba(61, 155, 106, 0.16);
+}
+
+.status-badge--delayed {
+  color: #fde68a;
+  border-color: rgba(196, 138, 46, 0.4);
+  background: rgba(196, 138, 46, 0.14);
+}
+
+.status-badge--on_hold,
+.status-badge--neutral {
+  color: #c8cdd3;
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.status-badge--cancelled {
+  color: #fecaca;
+  border-color: rgba(212, 83, 74, 0.4);
+  background: rgba(212, 83, 74, 0.14);
+}
+
+.status-badge--archived {
+  color: #c8cdd3;
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+}

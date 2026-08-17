@@ -1,0 +1,132 @@
+.add-user-modal {
+
+  z-index: 1080;
+
+}
+
+
+
+.add-user-modal .detail-modal__dialog {
+
+  width: min(100%, 36rem);
+
+  max-height: min(90vh, 40rem);
+
+}
+
+
+
+.add-user-modal .detail-modal__body {
+
+  padding: 1rem 1.25rem 1.15rem;
+
+  overflow-y: auto;
+
+}
+
+
+
+.add-user-modal .user-form {
+
+  gap: 0;
+
+}
+
+
+
+.add-user-modal .user-form__surface {
+
+  padding: 0;
+
+  border: 0;
+
+  border-radius: 0;
+
+  background: transparent;
+
+  box-shadow: none;
+
+}
+
+
+
+.add-user-modal .user-form .row {
+
+  --bs-gutter-x: 0.85rem;
+
+  --bs-gutter-y: 0.85rem;
+
+}
+
+
+
+.add-user-modal .user-form__label {
+
+  margin-bottom: 0.3rem;
+
+  letter-spacing: 0.02em;
+
+  text-transform: none;
+
+  font-size: 0.8125rem;
+
+  font-weight: 600;
+
+}
+
+
+
+.add-user-modal .user-form__hint {
+
+  margin-top: 0.3rem;
+
+  font-size: 0.75rem;
+
+  line-height: 1.35;
+
+}
+
+
+
+.add-user-modal .user-form__error {
+
+  margin-top: 0.25rem;
+
+  font-size: 0.78rem;
+
+}
+
+
+
+.add-user-modal .user-form__actions {
+
+  margin-top: 1rem;
+
+  gap: 0.65rem;
+
+}
+
+
+
+.add-user-modal .user-form__submit {
+
+  color: #ffffff !important;
+
+  background: #ff5a1f !important;
+
+  border: 0 !important;
+
+}
+
+
+
+.add-user-modal .user-form__secondary-action {
+
+  color: #f3f4f6 !important;
+
+  background: #2a2f36 !important;
+
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+
+}
+

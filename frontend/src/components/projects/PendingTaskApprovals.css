@@ -1,0 +1,60 @@
+.pending-task-approvals {
+  display: grid;
+  gap: 0;
+}
+
+.pending-task-approvals__list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pending-task-approvals__card {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--brand-border, #34383c);
+  border-radius: 0.65rem;
+  background: #242424;
+}
+
+.pending-task-approvals__card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.pending-task-approvals__card-header h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.pending-task-approvals__card-header span {
+  color: var(--admin-muted, #a0a5ad);
+  font-size: 0.8125rem;
+}
+
+.pending-task-approvals__card p {
+  margin: 0;
+  color: #c8c8c8;
+  font-size: 0.875rem;
+}
+
+.pending-task-approvals__badge {
+  border: 1px solid rgba(196, 138, 46, 0.4);
+  color: #fde68a;
+  background: rgba(196, 138, 46, 0.18);
+}
+
+.pending-task-approvals__note {
+  width: 100%;
+}
+
+.pending-task-approvals__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}

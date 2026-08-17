@@ -1,0 +1,281 @@
+.project-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7.5rem auto;
+  align-items: center;
+  gap: 1rem 1.25rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #34383c;
+  border-radius: 0.65rem;
+  background: #272a2c;
+  transition: border-color 0.15s ease;
+}
+
+.project-card:hover {
+  border-color: rgba(255, 90, 31, 0.35);
+}
+
+.project-card:focus-within:not(:hover) {
+  border-color: #34383c;
+  box-shadow: none;
+}
+
+.project-card--active {
+  border-color: #34383c;
+  box-shadow: none;
+}
+
+.project-card--active:hover {
+  border-color: rgba(255, 90, 31, 0.35);
+}
+
+.project-card__main {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.project-card__title {
+  margin: 0 0 0.35rem;
+  color: #f4f6f8;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.45rem;
+  color: #a7adb4;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.project-card__meta-sep {
+  color: #7e868d;
+  font-weight: 600;
+}
+
+.project-card__progress {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+  max-width: 14rem;
+}
+
+.project-card__progress-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: #7e868d;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.project-card__progress-label strong {
+  color: #f4f6f8;
+  font-size: 0.8125rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.project-card__progress-bar {
+  width: 100%;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.project-card__progress-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #ff5a1f;
+}
+
+.project-card__status-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.project-card__status {
+  min-width: 6.5rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+  text-align: center;
+}
+
+.project-card__status--planning {
+  color: #bfdbfe;
+  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(59, 130, 246, 0.16);
+}
+
+.project-card__status--active {
+  color: #ffc4a0;
+  border-color: rgba(255, 90, 31, 0.4);
+  background: rgba(255, 90, 31, 0.16);
+}
+
+.project-card__status--on_hold {
+  color: #fde68a;
+  border-color: rgba(196, 138, 46, 0.4);
+  background: rgba(196, 138, 46, 0.16);
+}
+
+.project-card__status--completed {
+  color: #bbf7d0;
+  border-color: rgba(61, 155, 106, 0.4);
+  background: rgba(61, 155, 106, 0.16);
+}
+
+.project-card__status--archived {
+  color: #c8cdd3;
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.project-card__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  justify-self: end;
+}
+
+.project-card__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid #5a5a5a;
+  border-radius: 0.4rem;
+  color: #f2f2f2;
+  background: #363636;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.project-card__action:hover,
+.project-card__action:focus-visible {
+  color: #ffffff;
+  border-color: rgba(255, 90, 31, 0.5);
+  background: #404040;
+}
+
+.project-card__action:focus:not(:focus-visible) {
+  color: #f2f2f2;
+  border-color: #5a5a5a;
+  background: #363636;
+}
+
+.project-card__action--danger {
+  border-color: rgba(220, 80, 80, 0.45);
+  background: transparent;
+  color: #f87171;
+}
+
+.project-card__action--danger:hover,
+.project-card__action--danger:focus {
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.7);
+  background: rgba(248, 113, 113, 0.12);
+}
+
+.project-card__more {
+  position: relative;
+}
+
+.project-card__more:focus-within .project-card__more-menu,
+.project-card__more:hover .project-card__more-menu {
+  display: block;
+}
+
+.project-card__more-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  z-index: 5;
+  min-width: 10.5rem;
+  padding: 0.35rem;
+  border: 1px solid #30363d;
+  border-radius: 0.5rem;
+  background: #1c2024;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.project-card__more-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: #f5f7fa;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.project-card__more-item:hover,
+.project-card__more-item:focus-visible {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.project-card__more-item--danger {
+  color: #f87171;
+}
+
+.project-card__more-item--danger:hover,
+.project-card__more-item--danger:focus-visible {
+  background: rgba(248, 113, 113, 0.12);
+}
+
+@media (max-width: 767.98px) {
+  .project-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "main status"
+      "actions actions";
+  }
+
+  .project-card__main {
+    grid-area: main;
+  }
+
+  .project-card__status-wrap {
+    grid-area: status;
+    justify-content: flex-end;
+  }
+
+  .project-card__actions {
+    grid-area: actions;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

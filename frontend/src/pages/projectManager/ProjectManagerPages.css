@@ -1,0 +1,4 @@
+.project-manager-projects-page {
+  display: grid;
+  gap: var(--section-gap);
+}

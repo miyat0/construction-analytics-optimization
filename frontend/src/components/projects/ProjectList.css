@@ -1,0 +1,29 @@
+.project-list {
+  /* uses .page-list */
+}
+
+.project-list__items {
+  /* uses .page-list__items */
+}
+
+.project-list__empty {
+  display: grid;
+  gap: 0.45rem;
+  justify-items: start;
+  padding: var(--admin-card-pad, 1.25rem);
+  border: 1px dashed var(--brand-border);
+  border-radius: var(--radius-md);
+  color: #b8b8b8;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.875rem;
+}
+
+.project-list__empty-title {
+  margin: 0;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.project-list__empty p {
+  margin: 0;
+}

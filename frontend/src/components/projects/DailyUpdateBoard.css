@@ -1,0 +1,163 @@
+.daily-update-board {
+  display: grid;
+  gap: 0;
+}
+
+.daily-update-board__description {
+  margin: -0.35rem 0 0.85rem;
+  color: #a7adb4;
+  font-size: 0.8125rem;
+}
+
+.daily-update-board__list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.daily-update-board__card {
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid #34383c;
+  border-radius: 0.65rem;
+  background: #272a2c;
+  padding: 1rem 1.1rem;
+}
+
+.daily-update-board__empty {
+  color: var(--brand-muted, #a0a5ad);
+  font-size: 0.875rem;
+}
+
+.daily-update-board__empty-title {
+  margin: 0;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.daily-update-board__card {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.daily-update-board__card-header,
+.daily-update-board__meta,
+.daily-update-board__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.daily-update-board__card-header {
+  justify-content: space-between;
+}
+
+.daily-update-board__card-header h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.daily-update-board__card-header span,
+.daily-update-board__meta {
+  color: var(--brand-muted, #a0a5ad);
+  font-size: 0.8125rem;
+}
+
+.daily-update-board__status {
+  color: #ffc4a0;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.daily-update-board__concern {
+  border-radius: 0.5rem;
+  background: rgba(255, 90, 31, 0.12);
+  color: #ffc4a0;
+  padding: 0.75rem 0.9rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.daily-update-board__hours-note {
+  margin: 0;
+  color: var(--brand-muted, #a0a5ad);
+  font-size: 0.75rem;
+}
+
+.daily-update-board__manpower {
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 0.15rem;
+}
+
+.daily-update-board__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem 1rem;
+}
+
+.daily-update-board__metrics span,
+.daily-update-board__manpower-grid span {
+  display: block;
+  color: var(--brand-muted, #a0a5ad);
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.daily-update-board__metrics strong,
+.daily-update-board__manpower-grid strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: #f5f6f7;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.daily-update-board__manpower-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 1rem;
+}
+
+.daily-update-board__review-panel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.daily-update-board__actions {
+  justify-content: flex-end;
+}
+
+.daily-update-board__primary-action {
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--brand-accent, #ff5a1f);
+  color: #fff;
+  min-height: 2.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.daily-update-board__secondary-action {
+  border: 1px solid #4a5056;
+  border-radius: 0.5rem;
+  background: #2a2e32;
+  color: #f5f6f7;
+  min-height: 2.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.daily-update-board__review-panel .form-control {
+  min-height: 2.5rem;
+  border: 1px solid var(--brand-border);
+  border-radius: 0.5rem;
+  color: #ffffff;
+  background: #1f1f1f;
+  font-size: 0.875rem;
+}

@@ -1,0 +1,225 @@
+.project-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.project-timeline__header h2 {
+  margin: 0;
+  color: #f5f7fa;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.project-timeline__table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem; /* 10–12px */
+  min-width: 0;
+}
+
+.project-timeline__col-head {
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 2fr)
+    minmax(180px, 1.4fr)
+    auto
+    minmax(180px, 1fr);
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 1.15rem;
+  color: #7f8995;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.project-timeline__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem; /* 10–12px */
+  min-width: 0;
+}
+
+.project-timeline__row {
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 2fr)
+    minmax(180px, 1.4fr)
+    auto
+    minmax(180px, 1fr);
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 5.25rem; /* ~84px */
+  padding: 1.1rem 1.15rem; /* ~18px */
+  border: 1px solid #30363d;
+  border-radius: 0.625rem; /* 10px */
+  background: #1d2226;
+  min-width: 0;
+}
+
+.project-timeline__milestone {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.project-timeline__name {
+  margin: 0;
+  color: #f5f7fa;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.project-timeline__notes {
+  margin: 0;
+  color: #7f8995;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.project-timeline__schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.project-timeline__schedule-range {
+  margin: 0;
+  color: #b0b8c2;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.project-timeline__schedule-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
+  margin: 0;
+  color: #b0b8c2;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.project-timeline__schedule-label {
+  color: #7f8995;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.project-timeline__schedule-start {
+  margin: 0.1rem 0 0;
+  color: #7f8995;
+  font-size: 0.75rem;
+}
+
+.project-timeline__status {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.project-timeline__progress {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.project-timeline__progress-value {
+  color: #f5f7fa;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.project-timeline__progress-bar {
+  width: 10rem; /* 160px */
+  max-width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.project-timeline__progress-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #ff5a1f;
+}
+
+.project-timeline__empty {
+  padding: 1rem 1.1rem;
+  border: 1px dashed #30363d;
+  border-radius: 0.625rem;
+  background: #1d2226;
+  color: #b0b8c2;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 991.98px) {
+  .project-timeline__col-head {
+    display: none;
+  }
+
+  .project-timeline__row {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    grid-template-areas:
+      "milestone status"
+      "schedule schedule"
+      "progress progress";
+    gap: 0.75rem 1rem;
+    min-height: 0;
+  }
+
+  .project-timeline__milestone {
+    grid-area: milestone;
+  }
+
+  .project-timeline__status {
+    grid-area: status;
+    justify-content: flex-end;
+  }
+
+  .project-timeline__schedule {
+    grid-area: schedule;
+  }
+
+  .project-timeline__progress {
+    grid-area: progress;
+  }
+
+  .project-timeline__progress-bar {
+    width: 100%;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .project-timeline__row {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "milestone"
+      "status"
+      "schedule"
+      "progress";
+    padding: 1rem;
+  }
+
+  .project-timeline__status {
+    justify-content: flex-start;
+  }
+}

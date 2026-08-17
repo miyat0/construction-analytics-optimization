@@ -1,0 +1,302 @@
+import { Link, Navigate, Route, Routes } from "react-router-dom";
+
+import { AuthSplitLayout } from "./components/auth/AuthSplitLayout";
+import { BrandLogo } from "./components/branding/BrandLogo";
+import { ROLE_NAMES } from "./types/auth";
+import { AuthProvider } from "./context/AuthContext";
+import LoginPage from "./pages/auth/LoginPage";
+import AccessDeniedPage from "./pages/access/AccessDeniedPage";
+import AdminLayout from "./layouts/admin/AdminLayout";
+import UserWorkspaceLayout from "./layouts/user/UserWorkspaceLayout";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminProjectsPage from "./pages/admin/AdminProjectsPage";
+import AdminUserCreatePage from "./pages/admin/AdminUserCreatePage";
+import AdminUserEditPage from "./pages/admin/AdminUserEditPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import ProjectDetailLayout from "./components/projects/ProjectDetailLayout";
+import CreateDocumentPage from "./pages/projects/CreateDocumentPage";
+import CreateExtensionPage from "./pages/projects/CreateExtensionPage";
+import CreateMilestonePage from "./pages/projects/CreateMilestonePage";
+import CreateTaskPage from "./pages/projects/CreateTaskPage";
+import EditExtensionPage from "./pages/projects/EditExtensionPage";
+import EditTaskPage from "./pages/projects/EditTaskPage";
+import ProjectDocumentsPage from "./pages/projects/ProjectDocumentsPage";
+import ProjectMilestoneDetailPage from "./pages/projects/ProjectMilestoneDetailPage";
+import ProjectMilestonesPage from "./pages/projects/ProjectMilestonesPage";
+import ProjectOverviewPage from "./pages/projects/ProjectOverviewPage";
+import ViewExtensionPage from "./pages/projects/ViewExtensionPage";
+import ViewTaskPage from "./pages/projects/ViewTaskPage";
+import ClientProjectsPage from "./pages/client/ClientProjectsPage";
+import LandingPage from "./pages/marketing/LandingPage";
+import ProjectManagerProjectsPage from "./pages/projectManager/ProjectManagerProjectsPage";
+import SiteEngineerDashboardPage from "./pages/siteEngineer/SiteEngineerDashboardPage";
+import SupervisorDashboardPage from "./pages/supervisor/SupervisorDashboardPage";
+import WorkerDashboardPage from "./pages/worker/WorkerDashboardPage";
+import DashboardRedirect from "./routes/DashboardRedirect";
+import { ProtectedRoute } from "./routes/ProtectedRoute";
+import { RoleProtectedRoute } from "./routes/RoleProtectedRoute";
+
+interface MessageScreenProps {
+  eyebrow: string;
+  title: string;
+  description: string;
+  actionLabel: string;
+  actionTo: string;
+}
+
+const MessageScreen = ({
+  eyebrow,
+  title,
+  description,
+  actionLabel,
+  actionTo,
+}: MessageScreenProps) => {
+  return (
+    <main className="app-placeholder">
+      <section className="app-placeholder__card">
+        <BrandLogo theme="light" />
+        <span className="app-placeholder__eyebrow">{eyebrow}</span>
+        <h1>{title}</h1>
+        <p>{description}</p>
+        <Link className="app-placeholder__action" to={actionTo}>
+          {actionLabel}
+        </Link>
+      </section>
+    </main>
+  );
+};
+
+const ForgotPasswordPage = () => {
+  return (
+    <AuthSplitLayout
+      visualFooter={
+        <Link className="auth-split-layout__return-link" to="/login">
+          Back to Login
+        </Link>
+      }
+    >
+      <section className="auth-split-layout__message-card">
+        <h2>Forgot password</h2>
+        <p>Password recovery is not available yet.</p>
+        <Link className="auth-split-layout__message-action" to="/login">
+          Back to Login
+        </Link>
+      </section>
+    </AuthSplitLayout>
+  );
+};
+
+const sessionCheckFallback = (
+  <MessageScreen
+    eyebrow="Session"
+    title="Checking session"
+    description="Validating your access."
+    actionLabel="Return to Login"
+    actionTo="/login"
+  />
+);
+
+const roleGuardFallback = (
+  <MessageScreen
+    eyebrow="Access"
+    title="Checking permissions"
+    description="Verifying your role access."
+    actionLabel="Return to Login"
+    actionTo="/login"
+  />
+);
+
+export const App = () => {
+  return (
+    <AuthProvider>
+      <Routes>
+        <Route element={<LandingPage />} path="/" />
+        <Route element={<LoginPage />} path="/login" />
+        <Route element={<ForgotPasswordPage />} path="/forgot-password" />
+
+        <Route element={<ProtectedRoute fallback={sessionCheckFallback} />}>
+          <Route element={<DashboardRedirect />} path="/dashboard" />
+          <Route element={<AccessDeniedPage />} path="/access-denied" />
+
+          <Route
+            element={
+              <RoleProtectedRoute
+                allowedRoles={[ROLE_NAMES.COMPANY_ADMINISTRATOR]}
+                fallback={roleGuardFallback}
+              />
+            }
+          >
+            <Route element={<AdminLayout />} path="/admin">
+              <Route element={<Navigate replace to="projects" />} index />
+              <Route element={<AdminDashboardPage />} path="dashboard" />
+              <Route element={<AdminProjectsPage />} path="projects" />
+              <Route
+                element={<CreateMilestonePage />}
+                path="projects/view/milestones/new"
+              />
+              <Route
+                element={<CreateDocumentPage />}
+                path="projects/view/documents/new"
+              />
+              <Route
+                element={<CreateTaskPage />}
+                path="projects/view/milestones/:milestoneId/tasks/new"
+              />
+              <Route
+                element={<EditTaskPage />}
+                path="projects/view/milestones/:milestoneId/tasks/:taskId/edit"
+              />
+              <Route
+                element={<ViewTaskPage />}
+                path="projects/view/milestones/:milestoneId/tasks/:taskId"
+              />
+              <Route
+                element={<CreateExtensionPage />}
+                path="projects/view/milestones/:milestoneId/extensions/new"
+              />
+              <Route
+                element={<EditExtensionPage />}
+                path="projects/view/milestones/:milestoneId/extensions/:extensionId/edit"
+              />
+              <Route
+                element={<ViewExtensionPage />}
+                path="projects/view/milestones/:milestoneId/extensions/:extensionId"
+              />
+              <Route element={<ProjectDetailLayout />} path="projects/view">
+                <Route element={<Navigate replace to="overview" />} index />
+                <Route element={<ProjectOverviewPage />} path="overview" />
+                <Route element={<ProjectMilestonesPage />} path="milestones" />
+                <Route
+                  element={<ProjectMilestoneDetailPage />}
+                  path="milestones/:milestoneId"
+                />
+                <Route element={<ProjectDocumentsPage />} path="documents" />
+              </Route>
+              <Route element={<AdminUsersPage />} path="users" />
+              <Route element={<AdminUserCreatePage />} path="users/create" />
+              <Route element={<AdminUserEditPage />} path="users/:userId/edit" />
+            </Route>
+          </Route>
+
+          <Route
+            element={
+              <RoleProtectedRoute
+                allowedRoles={[ROLE_NAMES.PROJECT_MANAGER]}
+                fallback={roleGuardFallback}
+              />
+            }
+          >
+            <Route element={<UserWorkspaceLayout />} path="/project-manager">
+              <Route element={<Navigate replace to="dashboard" />} index />
+              <Route element={<ProjectManagerProjectsPage />} path="dashboard" />
+              <Route element={<ProjectManagerProjectsPage />} path="projects" />
+              <Route
+                element={<CreateMilestonePage />}
+                path="projects/view/milestones/new"
+              />
+              <Route
+                element={<CreateDocumentPage />}
+                path="projects/view/documents/new"
+              />
+              <Route
+                element={<CreateTaskPage />}
+                path="projects/view/milestones/:milestoneId/tasks/new"
+              />
+              <Route
+                element={<EditTaskPage />}
+                path="projects/view/milestones/:milestoneId/tasks/:taskId/edit"
+              />
+              <Route
+                element={<ViewTaskPage />}
+                path="projects/view/milestones/:milestoneId/tasks/:taskId"
+              />
+              <Route
+                element={<CreateExtensionPage />}
+                path="projects/view/milestones/:milestoneId/extensions/new"
+              />
+              <Route
+                element={<EditExtensionPage />}
+                path="projects/view/milestones/:milestoneId/extensions/:extensionId/edit"
+              />
+              <Route
+                element={<ViewExtensionPage />}
+                path="projects/view/milestones/:milestoneId/extensions/:extensionId"
+              />
+              <Route element={<ProjectDetailLayout />} path="projects/view">
+                <Route element={<Navigate replace to="overview" />} index />
+                <Route element={<ProjectOverviewPage />} path="overview" />
+                <Route element={<ProjectMilestonesPage />} path="milestones" />
+                <Route
+                  element={<ProjectMilestoneDetailPage />}
+                  path="milestones/:milestoneId"
+                />
+                <Route element={<ProjectDocumentsPage />} path="documents" />
+              </Route>
+            </Route>
+          </Route>
+
+          <Route
+            element={
+              <RoleProtectedRoute
+                allowedRoles={[ROLE_NAMES.SITE_ENGINEER]}
+                fallback={roleGuardFallback}
+              />
+            }
+          >
+            <Route element={<UserWorkspaceLayout />} path="/site-engineer">
+              <Route element={<Navigate replace to="dashboard" />} index />
+              <Route element={<SiteEngineerDashboardPage />} path="dashboard" />
+            </Route>
+          </Route>
+
+          <Route
+            element={
+              <RoleProtectedRoute
+                allowedRoles={[ROLE_NAMES.SUPERVISOR]}
+                fallback={roleGuardFallback}
+              />
+            }
+          >
+            <Route element={<UserWorkspaceLayout />} path="/supervisor">
+              <Route element={<Navigate replace to="dashboard" />} index />
+              <Route element={<SupervisorDashboardPage />} path="dashboard" />
+            </Route>
+          </Route>
+
+          <Route
+            element={
+              <RoleProtectedRoute
+                allowedRoles={[ROLE_NAMES.WORKER]}
+                fallback={roleGuardFallback}
+              />
+            }
+          >
+            <Route element={<UserWorkspaceLayout />} path="/worker">
+              <Route element={<Navigate replace to="dashboard" />} index />
+              <Route element={<WorkerDashboardPage />} path="dashboard" />
+            </Route>
+          </Route>
+
+          <Route
+            element={
+              <RoleProtectedRoute
+                allowedRoles={[ROLE_NAMES.CLIENT]}
+                fallback={roleGuardFallback}
+              />
+            }
+          >
+            <Route element={<UserWorkspaceLayout />} path="/client">
+              <Route element={<Navigate replace to="dashboard" />} index />
+              <Route element={<ClientProjectsPage />} path="dashboard" />
+              <Route element={<ClientProjectsPage />} path="projects" />
+            </Route>
+          </Route>
+        </Route>
+
+        <Route element={<Navigate replace to="/" />} path="*" />
+      </Routes>
+    </AuthProvider>
+  );
+};
+
+export default App;

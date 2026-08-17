@@ -1,0 +1,182 @@
+.milestone-extension-manager {
+  display: grid;
+  gap: 0;
+}
+
+.milestone-extension-manager__toolbar {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.milestone-extension-manager__form {
+  display: grid;
+  gap: 1.05rem;
+  margin-bottom: 0.9rem;
+  padding: 1.15rem 1.2rem;
+  border: 1px solid #34383c;
+  border-radius: 0.65rem;
+  background: #222527;
+}
+
+.milestone-extension-manager__form-grid {
+  display: grid;
+  gap: 1.05rem 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.milestone-extension-manager__field {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.milestone-extension-manager__field--full {
+  grid-column: 1 / -1;
+}
+
+.milestone-extension-manager__label,
+.milestone-extension-manager__meta-label {
+  color: #7e868d;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.milestone-extension-manager__form .form-control,
+.milestone-extension-manager__form .form-select,
+.milestone-extension-manager__toolbar .form-select {
+  min-height: 2.5rem;
+  height: 2.5rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #34383c;
+  border-radius: 0.5rem;
+  color: #f4f6f8;
+  background: #1f1f1f;
+  font-size: 0.875rem;
+}
+
+.milestone-extension-manager__form textarea.form-control {
+  height: auto;
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.milestone-extension-manager__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.milestone-extension-manager__primary-action {
+  border: 0 !important;
+  border-radius: 0.5rem !important;
+  background: #ff5a1f !important;
+  color: #ffffff !important;
+  min-height: 2.5rem;
+  height: 2.5rem;
+  padding: 0.625rem 1rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+}
+
+.milestone-extension-manager__list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.milestone-extension-manager__card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #34383c;
+  border-radius: 0.65rem;
+  background: #272a2c;
+}
+
+.milestone-extension-manager__card-main {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.milestone-extension-manager__card-header h3 {
+  margin: 0;
+  color: #f4f6f8;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.milestone-extension-manager__dates {
+  margin-top: 0.4rem;
+  color: #a7adb4;
+  font-size: 0.875rem;
+}
+
+.milestone-extension-manager__meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+  color: #7e868d;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.milestone-extension-manager__reason {
+  margin: 0.45rem 0 0;
+  color: #a7adb4;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.milestone-extension-manager__row-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn.milestone-extension-manager__edit-action,
+.milestone-extension-manager__edit-action,
+.admin-btn.milestone-extension-manager__edit-action {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 2.5rem !important;
+  height: 2.5rem !important;
+  padding: 0.625rem 1rem !important;
+  border: 1px solid #4a5056 !important;
+  border-radius: 0.5rem !important;
+  color: #f4f6f8 !important;
+  background: #2a2e32 !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  white-space: nowrap;
+  box-shadow: none !important;
+}
+
+.btn.milestone-extension-manager__edit-action:hover,
+.milestone-extension-manager__edit-action:hover,
+.admin-btn.milestone-extension-manager__edit-action:hover {
+  border-color: rgba(255, 90, 31, 0.5) !important;
+  background: #32373c !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 767.98px) {
+  .milestone-extension-manager__form-grid {
+    grid-template-columns: 1fr;
+  }
+}

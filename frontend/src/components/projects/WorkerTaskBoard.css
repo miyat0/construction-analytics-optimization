@@ -1,0 +1,207 @@
+.worker-task-board {
+  display: grid;
+  gap: 12px;
+  color: #f4f6f8;
+}
+
+.worker-task-board__header h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #f4f6f8;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.worker-task-board__header h2 svg {
+  color: #77818c;
+}
+
+.worker-task-board__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  color: #aab3bd;
+  background: #20262b;
+  border: 1px solid #30363d;
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.worker-task-board__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 82px;
+  padding: 16px 18px;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  color: #aab3bd;
+  background: #1a1f23;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.worker-task-board__empty-icon {
+  display: inline-flex;
+  color: #77818c;
+}
+
+.worker-task-board__layout {
+  display: grid;
+  gap: 12px;
+}
+
+.worker-task-board__assignment-list {
+  display: grid;
+  gap: 0;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  background: #1a1f23;
+  overflow: hidden;
+}
+
+.worker-task-board__assignment-card {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  transition: background-color 150ms ease;
+}
+
+.worker-task-board__assignment-card:last-child {
+  border-bottom: 0;
+}
+
+.worker-task-board__assignment-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.worker-task-board__assignment-card--active {
+  background: rgba(255, 90, 31, 0.08);
+  box-shadow: inset 3px 0 0 var(--safety-orange, #ff5a1f);
+}
+
+.worker-task-board__assignment-card strong {
+  color: #f4f6f8;
+  font-size: 0.9375rem;
+  font-weight: 650;
+}
+
+.worker-task-board__assignment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+  color: #aab3bd;
+  font-size: 0.8125rem;
+}
+
+.worker-task-board__assignment-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  padding: 0 0.55rem;
+  border-radius: 999px;
+  color: #c9d0d6;
+  background: rgba(255, 255, 255, 0.06);
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.worker-task-board__form {
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  background: #1a1f23;
+}
+
+.worker-task-board__details h3 {
+  margin: 0;
+  color: #f4f6f8;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.worker-task-board__details p {
+  margin: 6px 0 0;
+  color: #aab3bd;
+  font-size: 0.875rem;
+}
+
+.worker-task-board__grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.worker-task-board__field {
+  display: grid;
+  gap: 6px;
+}
+
+.worker-task-board__field--full {
+  grid-column: 1 / -1;
+}
+
+.worker-task-board__label {
+  color: #77818c;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.worker-task-board__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #aab3bd;
+  font-size: 0.875rem;
+}
+
+.worker-task-board__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.worker-task-board__primary-action {
+  border: 0;
+  border-radius: 8px;
+  background: var(--safety-orange, #ff5a1f);
+  color: #fff;
+  min-height: 2.5rem;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.875rem;
+  font-weight: 650;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.worker-task-board__primary-action:hover,
+.worker-task-board__primary-action:focus {
+  background: #ff6a35;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 767.98px) {
+  .worker-task-board__grid {
+    grid-template-columns: 1fr;
+  }
+}

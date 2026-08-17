@@ -1,0 +1,312 @@
+/* Shared detail modal + overview grid (Admin Projects, Supervisor, forms) */
+
+.detail-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.detail-modal--sm .detail-modal__dialog {
+  width: min(100%, 42rem);
+}
+
+.detail-modal--md .detail-modal__dialog {
+  width: min(100%, 54rem);
+}
+
+.detail-modal--lg .detail-modal__dialog {
+  width: min(100%, 64rem);
+}
+
+.detail-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: rgba(6, 8, 12, 0.7);
+  backdrop-filter: blur(3px);
+  cursor: pointer;
+}
+
+.detail-modal__dialog {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 64rem);
+  height: auto;
+  max-height: var(--modal-max-height, 85vh);
+  margin: 0;
+  border: 1px solid #34383c;
+  border-radius: 0.75rem;
+  background: #191c1e;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.detail-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  flex-shrink: 0;
+  min-height: 4.25rem; /* ~68px */
+  padding: 0.9rem var(--modal-pad, 1.5rem);
+  border-bottom: 1px solid #34383c;
+  background: #222527;
+}
+
+.detail-modal__heading {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.detail-modal__title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.detail-modal__title {
+  margin: 0;
+  color: #f4f6f8;
+  font-size: 1.3rem; /* ~21px */
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.detail-modal__description {
+  margin: 0.3rem 0 0;
+  color: var(--admin-muted, #a0a5ad);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.detail-modal__badge {
+  border: 1px solid rgba(255, 90, 31, 0.35);
+  color: #ffc4a0;
+  background: rgba(255, 90, 31, 0.18);
+  text-transform: capitalize;
+}
+
+.detail-modal__badge--archived,
+.detail-modal__badge--muted {
+  color: #d0d0d0;
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.detail-modal__header-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.detail-modal__header-actions .admin-btn,
+.detail-modal__header-actions .project-details-modal__primary-btn,
+.detail-modal__header-actions .project-details-modal__edit-btn {
+  align-self: center;
+  min-height: 2.5rem;
+  height: 2.5rem;
+}
+
+.detail-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 0.4rem;
+  color: #c8c8c8;
+  background: transparent;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.detail-modal__close:hover,
+.detail-modal__close:focus {
+  color: #ffffff;
+  background: rgba(255, 90, 31, 0.14);
+}
+
+.detail-modal__tabs {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  padding: 0.35rem var(--modal-pad, 1.5rem) 0;
+  border-bottom: 1px solid #34383c;
+  background: #222527;
+}
+
+.detail-modal__tab {
+  min-height: 2.35rem;
+  padding: 0.4rem 0.85rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0.35rem 0.35rem 0 0;
+  color: #a7adb4;
+  background: transparent;
+  font-size: 0.9rem; /* ~14–15px */
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.detail-modal__tab:hover,
+.detail-modal__tab:focus {
+  color: #ffffff;
+}
+
+.detail-modal__tab--active {
+  color: #ffffff;
+  border-bottom-color: var(--brand-accent, #ff5a1f);
+}
+
+.detail-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1.25rem var(--modal-pad, 1.5rem) var(--modal-pad, 1.5rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #191c1e;
+}
+
+.detail-modal__loading {
+  padding: 2rem 1rem;
+  color: var(--brand-muted, #a0a5ad);
+  text-align: center;
+}
+
+/* Overview label/value grid */
+.detail-overview__grid,
+.project-details-overview__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 2.5rem; /* tighter, more balanced */
+  row-gap: 1.35rem;
+}
+
+.detail-overview__item,
+.project-details-overview__item {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.detail-overview__item--full,
+.project-details-overview__item--full {
+  grid-column: 1 / -1;
+}
+
+.detail-overview__label,
+.project-details-overview__label {
+  color: var(--brand-muted-deep, #7d858c);
+  font-size: 0.72rem; /* ~11.5px */
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.detail-overview__value,
+.project-details-overview__value {
+  color: #ffffff;
+  font-size: 0.95rem; /* ~15px */
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.detail-overview__section,
+.project-details-overview__section {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--brand-border, #34383c);
+}
+
+.detail-overview__section-title {
+  margin: 0 0 0.85rem;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.detail-panel-stack {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.detail-empty {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: start;
+  padding: 1.15rem 1.1rem;
+  border: 1px dashed var(--brand-border, #34383c);
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--brand-muted, #a0a5ad);
+  font-size: 0.875rem;
+}
+
+.detail-empty__title {
+  margin: 0;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+@media (max-width: 767.98px) {
+  .detail-modal__header {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+  }
+
+  .detail-modal__header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .detail-modal__tabs {
+    overflow-x: auto;
+  }
+
+  .detail-overview__grid,
+  .project-details-overview__grid {
+    grid-template-columns: 1fr;
+    column-gap: 0;
+    row-gap: 1.25rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .detail-modal {
+    padding: 0.65rem;
+    align-items: flex-end;
+  }
+
+  .detail-modal__dialog {
+    max-height: min(92vh, var(--modal-max-height, 85vh));
+    border-radius: 0.85rem 0.85rem 0.65rem 0.65rem;
+  }
+
+  .detail-modal__header,
+  .detail-modal__body,
+  .detail-modal__tabs {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}

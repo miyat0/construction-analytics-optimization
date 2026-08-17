@@ -1,0 +1,151 @@
+from django.urls import path
+
+from .execution_views import (
+    DailyTaskEngineerReviewView,
+    DailyTaskSupervisorReviewView,
+    MilestoneExtensionDetailView,
+    MilestoneExtensionListCreateView,
+    MilestoneTaskApprovalView,
+    MilestoneTaskDetailView,
+    MilestoneTaskListCreateView,
+    MilestoneTaskManpowerSummaryView,
+    MilestoneTaskRejectionView,
+    ProjectConcernListView,
+    ProjectConcernResolveView,
+    ProjectDailyUpdateListView,
+    ProjectExecutionWorkerListView,
+    ProjectPendingTaskListView,
+    TaskAssignmentDetailView,
+    TaskAssignmentListCreateView,
+    TaskAssignmentUpdateListCreateView,
+    WorkerTaskAssignmentListView,
+)
+from .views import (
+    AdminDashboardView,
+    ProjectArchiveView,
+    ProjectDetailView,
+    ProjectDocumentDetailView,
+    ProjectDocumentListCreateView,
+    ProjectListCreateView,
+    ProjectLookupsView,
+    ProjectMilestoneDetailView,
+    ProjectMilestoneListCreateView,
+)
+
+urlpatterns = [
+    path("", ProjectListCreateView.as_view(), name="project-list-create"),
+    path("lookups/", ProjectLookupsView.as_view(), name="project-lookups"),
+    path("admin-dashboard/", AdminDashboardView.as_view(), name="admin-dashboard"),
+    path("<int:project_id>/", ProjectDetailView.as_view(), name="project-detail"),
+    path("<int:project_id>/archive/", ProjectArchiveView.as_view(), name="project-archive"),
+    path(
+        "<int:project_id>/milestones/",
+        ProjectMilestoneListCreateView.as_view(),
+        name="project-milestone-list-create",
+    ),
+    path(
+        "<int:project_id>/milestones/<int:milestone_id>/",
+        ProjectMilestoneDetailView.as_view(),
+        name="project-milestone-detail",
+    ),
+    path(
+        "<int:project_id>/milestones/<int:milestone_id>/extensions/",
+        MilestoneExtensionListCreateView.as_view(),
+        name="project-milestone-extension-list-create",
+    ),
+    path(
+        "<int:project_id>/milestones/<int:milestone_id>/extensions/<int:extension_id>/",
+        MilestoneExtensionDetailView.as_view(),
+        name="project-milestone-extension-detail",
+    ),
+    path(
+        "<int:project_id>/milestones/<int:milestone_id>/tasks/",
+        MilestoneTaskListCreateView.as_view(),
+        name="project-milestone-task-list-create",
+    ),
+    path(
+        "<int:project_id>/milestones/<int:milestone_id>/tasks/<int:task_id>/",
+        MilestoneTaskDetailView.as_view(),
+        name="project-milestone-task-detail",
+    ),
+    path(
+        "<int:project_id>/milestones/<int:milestone_id>/tasks/<int:task_id>/manpower-summary/",
+        MilestoneTaskManpowerSummaryView.as_view(),
+        name="project-milestone-task-manpower-summary",
+    ),
+    path(
+        "<int:project_id>/milestones/<int:milestone_id>/tasks/<int:task_id>/approve/",
+        MilestoneTaskApprovalView.as_view(),
+        name="project-milestone-task-approve",
+    ),
+    path(
+        "<int:project_id>/milestones/<int:milestone_id>/tasks/<int:task_id>/reject/",
+        MilestoneTaskRejectionView.as_view(),
+        name="project-milestone-task-reject",
+    ),
+    path(
+        "<int:project_id>/pending-tasks/",
+        ProjectPendingTaskListView.as_view(),
+        name="project-pending-task-list",
+    ),
+    path(
+        "<int:project_id>/daily-updates/",
+        ProjectDailyUpdateListView.as_view(),
+        name="project-daily-update-list",
+    ),
+    path(
+        "<int:project_id>/milestones/<int:milestone_id>/tasks/<int:task_id>/assignments/",
+        TaskAssignmentListCreateView.as_view(),
+        name="project-task-assignment-list-create",
+    ),
+    path(
+        "<int:project_id>/milestones/<int:milestone_id>/tasks/<int:task_id>/assignments/<int:assignment_id>/",
+        TaskAssignmentDetailView.as_view(),
+        name="project-task-assignment-detail",
+    ),
+    path(
+        "<int:project_id>/documents/",
+        ProjectDocumentListCreateView.as_view(),
+        name="project-document-list-create",
+    ),
+    path(
+        "<int:project_id>/documents/<int:document_id>/",
+        ProjectDocumentDetailView.as_view(),
+        name="project-document-detail",
+    ),
+    path(
+        "<int:project_id>/team-workers/",
+        ProjectExecutionWorkerListView.as_view(),
+        name="project-execution-workers",
+    ),
+    path(
+        "<int:project_id>/concerns/",
+        ProjectConcernListView.as_view(),
+        name="project-concern-list",
+    ),
+    path(
+        "<int:project_id>/concerns/<int:update_id>/resolve/",
+        ProjectConcernResolveView.as_view(),
+        name="project-concern-resolve",
+    ),
+    path(
+        "task-assignments/<int:assignment_id>/updates/",
+        TaskAssignmentUpdateListCreateView.as_view(),
+        name="task-assignment-update-list-create",
+    ),
+    path(
+        "task-updates/<int:update_id>/supervisor-review/",
+        DailyTaskSupervisorReviewView.as_view(),
+        name="task-update-supervisor-review",
+    ),
+    path(
+        "task-updates/<int:update_id>/engineer-review/",
+        DailyTaskEngineerReviewView.as_view(),
+        name="task-update-engineer-review",
+    ),
+    path(
+        "my-task-assignments/",
+        WorkerTaskAssignmentListView.as_view(),
+        name="worker-task-assignment-list",
+    ),
+]

@@ -1,0 +1,4 @@
+/* Project form modal — inherits DetailModal shell; keep z-index above details */
+.project-form-modal {
+  z-index: 1070;
+}

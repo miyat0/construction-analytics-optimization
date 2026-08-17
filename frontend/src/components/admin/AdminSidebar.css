@@ -1,0 +1,148 @@
+.admin-sidebar {
+  flex: 0 0 16.5rem;
+  flex-shrink: 0;
+  width: 16.5rem;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-4) var(--space-3);
+  overflow-x: hidden;
+  overflow-y: auto;
+  color: var(--brand-sidebar-text);
+  background: var(--brand-sidebar);
+  border-right: 1px solid var(--brand-border);
+}
+
+.admin-sidebar__brand {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: var(--space-5);
+  text-decoration: none;
+}
+
+.admin-sidebar__brand .brand-logo__image {
+  height: 2.2rem;
+  max-width: 11rem;
+}
+
+.admin-sidebar__section + .admin-sidebar__section {
+  margin-top: var(--space-4);
+}
+
+.admin-sidebar__section-title {
+  margin-bottom: var(--space-2);
+  padding-inline: var(--space-2);
+  color: var(--brand-sidebar-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.admin-sidebar__nav {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--brand-sidebar-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-sidebar__link:hover,
+.admin-sidebar__link:focus {
+  color: var(--brand-sidebar-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.admin-sidebar__link--active {
+  color: #ffffff;
+  border-color: rgba(255, 90, 31, 0.35);
+  background: #22262a;
+}
+
+.admin-sidebar__link--active .admin-sidebar__icon {
+  color: var(--brand-accent);
+}
+
+.admin-sidebar__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  color: var(--brand-accent);
+}
+
+.admin-sidebar__footer {
+  margin-top: auto;
+  padding-top: var(--space-3);
+}
+
+.admin-sidebar__footer-nav {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.65rem;
+}
+
+.admin-sidebar__footer-link {
+  width: 100%;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.admin-sidebar__profile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-md);
+  background: var(--brand-surface-strong);
+}
+
+.admin-sidebar__profile-name {
+  display: block;
+  color: var(--brand-ink);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.admin-sidebar__profile-role {
+  display: block;
+  color: var(--brand-muted);
+  font-size: 0.75rem;
+}
+
+@media (max-width: 991.98px) {
+  .admin-sidebar {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    padding: var(--space-4);
+    overflow: visible;
+    border-right: 0;
+    border-bottom: 1px solid var(--brand-border);
+  }
+
+  .admin-sidebar__brand {
+    margin-bottom: var(--space-4);
+  }
+
+  .admin-sidebar__footer {
+    margin-top: var(--space-4);
+  }
+}

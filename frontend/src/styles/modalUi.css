@@ -1,0 +1,358 @@
+/* Shared modal system — Project Details, Edit Project, Add User, forms inside modals */
+
+:root {
+  --modal-pad: 1.5rem; /* 24px */
+  --modal-field-gap: 1.05rem; /* ~17px */
+  --modal-max-height: 85vh;
+  --modal-control-height: 2.5rem; /* 40px */
+  --modal-textarea-height: 5.5rem; /* ~88px */
+}
+
+.app-modal,
+.project-details-modal,
+.project-form-modal,
+.add-user-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.app-modal__backdrop,
+.project-details-modal__backdrop,
+.project-form-modal__backdrop,
+.add-user-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: rgba(6, 8, 12, 0.7);
+  backdrop-filter: blur(3px);
+  cursor: pointer;
+}
+
+.app-modal__dialog,
+.project-details-modal__dialog,
+.project-form-modal__dialog,
+.add-user-modal__dialog {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 54rem);
+  height: auto !important;
+  max-height: var(--modal-max-height);
+  margin: 0;
+  border: 1px solid var(--brand-border, #34383c);
+  border-radius: 0.75rem;
+  background: var(--brand-surface, #1d2022);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.project-details-modal__dialog {
+  width: min(100%, 64rem);
+}
+
+.add-user-modal__dialog {
+  width: min(100%, 42rem);
+}
+
+.app-modal__header,
+.project-details-modal__header,
+.project-form-modal__header,
+.add-user-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  flex-shrink: 0;
+  padding: var(--modal-pad);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.project-details-modal__header {
+  align-items: center;
+  padding-bottom: 1rem;
+}
+
+.app-modal__title,
+.project-details-modal__heading h2,
+.project-form-modal__header h2,
+.add-user-modal__heading h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.add-user-modal__description {
+  margin: 0.3rem 0 0;
+  color: var(--admin-muted, #a0a5ad);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.app-modal__close,
+.project-details-modal__close,
+.project-form-modal__close,
+.add-user-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 0.4rem;
+  color: #c8c8c8;
+  background: transparent;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.app-modal__close:hover,
+.app-modal__close:focus,
+.project-details-modal__close:hover,
+.project-details-modal__close:focus,
+.project-form-modal__close:hover,
+.project-form-modal__close:focus,
+.add-user-modal__close:hover,
+.add-user-modal__close:focus {
+  color: #ffffff;
+  background: rgba(255, 90, 31, 0.14);
+}
+
+.app-modal__body,
+.project-details-modal__body,
+.project-form-modal__body,
+.add-user-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1rem var(--modal-pad) var(--modal-pad);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.project-details-modal__tabs {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  padding: 0.35rem var(--modal-pad) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.project-details-modal__tab {
+  min-height: 2.35rem;
+  padding: 0.4rem 0.85rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0.35rem 0.35rem 0 0;
+  color: #b8b8b8;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.project-details-modal__tab:hover,
+.project-details-modal__tab:focus {
+  color: #ffffff;
+}
+
+.project-details-modal__tab--active {
+  color: #ffffff;
+  border-bottom-color: var(--brand-accent, #ff5a1f);
+}
+
+.project-details-modal__header-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.project-details-modal__title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Compact controls inside any detail modal body */
+.detail-modal__body .form-control,
+.detail-modal__body .form-select,
+.detail-modal__body .user-form__control,
+.detail-modal__body .user-form__select,
+.detail-modal__body .milestone-manager__form .form-control,
+.detail-modal__body .milestone-manager__form .form-select,
+.detail-modal__body .project-document-manager__form .form-control,
+.detail-modal__body .project-document-manager__form .form-select {
+  min-height: var(--modal-control-height);
+  height: var(--modal-control-height);
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.detail-modal__body textarea.form-control,
+.detail-modal__body .milestone-manager__form textarea.form-control,
+.detail-modal__body .project-document-manager__form textarea.form-control {
+  height: auto;
+  min-height: var(--modal-textarea-height);
+  max-height: 14rem;
+  resize: vertical;
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+}
+
+.detail-modal__body .milestone-manager,
+.detail-modal__body .project-document-manager {
+  gap: 1rem;
+}
+
+.detail-modal__body .milestone-manager__header,
+.detail-modal__body .project-document-manager__header {
+  margin-bottom: 0;
+}
+
+.detail-modal__body .milestone-manager__header h2,
+.detail-modal__body .project-document-manager__header h2 {
+  margin-top: 0.25rem;
+  margin-bottom: 0;
+  font-size: 1rem;
+}
+
+.detail-modal__body .milestone-manager__form,
+.detail-modal__body .project-document-manager__form {
+  margin-top: 0;
+  gap: var(--modal-field-gap);
+}
+
+.detail-modal__body .milestone-manager__grid,
+.detail-modal__body .project-document-manager__grid {
+  gap: var(--modal-field-gap) 1rem;
+}
+
+.detail-modal__body .milestone-manager__field,
+.detail-modal__body .project-document-manager__field {
+  gap: 0.35rem;
+}
+
+.detail-modal__body .milestone-manager__actions,
+.detail-modal__body .project-document-manager__actions,
+.detail-modal__body .project-form__actions,
+.detail-modal__body .user-form__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.15rem;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.detail-modal__body .milestone-manager__primary-action,
+.detail-modal__body .milestone-manager__secondary-action,
+.detail-modal__body .project-document-manager__primary-action,
+.detail-modal__body .project-document-manager__secondary-action,
+.detail-modal__body .project-form__primary-action,
+.detail-modal__body .project-form__secondary-action,
+.detail-modal__body .user-form__submit,
+.detail-modal__body .user-form__secondary-action,
+.btn.project-details-modal__primary-btn,
+.btn.project-details-modal__edit-btn,
+.project-details-modal__primary-btn,
+.project-details-modal__edit-btn {
+  min-height: var(--admin-btn-height, 2.5rem) !important;
+  height: var(--admin-btn-height, 2.5rem);
+  padding: 0.625rem 1rem !important;
+  border-radius: 0.5rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+.detail-modal__body .user-form__surface {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.detail-modal__body .row {
+  --bs-gutter-y: 1.05rem;
+}
+
+.detail-modal__body .user-form,
+.detail-modal__body .project-form {
+  gap: 1.05rem;
+}
+
+.detail-modal__body .project-form__grid {
+  gap: 1.05rem 1rem;
+}
+
+.detail-modal__body .project-form__header {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .project-details-modal__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .project-details-modal__header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .project-details-modal__tabs {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .app-modal,
+  .project-details-modal,
+  .project-form-modal,
+  .add-user-modal {
+    padding: 0.65rem;
+    align-items: flex-end;
+  }
+
+  .app-modal__dialog,
+  .project-details-modal__dialog,
+  .project-form-modal__dialog,
+  .add-user-modal__dialog {
+    max-height: min(92vh, var(--modal-max-height));
+    border-radius: 0.85rem 0.85rem 0.65rem 0.65rem;
+  }
+
+  .app-modal__header,
+  .app-modal__body,
+  .project-details-modal__header,
+  .project-details-modal__body,
+  .project-form-modal__header,
+  .project-form-modal__body,
+  .add-user-modal__header,
+  .add-user-modal__body,
+  .project-details-modal__tabs {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}

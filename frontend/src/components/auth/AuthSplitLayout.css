@@ -1,0 +1,372 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap");
+
+.auth-split-layout {
+  --ink: #0d1218;
+  --steel: #121920;
+  --concrete: #8ea0b4;
+  --blueprint-white: #f4f7fa;
+  --blueprint-blue: #7fa4c9;
+  --safety-orange: #ff5a1f;
+  --lp-display: "Space Grotesk", "Archivo", sans-serif;
+  --lp-body: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --panel-pad-x: clamp(2.5rem, 5vw, 4.5rem);
+
+  /* Right-panel type scale — tweak these to adjust login typography */
+  --auth-fs-back: 0.8125rem;
+  --auth-fs-tagline: 0.6875rem;
+  --auth-fs-eyebrow: 0.6875rem;
+  --auth-fs-heading: clamp(1.75rem, 2.1vw, 1.95rem);
+  --auth-fs-subtitle: 0.875rem;
+  --auth-fs-label: 0.75rem;
+  --auth-fs-input: 0.875rem;
+  --auth-fs-meta: 0.8125rem;
+  --auth-fs-button: 0.875rem;
+  --auth-fs-support: 0.8125rem;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 100vh;
+  min-height: 100dvh;
+  color: var(--blueprint-white);
+  font-family: var(--lp-body);
+  background: var(--ink);
+}
+
+@media (min-width: 900px) {
+  html:has(.auth-split-layout),
+  body:has(.auth-split-layout),
+  body:has(.auth-split-layout) #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .auth-split-layout {
+    height: 100%;
+    max-height: 100vh;
+    max-height: 100dvh;
+  }
+}
+
+.auth-split-layout__panel {
+  min-height: 0;
+  height: 100%;
+}
+
+.auth-split-layout__panel--hero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  overflow: hidden;
+  color: var(--blueprint-white);
+  background-color: #0b0d10;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.auth-split-layout__hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(8, 12, 16, 0.55) 0%,
+      rgba(8, 12, 16, 0.12) 22%,
+      rgba(8, 12, 16, 0.08) 48%,
+      rgba(7, 11, 15, 0.78) 100%
+    ),
+    linear-gradient(
+      to right,
+      rgba(10, 15, 20, 0.18),
+      rgba(20, 32, 44, 0.06) 50%,
+      rgba(13, 18, 24, 0.2)
+    );
+}
+
+.auth-split-layout__hero-inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+  padding: 1.75rem 2.25rem 4.5rem;
+  box-sizing: border-box;
+}
+
+.auth-split-layout__hero-brand {
+  position: relative;
+  z-index: 3;
+}
+
+.auth-split-layout__hero-brand .fortesite-mark__word {
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+}
+
+.auth-split-layout__hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  max-width: 29rem;
+}
+
+.auth-split-layout__hero-title {
+  margin: 0;
+  color: var(--blueprint-white);
+  font-family: var(--lp-display);
+  font-size: clamp(2.35rem, 3.2vw, 2.7rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.auth-split-layout__hero-title-line {
+  display: block;
+}
+
+.auth-split-layout__hero-title-line--accent {
+  color: var(--safety-orange);
+}
+
+.auth-split-layout__hero-description {
+  margin: 0;
+  max-width: 26.5rem;
+  color: rgba(245, 247, 250, 0.82);
+  font-family: var(--lp-body);
+  font-size: clamp(0.9375rem, 1.05vw, 1rem);
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.auth-split-layout__panel--form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  height: 100%;
+  padding: 2.5rem var(--panel-pad-x);
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: linear-gradient(145deg, #0d1218 0%, #101720 55%, #0d1218 100%);
+  box-sizing: border-box;
+}
+
+.auth-split-layout__auth-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 26.5rem;
+}
+
+.auth-split-layout__auth-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.auth-split-layout__top-nav {
+  margin: 0 0 1.75rem;
+}
+
+.auth-split-layout__back-link,
+.auth-split-layout__return-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  margin: 0 0 1.5rem;
+  color: #899bad;
+  font-family: var(--lp-body);
+  font-size: var(--auth-fs-back);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+
+.auth-split-layout__top-nav .auth-split-layout__return-link {
+  margin-bottom: 0;
+}
+
+.auth-split-layout__back-link:hover,
+.auth-split-layout__back-link:focus-visible,
+.auth-split-layout__return-link:hover,
+.auth-split-layout__return-link:focus-visible {
+  color: var(--blueprint-white);
+  outline: none;
+}
+
+.auth-split-layout__brand-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0 0 1.85rem;
+}
+
+.auth-split-layout__brand {
+  display: inline-flex;
+}
+
+.auth-split-layout__brand-tagline {
+  margin: 0;
+  color: #708295;
+  font-family: var(--lp-body);
+  font-size: var(--auth-fs-tagline);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.auth-split-layout__message-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.auth-split-layout__message-card h2 {
+  margin: 0;
+  color: var(--blueprint-white);
+  font-family: var(--lp-display);
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.auth-split-layout__message-card p {
+  margin: 0;
+  color: var(--concrete);
+  font-family: var(--lp-body);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.auth-split-layout__message-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 3.25rem;
+  margin-top: 0.5rem;
+  border: 0;
+  border-radius: 0.5rem;
+  color: #ffffff;
+  background-color: var(--safety-orange);
+  font-family: var(--lp-body);
+  font-size: 0.9375rem;
+  font-weight: 650;
+  text-decoration: none;
+  transition: background-color 0.18s ease;
+}
+
+.auth-split-layout__message-action:hover,
+.auth-split-layout__message-action:focus {
+  color: #ffffff;
+  background-color: #e54e16;
+}
+
+@media (max-width: 1199.98px) {
+  .auth-split-layout__hero-inner {
+    padding: 1.5rem 1.75rem 3.75rem;
+  }
+
+  .auth-split-layout__hero-title {
+    font-size: clamp(2rem, 3.2vw, 2.45rem);
+  }
+}
+
+@media (max-height: 800px) {
+  .auth-split-layout__panel--form {
+    padding-block: 1.75rem;
+  }
+
+  .auth-split-layout__back-link,
+  .auth-split-layout__return-link,
+  .auth-split-layout__top-nav {
+    margin-bottom: 1.25rem;
+  }
+
+  .auth-split-layout__brand-block {
+    margin-bottom: 1.5rem;
+  }
+
+  .auth-split-layout__hero-inner {
+    padding-bottom: 3.5rem;
+  }
+
+  .auth-split-layout__hero-title {
+    font-size: clamp(2rem, 2.8vw, 2.35rem);
+  }
+}
+
+@media (max-width: 899.98px) {
+  .auth-split-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    height: auto;
+    max-height: none;
+    min-height: 100vh;
+    min-height: 100dvh;
+    --panel-pad-x: 1.75rem;
+  }
+
+  .auth-split-layout__panel {
+    height: auto;
+  }
+
+  .auth-split-layout__panel--hero {
+    min-height: 11rem;
+    max-height: 13rem;
+  }
+
+  .auth-split-layout__hero-inner {
+    padding: 1.25rem 1.5rem 1.35rem;
+  }
+
+  .auth-split-layout__hero-title {
+    font-size: clamp(1.45rem, 5vw, 1.8rem);
+  }
+
+  .auth-split-layout__panel--form {
+    min-height: auto;
+    height: auto;
+    justify-content: flex-start;
+    padding: 2rem var(--panel-pad-x) 2.25rem;
+  }
+
+  .auth-split-layout__auth-area {
+    max-width: 26.5rem;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .auth-split-layout {
+    --panel-pad-x: 1.5rem;
+  }
+
+  .auth-split-layout__panel--hero {
+    display: none;
+  }
+
+  .auth-split-layout__panel--form {
+    padding: 1.5rem var(--panel-pad-x) 2rem;
+  }
+
+  .auth-split-layout__auth-area {
+    max-width: 100%;
+  }
+}

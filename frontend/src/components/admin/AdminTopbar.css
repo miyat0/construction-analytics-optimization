@@ -1,0 +1,164 @@
+.admin-topbar {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 20;
+  border-bottom: 1px solid var(--brand-border);
+  /* Opaque so scrolling content never shows through / clips under the bar */
+  background: #151719;
+}
+
+.admin-topbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 4.25rem; /* 68px */
+  padding: 0.75rem var(--page-padding);
+}
+
+.admin-topbar__content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.admin-topbar__title {
+  margin: 0;
+  color: var(--brand-ink);
+  font-size: var(--admin-title, 1.4rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.admin-topbar__breadcrumb {
+  margin: 0;
+  color: #8f969e;
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-topbar__breadcrumb-current {
+  color: #d5dbe1;
+  font-weight: 600;
+}
+
+.admin-topbar__controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  flex: 0 0 auto;
+}
+
+.admin-topbar__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.admin-topbar__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--admin-btn-height, 2.5rem);
+  height: var(--admin-btn-height, 2.5rem);
+  padding: 0.625rem 1rem;
+  border: 0;
+  border-radius: 0.5rem;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-topbar__action--primary {
+  color: #ffffff;
+  background: var(--brand-accent);
+}
+
+.admin-topbar__action--primary:hover,
+.admin-topbar__action--primary:focus {
+  color: #ffffff;
+  background: var(--brand-accent-deep);
+}
+
+.admin-topbar__action--with-icon {
+  gap: 0.4rem;
+}
+
+.admin-topbar__action--secondary {
+  border: 1px solid #4a5056;
+  color: #f4f6f8;
+  background: #2a2e32;
+}
+
+.admin-topbar__action--secondary:hover,
+.admin-topbar__action--secondary:focus {
+  color: #ffffff;
+  border-color: rgba(255, 90, 31, 0.45);
+  background: #32373c;
+}
+
+.admin-topbar__profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  min-height: 2.25rem;
+  padding: 0.2rem 0.55rem 0.2rem 0.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-topbar__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem; /* 36px */
+  height: 2.25rem;
+  border-radius: 0.45rem;
+  color: #d7dde3;
+  background: #2a2e32;
+  border: 1px solid #3a4046;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.admin-topbar__profile-name {
+  color: #f5f6f7;
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 991.98px) {
+  .admin-topbar__inner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  .admin-topbar__controls,
+  .admin-topbar__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

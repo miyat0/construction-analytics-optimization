@@ -1,0 +1,279 @@
+/* Shared admin design system — used by Dashboard, Projects, Users & Roles */
+
+:root {
+  --admin-title: 1.4rem; /* ~22.4px */
+  --admin-section-title: 1.0625rem; /* 17px */
+  --admin-stat-value: 1.625rem; /* 26px */
+  --admin-stat-label: 0.6875rem; /* 11px */
+  --admin-stat-meta: 0.8125rem; /* 13px */
+  --admin-table-head: 0.6875rem; /* 11px */
+  --admin-table-body: 0.875rem; /* 14px */
+  --admin-btn-height: 2.5rem; /* 40px */
+  --admin-gap-page: 1.5rem; /* 24px */
+  --admin-gap-stats: 0.875rem; /* 14px */
+  --admin-gap-action: 1.5rem; /* 24px button ↔ stats */
+  --admin-card-pad: 1.25rem; /* 20px */
+  --admin-row-pad-y: 0.9rem; /* ~14.5px */
+  --admin-icon-btn: 2rem; /* 32px */
+  --admin-accent: #ff5a1f;
+  --admin-muted: #a0a5ad;
+  --admin-surface: #1d2023;
+  --admin-border: #303438;
+}
+
+/* ——— Compact primary / secondary buttons ——— */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: var(--admin-btn-height);
+  height: var(--admin-btn-height);
+  padding: 0.625rem 1rem;
+  border: 0;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-btn--primary {
+  color: #ffffff;
+  background: var(--admin-accent);
+}
+
+.admin-btn--primary:hover,
+.admin-btn--primary:focus {
+  color: #ffffff;
+  background: #e04a12;
+}
+
+.admin-btn--secondary {
+  border: 1px solid #4a5056;
+  color: #f5f6f7;
+  background: #2a2e32;
+}
+
+.admin-btn--secondary:hover,
+.admin-btn--secondary:focus {
+  border-color: rgba(255, 90, 31, 0.45);
+  color: #ffffff;
+}
+
+.admin-btn--ghost {
+  min-height: 2rem;
+  height: auto;
+  padding: 0.3rem 0.55rem;
+  color: #ffb48a;
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.admin-btn--ghost:hover,
+.admin-btn--ghost:focus {
+  color: #ffffff;
+}
+
+.admin-btn__plus {
+  font-size: 1.05em;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ——— Action row: button left, stats right ——— */
+.admin-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--admin-gap-action);
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.admin-action-row > .admin-btn {
+  align-self: center;
+  flex: 0 0 auto;
+}
+
+.admin-action-row > .stat-card-row {
+  align-self: center;
+}
+
+/* ——— Admin list page shell (Projects, Users & Roles, future lists) ——— */
+.page-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.375rem; /* ~22px toolbar → list */
+  width: 100%;
+  min-width: 0;
+}
+
+.page-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem; /* ~18px action → filter */
+  width: 100%;
+}
+
+.page-toolbar__action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.page-list__items {
+  display: grid;
+  gap: 0.875rem; /* 14px between cards */
+  width: 100%;
+  min-width: 0;
+}
+
+/* ——— Status pills ——— */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* ——— Icon action buttons in list rows ——— */
+.admin-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--admin-icon-btn);
+  height: var(--admin-icon-btn);
+  padding: 0;
+  border: 1px solid #5a5a5a;
+  border-radius: 0.4rem;
+  color: #f2f2f2;
+  background: #363636;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-icon-btn:hover,
+.admin-icon-btn:focus-visible {
+  color: #ffffff;
+  border-color: rgba(255, 90, 31, 0.5);
+  background: #404040;
+}
+
+.admin-icon-btn:focus:not(:focus-visible) {
+  border-color: #5a5a5a;
+  background: #363636;
+  color: #f2f2f2;
+}
+
+.admin-icon-btn--danger {
+  border-color: rgba(255, 90, 31, 0.45);
+  background: var(--admin-accent);
+  color: #ffffff;
+}
+
+.admin-icon-btn--danger:hover,
+.admin-icon-btn--danger:focus-visible {
+  color: #ffffff;
+  border-color: #e04a12;
+  background: #e04a12;
+}
+
+.admin-icon-btn--danger:focus:not(:focus-visible) {
+  border-color: rgba(255, 90, 31, 0.45);
+  background: var(--admin-accent);
+  color: #ffffff;
+}
+
+.admin-icon-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.admin-icon-btn-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* ——— Form controls (search / filters) ——— */
+.admin-control {
+  min-height: var(--admin-btn-height);
+  height: var(--admin-btn-height);
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 0.5rem;
+  color: #f5f6f7;
+  background: #1f1f1f;
+  font-size: 0.875rem;
+}
+
+.admin-control:focus {
+  outline: none;
+  border-color: rgba(255, 90, 31, 0.55);
+  box-shadow: 0 0 0 0.15rem rgba(255, 90, 31, 0.16);
+}
+
+.filter-bar,
+.admin-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem; /* 12px */
+  width: 100%;
+}
+
+.filter-bar__input {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.filter-bar__select {
+  flex: 0 1 12rem;
+  min-width: 10rem;
+}
+
+.filter-bar__actions,
+.admin-filter-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* 12px */
+  flex-shrink: 0;
+}
+
+@media (max-width: 575.98px) {
+  .filter-bar__input,
+  .filter-bar__select {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .filter-bar__actions,
+  .admin-filter-bar__actions {
+    width: 100%;
+  }
+
+  .filter-bar__actions > *,
+  .admin-filter-bar__actions > * {
+    flex: 1 1 0;
+  }
+
+  .page-toolbar__action .admin-btn {
+    width: 100%;
+  }
+}

@@ -1,0 +1,151 @@
+.task-assignment-manager {
+  display: grid;
+  gap: 1rem;
+}
+
+.task-assignment-manager__header h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.task-assignment-manager__header p {
+  margin: 0.35rem 0 0;
+  color: var(--brand-muted, #a0a5ad);
+  font-size: 0.875rem;
+}
+
+.task-assignment-manager__task-meta,
+.task-assignment-manager__inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.task-assignment-manager__task-meta {
+  color: var(--brand-muted, #a0a5ad);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.task-assignment-manager__form,
+.task-assignment-manager__list {
+  display: grid;
+  gap: 1rem;
+}
+
+.task-assignment-manager__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.task-assignment-manager__field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.task-assignment-manager__field--full {
+  grid-column: 1 / -1;
+}
+
+.task-assignment-manager__label {
+  color: var(--brand-muted, #a0a5ad);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.task-assignment-manager__field .form-select,
+.task-assignment-manager__field .form-control,
+.task-assignment-manager select.form-select {
+  min-height: 2.5rem;
+  height: 2.5rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--brand-border, #34383c);
+  border-radius: 0.5rem;
+  color: #ffffff;
+  background: #1f1f1f;
+  font-size: 0.875rem;
+}
+
+.task-assignment-manager__field textarea.form-control {
+  height: auto;
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.task-assignment-manager__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--brand-muted, #a0a5ad);
+  font-size: 0.875rem;
+}
+
+.task-assignment-manager__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.task-assignment-manager__primary-action {
+  border: 0 !important;
+  border-radius: 0.5rem;
+  background: var(--brand-accent, #ff5a1f) !important;
+  color: #fff !important;
+  min-height: 2.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.task-assignment-manager__secondary-action,
+.task-assignment-manager__text-action {
+  border: 1px solid #4a5056 !important;
+  border-radius: 0.5rem;
+  background: #2a2e32 !important;
+  color: #f5f6f7 !important;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.task-assignment-manager__text-action--danger {
+  border-color: rgba(255, 90, 31, 0.45) !important;
+  background: var(--brand-accent, #ff5a1f) !important;
+  color: #ffffff !important;
+}
+
+.task-assignment-manager__card,
+.task-assignment-manager__empty {
+  display: grid;
+  gap: 0.65rem;
+  border: 1px solid var(--brand-border, #34383c);
+  border-radius: 0.65rem;
+  background: #242424;
+  padding: 1rem 1.1rem;
+}
+
+.task-assignment-manager__card h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.task-assignment-manager__empty {
+  color: var(--brand-muted, #a0a5ad);
+  font-size: 0.875rem;
+}
+
+.task-assignment-manager__card p,
+.task-assignment-manager__card small {
+  margin: 0;
+  color: var(--brand-muted, #a0a5ad);
+  font-size: 0.8125rem;
+}

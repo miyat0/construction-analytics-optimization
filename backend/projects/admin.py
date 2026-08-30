@@ -9,6 +9,8 @@ from .models import (
     ProjectAssignment,
     ProjectDocument,
     TaskWorkerAssignment,
+    WorkplaceNeed,
+    WorkplaceNeedAttachment,
 )
 
 
@@ -138,3 +140,30 @@ class ProjectAssignmentAdmin(admin.ModelAdmin):
     list_display = ("project", "user", "assignment_role", "is_active")
     list_filter = ("assignment_role", "is_active")
     search_fields = ("project__project_name", "user__name", "user__email")
+
+
+class WorkplaceNeedAttachmentInline(admin.TabularInline):
+    model = WorkplaceNeedAttachment
+    extra = 0
+
+
+@admin.register(WorkplaceNeed)
+class WorkplaceNeedAdmin(admin.ModelAdmin):
+    list_display = (
+        "request_id",
+        "project",
+        "category",
+        "priority",
+        "status",
+        "submitted_by",
+        "submitted_at",
+    )
+    list_filter = ("category", "priority", "status")
+    search_fields = ("description", "project__project_name", "submitted_by__name")
+    inlines = [WorkplaceNeedAttachmentInline]
+
+
+@admin.register(WorkplaceNeedAttachment)
+class WorkplaceNeedAttachmentAdmin(admin.ModelAdmin):
+    list_display = ("attachment_id", "need", "original_name", "created_at")
+    search_fields = ("original_name", "need__description")

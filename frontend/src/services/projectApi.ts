@@ -26,6 +26,11 @@ import type {
   TaskAssignmentListData,
   TaskWorkerAssignmentPayload,
   WorkerLookupListData,
+  WorkplaceNeed,
+  WorkplaceNeedContextData,
+  WorkplaceNeedListData,
+  WorkplaceNeedPmActionPayload,
+  WorkplaceNeedSupervisorReviewPayload,
 } from "../types/project";
 import type { ApiSuccessResponse } from "../types/auth";
 
@@ -485,4 +490,85 @@ export const getProjectWorkerOptions = async (
 ): Promise<ProjectLookupUser[]> => {
   const data = await listProjectWorkers(projectId);
   return data.results;
+};
+
+export const getWorkplaceNeedContext = async (): Promise<WorkplaceNeedContextData> => {
+  const response = await apiClient.get<ApiSuccessResponse<WorkplaceNeedContextData>>(
+    "/projects/workplace-needs/context/",
+  );
+  return response.data.data;
+};
+
+export const listMyWorkplaceNeeds = async (): Promise<WorkplaceNeedListData> => {
+  const response = await apiClient.get<ApiSuccessResponse<WorkplaceNeedListData>>(
+    "/projects/workplace-needs/mine/",
+  );
+  return response.data.data;
+};
+
+export const createWorkplaceNeed = async (payload: FormData): Promise<WorkplaceNeed> => {
+  const response = await apiClient.post<ApiSuccessResponse<WorkplaceNeed>>(
+    "/projects/workplace-needs/mine/",
+    payload,
+    multipartHeaders,
+  );
+  return response.data.data;
+};
+
+export const listSupervisorWorkplaceNeeds = async (
+  projectId?: number,
+): Promise<WorkplaceNeedListData> => {
+  const response = await apiClient.get<ApiSuccessResponse<WorkplaceNeedListData>>(
+    "/projects/workplace-needs/inbox/supervisor/",
+    {
+      params: projectId ? { project_id: projectId } : undefined,
+    },
+  );
+  return response.data.data;
+};
+
+export const listPmWorkplaceNeeds = async (
+  options?: { projectId?: number; includeResolved?: boolean },
+): Promise<WorkplaceNeedListData> => {
+  const response = await apiClient.get<ApiSuccessResponse<WorkplaceNeedListData>>(
+    "/projects/workplace-needs/inbox/project-manager/",
+    {
+      params: {
+        ...(options?.projectId ? { project_id: options.projectId } : {}),
+        ...(options?.includeResolved ? { include_resolved: "1" } : {}),
+      },
+    },
+  );
+  return response.data.data;
+};
+
+export const listProjectWorkplaceNeeds = async (
+  projectId: number,
+): Promise<WorkplaceNeedListData> => {
+  const response = await apiClient.get<ApiSuccessResponse<WorkplaceNeedListData>>(
+    `/projects/${projectId}/workplace-needs/`,
+  );
+  return response.data.data;
+};
+
+export const reviewWorkplaceNeedBySupervisor = async (
+  requestId: number,
+  payload: WorkplaceNeedSupervisorReviewPayload,
+): Promise<WorkplaceNeed> => {
+  const response = await apiClient.post<ApiSuccessResponse<WorkplaceNeed>>(
+    `/projects/workplace-needs/${requestId}/supervisor-review/`,
+    payload,
+  );
+  return response.data.data;
+};
+
+export const updateWorkplaceNeedByPm = async (
+  requestId: number,
+  payload: WorkplaceNeedPmActionPayload,
+): Promise<WorkplaceNeed> => {
+  const response = await apiClient.post<ApiSuccessResponse<WorkplaceNeed>>(
+    `/projects/workplace-needs/${requestId}/pm-action/`,
+    payload,
+  );
+  return response.data.data;
 };

@@ -1,6 +1,7 @@
 import type { ProjectSummary } from "../../types/project";
 import { formatCurrencyINR } from "../../utils/formatCurrency";
 import { formatDisplayTitle } from "../../utils/formatDisplayTitle";
+import { StatusBadge } from "../ui/StatusBadge";
 
 import "./ProjectCard.css";
 
@@ -96,6 +97,7 @@ export const ProjectCard = ({
 }: ProjectCardProps) => {
   const progress = Number(project.progress_percentage || 0);
   const statusKey = getStatusKey(project);
+  const managerName = project.project_manager?.name ?? "Unassigned";
 
   return (
     <article
@@ -106,60 +108,69 @@ export const ProjectCard = ({
         className="project-card__main"
         onClick={() => onView(project)}
       >
-        <h3 className="project-card__title">
-          {formatDisplayTitle(project.project_name) || project.project_name}
-        </h3>
+        <div className="project-card__header">
+          <h3 className="project-card__title">
+            {formatDisplayTitle(project.project_name) || project.project_name}
+          </h3>
+          <StatusBadge
+            className="status-badge--compact project-card__status"
+            label={getStatusLabel(project)}
+            tone={statusKey as "planning"}
+          />
+        </div>
 
-        <div className="project-card__meta">
-          <span>PM: {project.project_manager?.name ?? "Unassigned"}</span>
-          <span className="project-card__meta-sep" aria-hidden="true">
-            ·
-          </span>
-          <span>Client: {project.client?.name ?? "Unassigned"}</span>
-          <span className="project-card__meta-sep" aria-hidden="true">
+        <p className="project-card__secondary">
+          <span>{managerName}</span>
+          <span className="project-card__secondary-sep" aria-hidden="true">
             ·
           </span>
           <span>
-            {formatDate(project.start_date)} – {formatDate(project.end_date)}
+            {formatDate(project.start_date)} → {formatDate(project.end_date)}
           </span>
-          <span className="project-card__meta-sep" aria-hidden="true">
-            ·
-          </span>
-          <span>{project.milestone_count} milestones</span>
-          <span className="project-card__meta-sep" aria-hidden="true">
-            ·
-          </span>
-          <span>Budget: {formatCurrencyINR(project.initial_budget)}</span>
-        </div>
+        </p>
 
-        <div className="project-card__progress">
-          <div className="project-card__progress-label">
-            <span>Progress</span>
-            <strong>{progress.toFixed(0)}%</strong>
+        <div className="project-card__metrics">
+          <div className="project-card__metric">
+            <span className="project-card__metric-label">Client</span>
+            <span className="project-card__metric-value">
+              {project.client?.name ?? "Unassigned"}
+            </span>
           </div>
-          <div
-            className="project-card__progress-bar"
-            role="progressbar"
-            aria-valuenow={progress || 0}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <span style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} />
+          <div className="project-card__metric">
+            <span className="project-card__metric-label">Budget</span>
+            <span className="project-card__metric-value">
+              {formatCurrencyINR(project.initial_budget)}
+            </span>
+          </div>
+          <div className="project-card__metric">
+            <span className="project-card__metric-label">Milestones</span>
+            <span className="project-card__metric-value">{project.milestone_count}</span>
+          </div>
+          <div className="project-card__metric project-card__metric--progress">
+            <div className="project-card__progress-head">
+              <span className="project-card__metric-label">Progress</span>
+              <strong className="project-card__metric-value">
+                {progress.toFixed(0)}%
+              </strong>
+            </div>
+            <div
+              className="project-card__progress-bar"
+              role="progressbar"
+              aria-valuenow={progress || 0}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <span style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} />
+            </div>
           </div>
         </div>
       </button>
-
-      <div className="project-card__status-wrap">
-        <span className={`status-pill project-card__status project-card__status--${statusKey}`}>
-          {getStatusLabel(project)}
-        </span>
-      </div>
 
       <div className="project-card__actions">
         <button
           type="button"
           className="project-card__action"
-          title="View Project"
+          title="View project"
           aria-label={`View ${project.project_name}`}
           onClick={(event) => {
             event.stopPropagation();
@@ -167,11 +178,12 @@ export const ProjectCard = ({
           }}
         >
           <ViewIcon />
+          <span className="project-card__action-label">View</span>
         </button>
         <button
           type="button"
           className="project-card__action"
-          title="Edit Project"
+          title="Edit project"
           aria-label={`Edit ${project.project_name}`}
           onClick={(event) => {
             event.stopPropagation();
@@ -179,6 +191,7 @@ export const ProjectCard = ({
           }}
         >
           <EditIcon />
+          <span className="project-card__action-label">Edit</span>
         </button>
         <div className="project-card__more">
           <button
@@ -189,6 +202,7 @@ export const ProjectCard = ({
             aria-haspopup="menu"
           >
             <MoreIcon />
+            <span className="project-card__action-label">More</span>
           </button>
           <div className="project-card__more-menu" role="menu">
             <button

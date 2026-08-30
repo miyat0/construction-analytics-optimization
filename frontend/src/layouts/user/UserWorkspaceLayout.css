@@ -1,6 +1,6 @@
 .user-workspace-layout {
   display: grid;
-  grid-template-columns: 16.5rem minmax(0, 1fr);
+  grid-template-columns: 15rem minmax(0, 1fr);
   min-height: 100dvh;
   background: #101315;
 }
@@ -18,32 +18,45 @@
   z-index: 10;
 }
 
-.user-workspace-layout__topbar .admin-topbar__inner {
+.user-workspace-layout__topbar-inner {
   align-items: center;
-  min-height: 4.25rem;
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
+  min-height: 4rem;
+  height: 4rem;
+  padding: 0 1.75rem;
 }
 
-.user-workspace-layout__topbar .admin-topbar__content {
+.user-workspace-layout__topbar-content {
   display: flex;
   align-items: center;
+  gap: 0.75rem;
   min-height: 2.5rem;
 }
 
 .user-workspace-layout__topbar .admin-topbar__title {
+  font-size: 1.0625rem;
+  font-weight: 600;
   line-height: 1.2;
 }
 
-.user-workspace-layout__topbar .admin-topbar__controls {
-  align-items: center;
-  min-height: 2.5rem;
+.user-workspace-layout__menu-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0.4rem;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  background: #1a1f23;
+  cursor: pointer;
 }
 
-.user-workspace-layout__topbar .admin-topbar__profile {
-  align-items: center;
-  min-height: 2.5rem;
-  padding: 0.15rem 0.6rem 0.15rem 0.15rem;
+.user-workspace-layout__menu-btn span {
+  display: block;
+  width: 100%;
+  height: 1.5px;
+  background: #d7dde4;
 }
 
 .user-workspace-layout__body {
@@ -51,20 +64,96 @@
   padding: 1.25rem var(--page-padding) 1.5rem;
 }
 
-.user-workspace-layout .admin-topbar__action--logout {
-  color: #d7dde4;
-  border: 1px solid #30363d;
-  background: #1a1f23;
-  font-weight: 600;
-  min-height: 2.5rem;
-  height: 2.5rem;
+.user-workspace-layout__profile-menu {
+  position: relative;
 }
 
-.user-workspace-layout .admin-topbar__action--logout:hover,
-.user-workspace-layout .admin-topbar__action--logout:focus {
-  color: #ffffff;
+.user-workspace-layout__profile-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: 42px;
+  min-height: 42px;
+  padding: 0.15rem 0.55rem 0.15rem 0.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.55rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: inherit;
+  cursor: pointer;
+}
+
+.user-workspace-layout__topbar .admin-topbar__avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 0.75rem;
+}
+
+.user-workspace-layout__topbar .admin-topbar__profile-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.user-workspace-layout__profile-trigger:hover,
+.user-workspace-layout__profile-trigger:focus-visible {
   border-color: #3d4450;
-  background: #20262b;
+  outline: none;
+}
+
+.user-workspace-layout__profile-caret {
+  color: #8f969e;
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.user-workspace-layout__profile-dropdown {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 30;
+  min-width: 11.5rem;
+  padding: 0.45rem;
+  border: 1px solid #30363d;
+  border-radius: 0.65rem;
+  background: #1a1f23;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.user-workspace-layout__profile-meta {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.45rem 0.55rem 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.user-workspace-layout__profile-meta strong {
+  color: #f4f6f8;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.user-workspace-layout__profile-meta span {
+  color: #aab3bd;
+  font-size: 0.75rem;
+}
+
+.user-workspace-layout__profile-logout {
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.55rem 0.6rem;
+  border: 0;
+  border-radius: 0.45rem;
+  color: #f4f6f8;
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.user-workspace-layout__profile-logout:hover,
+.user-workspace-layout__profile-logout:focus-visible {
+  background: rgba(255, 255, 255, 0.05);
+  outline: none;
 }
 
 .user-workspace-layout .admin-topbar__avatar {
@@ -76,6 +165,14 @@
 @media (max-width: 991.98px) {
   .user-workspace-layout {
     grid-template-columns: 1fr;
+  }
+
+  .user-workspace-layout__menu-btn {
+    display: inline-flex;
+  }
+
+  .user-workspace-layout__topbar-inner {
+    padding: 0 1rem;
   }
 
   .user-workspace-layout__body {

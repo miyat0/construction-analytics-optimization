@@ -1,355 +1,241 @@
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
-import { ConcernPanel } from "../../components/projects/ConcernPanel";
-import { DailyUpdateBoard } from "../../components/projects/DailyUpdateBoard";
-import { ProjectTimeline } from "../../components/projects/ProjectTimeline";
-import { TaskManager } from "../../components/projects/TaskManager";
-import { WorkerAllocationPanel } from "../../components/projects/WorkerAllocationPanel";
+import { useWorkspacePageTitle } from "../../contexts/AdminChromeContext";
+import { useAuth } from "../../hooks/useAuth";
 import {
-  createMilestoneTask,
-  getProject,
-  listMilestoneTasks,
-  listProjectConcerns,
+  listProjectDailyUpdates,
   listProjectMilestones,
   listProjects,
-  reviewTaskUpdateByEngineer,
-  updateMilestoneTask,
-  deleteMilestoneTask,
 } from "../../services/projectApi";
-import type {
-  DailyTaskReviewPayload,
-  DailyTaskUpdate,
-  Milestone,
-  MilestoneTask,
-  MilestoneTaskPayload,
-  ProjectDetail,
-  ProjectSummary,
-} from "../../types/project";
+import type { DailyTaskUpdate, Milestone, ProjectSummary } from "../../types/project";
+import { formatDisplayTitle } from "../../utils/formatDisplayTitle";
+import { formatHeaderDate, getGreeting } from "../worker/workerFormatters";
+import { StatusBadge } from "../../components/ui/StatusBadge";
 
-import "./SiteEngineerDashboardPage.css";
+import "./SiteEngineerPages.css";
+
+type MilestoneRow = Milestone & { project_name: string; project_id: number };
 
 const getErrorMessage = (error: unknown, fallbackMessage: string): string => {
   if (axios.isAxiosError(error)) {
     return (error.response?.data as { message?: string } | undefined)?.message ?? fallbackMessage;
   }
-
   return fallbackMessage;
 };
 
+const formatDate = (value: string | null): string => {
+  if (!value) {
+    return "—";
+  }
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(value));
+};
+
 export const SiteEngineerDashboardPage = () => {
+  useWorkspacePageTitle("Site Engineer Dashboard");
+  const { user } = useAuth();
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-  const [selectedProject, setSelectedProject] = useState<ProjectDetail | null>(null);
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [selectedMilestoneId, setSelectedMilestoneId] = useState<number | null>(null);
-  const [milestoneTasks, setMilestoneTasks] = useState<MilestoneTask[]>([]);
-  const [projectConcerns, setProjectConcerns] = useState<DailyTaskUpdate[]>([]);
+  const [milestones, setMilestones] = useState<MilestoneRow[]>([]);
+  const [pendingUpdates, setPendingUpdates] = useState<DailyTaskUpdate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDetailLoading, setIsDetailLoading] = useState(false);
-  const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const aggregatedUpdates = useMemo(() => {
-    return milestoneTasks.flatMap((task) =>
-      task.active_assignments.flatMap((assignment) => assignment.updates),
-    );
-  }, [milestoneTasks]);
-
-  const loadProjectExecution = async (projectId: number, milestoneId?: number | null) => {
-    setIsDetailLoading(true);
-
-    try {
-      const [project, milestoneData, concernData] = await Promise.all([
-        getProject(projectId),
-        listProjectMilestones(projectId),
-        listProjectConcerns(projectId),
-      ]);
-
-      setSelectedProject(project);
-      setMilestones(milestoneData.results);
-      setProjectConcerns(concernData.results);
-
-      const nextMilestoneId =
-        milestoneId &&
-        milestoneData.results.some((item) => item.milestone_id === milestoneId)
-          ? milestoneId
-          : milestoneData.results[0]?.milestone_id ?? null;
-
-      setSelectedMilestoneId(nextMilestoneId);
-
-      if (nextMilestoneId) {
-        const taskData = await listMilestoneTasks(projectId, nextMilestoneId);
-        setMilestoneTasks(taskData.results);
-      } else {
-        setMilestoneTasks([]);
-      }
-    } catch (error) {
-      setErrorMessage(
-        getErrorMessage(error, "Unable to load the Site Engineer workspace right now."),
-      );
-    } finally {
-      setIsDetailLoading(false);
-    }
-  };
-
-  const loadProjects = async (preferredProjectId?: number | null) => {
-    setIsLoading(true);
-    setErrorMessage(null);
-
-    try {
-      const projectData = await listProjects();
-      setProjects(projectData.results);
-
-      const nextProjectId =
-        preferredProjectId &&
-        projectData.results.some((project) => project.project_id === preferredProjectId)
-          ? preferredProjectId
-          : projectData.results[0]?.project_id ?? null;
-
-      setSelectedProjectId(nextProjectId);
-
-      if (nextProjectId) {
-        await loadProjectExecution(nextProjectId);
-      } else {
-        setSelectedProject(null);
-        setMilestones([]);
-        setSelectedMilestoneId(null);
-        setMilestoneTasks([]);
-        setProjectConcerns([]);
-      }
-    } catch (error) {
-      setErrorMessage(
-        getErrorMessage(error, "Unable to load your assigned projects right now."),
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    void loadProjects();
+    const load = async () => {
+      setIsLoading(true);
+      setErrorMessage(null);
+      try {
+        const projectData = await listProjects();
+        setProjects(projectData.results);
+
+        const milestoneBundles = await Promise.all(
+          projectData.results.map(async (project) => {
+            const [milestoneData, updateData] = await Promise.all([
+              listProjectMilestones(project.project_id),
+              listProjectDailyUpdates(project.project_id),
+            ]);
+            return {
+              project,
+              milestones: milestoneData.results.map((milestone) => ({
+                ...milestone,
+                project_name: project.project_name,
+                project_id: project.project_id,
+              })),
+              updates: updateData.results,
+            };
+          }),
+        );
+
+        setMilestones(milestoneBundles.flatMap((bundle) => bundle.milestones));
+        setPendingUpdates(
+          milestoneBundles
+            .flatMap((bundle) => bundle.updates)
+            .filter(
+              (update) =>
+                update.supervisor_review_status === "approved" &&
+                update.engineer_review_status === "pending",
+            ),
+        );
+      } catch (error) {
+        setErrorMessage(
+          getErrorMessage(error, "Unable to load the Site Engineer dashboard right now."),
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void load();
   }, []);
 
-  const refreshSelectedProject = async () => {
-    if (selectedProjectId) {
-      await loadProjectExecution(selectedProjectId, selectedMilestoneId);
-    }
-  };
+  const behindCount = useMemo(
+    () => milestones.filter((item) => item.schedule_status === "behind_schedule").length,
+    [milestones],
+  );
 
-  const handleSelectProject = async (projectId: number) => {
-    setSelectedProjectId(projectId);
-    setNoticeMessage(null);
-    await loadProjectExecution(projectId);
-  };
-
-  const handleSelectMilestone = async (milestoneId: number) => {
-    if (!selectedProjectId) {
-      return;
-    }
-
-    const normalizedMilestoneId = milestoneId > 0 ? milestoneId : null;
-    setSelectedMilestoneId(normalizedMilestoneId);
-
-    if (!normalizedMilestoneId) {
-      setMilestoneTasks([]);
-      return;
-    }
-
-    try {
-      const taskData = await listMilestoneTasks(selectedProjectId, normalizedMilestoneId);
-      setMilestoneTasks(taskData.results);
-    } catch (error) {
-      setErrorMessage(
-        getErrorMessage(error, "Unable to load milestone tasks right now."),
-      );
-    }
-  };
-
-  const handleCreateTask = async (payload: MilestoneTaskPayload) => {
-    if (!selectedProjectId || !selectedMilestoneId) {
-      return;
-    }
-
-    try {
-      await createMilestoneTask(selectedProjectId, selectedMilestoneId, payload);
-      setNoticeMessage("Task created successfully and sent for approval.");
-      await refreshSelectedProject();
-    } catch (error) {
-      setErrorMessage(getErrorMessage(error, "Unable to create the task right now."));
-    }
-  };
-
-  const handleUpdateTask = async (
-    taskId: number,
-    payload: Partial<MilestoneTaskPayload>,
-  ) => {
-    if (!selectedProjectId || !selectedMilestoneId) {
-      return;
-    }
-
-    try {
-      await updateMilestoneTask(selectedProjectId, selectedMilestoneId, taskId, payload);
-      setNoticeMessage("Task updated successfully and returned for approval.");
-      await refreshSelectedProject();
-    } catch (error) {
-      setErrorMessage(getErrorMessage(error, "Unable to update the task right now."));
-    }
-  };
-
-  const handleDeleteTask = async (taskId: number) => {
-    if (!selectedProjectId || !selectedMilestoneId) {
-      return;
-    }
-
-    try {
-      await deleteMilestoneTask(selectedProjectId, selectedMilestoneId, taskId);
-      setNoticeMessage("Task deleted successfully.");
-      await refreshSelectedProject();
-    } catch (error) {
-      setErrorMessage(getErrorMessage(error, "Unable to delete the task right now."));
-    }
-  };
-
-  const handleEngineerReview = async (
-    updateId: number,
-    payload: DailyTaskReviewPayload,
-  ) => {
-    try {
-      await reviewTaskUpdateByEngineer(updateId, payload);
-      setNoticeMessage("Daily update verified successfully.");
-      await refreshSelectedProject();
-    } catch (error) {
-      setErrorMessage(
-        getErrorMessage(error, "Unable to verify the daily update right now."),
-      );
-    }
-  };
+  const previewMilestones = milestones.slice(0, 8);
 
   return (
-    <main className="site-engineer-dashboard">
-      <section className="site-engineer-dashboard__hero">
-        <div>
-          <h1>Site Engineer</h1>
-        </div>
-      </section>
+    <main className="site-engineer-page">
+      <div className="site-engineer-page-content">
+        {errorMessage ? (
+          <div className="alert alert-danger site-engineer-page__alert" role="alert">
+            {errorMessage}
+          </div>
+        ) : null}
 
-      {noticeMessage ? <div className="alert alert-success">{noticeMessage}</div> : null}
-      {errorMessage ? <div className="alert alert-danger">{errorMessage}</div> : null}
-
-      <div className="site-engineer-dashboard__grid">
-        <section className="site-engineer-dashboard__surface">
-          <div className="site-engineer-dashboard__surface-header">
+        <header className="site-engineer-page__intro">
+          <div className="site-engineer-page__intro-row">
             <div>
-              <h2>Projects</h2>
+              <p className="site-engineer-page__greeting">
+                {getGreeting()}, {user?.name ?? "Site Engineer"}
+              </p>
+              <p className="site-engineer-page__support">
+                Monitor milestones, design tasks, and verify supervisor-approved progress.
+              </p>
             </div>
+            <p className="site-engineer-page__date">{formatHeaderDate(new Date())}</p>
+          </div>
+        </header>
+
+        <section className="site-engineer-stats" aria-label="Workspace summary">
+          <article className="site-engineer-stat">
+            <span className="site-engineer-stat__label">Projects</span>
+            <strong className="site-engineer-stat__value">
+              {isLoading ? "—" : projects.length}
+            </strong>
+          </article>
+          <article className="site-engineer-stat">
+            <span className="site-engineer-stat__label">Milestones</span>
+            <strong className="site-engineer-stat__value">
+              {isLoading ? "—" : milestones.length}
+            </strong>
+          </article>
+          <article className="site-engineer-stat">
+            <span className="site-engineer-stat__label">Pending Verifications</span>
+            <strong className="site-engineer-stat__value">
+              {isLoading ? "—" : pendingUpdates.length}
+            </strong>
+          </article>
+          <article className="site-engineer-stat">
+            <span className="site-engineer-stat__label">Behind Schedule</span>
+            <strong className="site-engineer-stat__value">
+              {isLoading ? "—" : behindCount}
+            </strong>
+          </article>
+        </section>
+
+        <section className="site-engineer-quick-links" aria-label="Quick links">
+          <Link className="site-engineer-quick-link" to="/site-engineer/projects">
+            <strong>Projects &amp; Milestones</strong>
+            <span>Review authorized schedules and progress</span>
+          </Link>
+          <Link className="site-engineer-quick-link" to="/site-engineer/tasks">
+            <strong>Task Management</strong>
+            <span>Break milestones into expected work</span>
+          </Link>
+          <Link className="site-engineer-quick-link" to="/site-engineer/verifications">
+            <strong>Verification Queue</strong>
+            <span>
+              {pendingUpdates.length} update{pendingUpdates.length === 1 ? "" : "s"} awaiting review
+            </span>
+          </Link>
+        </section>
+
+        <section className="site-engineer-card">
+          <div className="site-engineer-card__header">
+            <h2 className="site-engineer-card__title">Milestone Schedule</h2>
+            <Link className="site-engineer-card__link" to="/site-engineer/projects">
+              View all
+            </Link>
           </div>
 
           {isLoading ? (
-            <div className="site-engineer-dashboard__empty">Loading projects...</div>
-          ) : projects.length === 0 ? (
-            <div className="site-engineer-dashboard__empty">
-              No projects assigned.
-            </div>
+            <div className="site-engineer-empty">Loading milestones...</div>
+          ) : previewMilestones.length === 0 ? (
+            <div className="site-engineer-empty">No milestones on assigned projects yet.</div>
           ) : (
-            <div className="site-engineer-dashboard__project-list">
-              {projects.map((project) => (
-                <button
-                  key={project.project_id}
-                  type="button"
-                  className={`site-engineer-dashboard__project-card ${
-                    selectedProjectId === project.project_id
-                      ? "site-engineer-dashboard__project-card--active"
-                      : ""
-                  }`}
-                  onClick={() => void handleSelectProject(project.project_id)}
-                >
-                  <strong>{project.project_name}</strong>
-                  <span>{project.status.replace(/_/g, " ")}</span>
-                  <small>Milestones: {project.milestone_count}</small>
-                </button>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="site-engineer-dashboard__surface">
-          <div className="site-engineer-dashboard__surface-header">
-            <div>
-              <h2>Overview</h2>
-            </div>
-          </div>
-
-          {isDetailLoading ? (
-            <div className="site-engineer-dashboard__empty">Loading project details...</div>
-          ) : !selectedProject ? (
-            <div className="site-engineer-dashboard__empty">
-              Select a project.
-            </div>
-          ) : (
-            <div className="site-engineer-dashboard__overview">
-              <h3>{selectedProject.project_name}</h3>
-              <p>{selectedProject.description || "No description"}</p>
-              <div className="site-engineer-dashboard__meta-grid">
-                <span>Start: {selectedProject.start_date ?? "Not set"}</span>
-                <span>End: {selectedProject.end_date ?? "Not set"}</span>
-                <span>PM: {selectedProject.project_manager?.name ?? "Unassigned"}</span>
-                <span>Supervisor: {selectedProject.supervisor?.name ?? "Unassigned"}</span>
-              </div>
+            <div className="site-engineer-milestone-table-wrap">
+              <table className="site-engineer-milestone-table">
+                <thead>
+                  <tr>
+                    <th>Project / Milestone</th>
+                    <th>Timeline</th>
+                    <th>Planned %</th>
+                    <th>Actual %</th>
+                    <th>Schedule</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {previewMilestones.map((milestone) => {
+                    const planned = Number(milestone.expected_progress_percentage || 0);
+                    const actual = Number(milestone.progress_percentage || 0);
+                    return (
+                      <tr key={`${milestone.project_id}-${milestone.milestone_id}`}>
+                        <td>
+                          {formatDisplayTitle(milestone.title) || milestone.title}
+                          <span className="meta">
+                            {formatDisplayTitle(milestone.project_name) || milestone.project_name}
+                          </span>
+                        </td>
+                        <td>
+                          {formatDate(milestone.planned_start_date)} →{" "}
+                          {formatDate(milestone.effective_end_date || milestone.planned_end_date)}
+                          <span className="meta">
+                            Original: {formatDate(milestone.planned_end_date)}
+                          </span>
+                        </td>
+                        <td>{planned.toFixed(0)}%</td>
+                        <td>{actual.toFixed(0)}%</td>
+                        <td>
+                          <StatusBadge
+                            className="status-badge--compact"
+                            label={milestone.schedule_status_label || "On Schedule"}
+                            tone={
+                              milestone.schedule_status === "behind_schedule"
+                                ? "delayed"
+                                : milestone.schedule_status === "ahead_of_schedule"
+                                  ? "active"
+                                  : milestone.schedule_status === "completed"
+                                    ? "completed"
+                                    : "planning"
+                            }
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </section>
       </div>
-
-      {selectedProject ? (
-        <section className="site-engineer-dashboard__surface">
-          <ProjectTimeline milestones={milestones} />
-        </section>
-      ) : null}
-
-      {selectedProject ? (
-        <section className="site-engineer-dashboard__surface">
-          <TaskManager
-            milestones={milestones}
-            selectedMilestoneId={selectedMilestoneId}
-            tasks={milestoneTasks}
-            canManageTasks={true}
-            canApproveTasks={false}
-            onSelectMilestone={(milestoneId) => void handleSelectMilestone(milestoneId)}
-            onCreateTask={handleCreateTask}
-            onUpdateTask={handleUpdateTask}
-            onDeleteTask={handleDeleteTask}
-          />
-        </section>
-      ) : null}
-
-      {selectedProject ? (
-        <section className="site-engineer-dashboard__surface">
-          <WorkerAllocationPanel tasks={milestoneTasks} />
-        </section>
-      ) : null}
-
-      {selectedProject ? (
-        <section className="site-engineer-dashboard__surface">
-          <DailyUpdateBoard
-            title="Verify Supervisor Updates"
-            description="Approve or reject updates already verified by the Supervisor."
-            updates={aggregatedUpdates}
-            mode="site-engineer"
-            onReview={handleEngineerReview}
-          />
-        </section>
-      ) : null}
-
-      {selectedProject ? (
-        <section className="site-engineer-dashboard__surface">
-          <ConcernPanel
-            title="Concerns"
-            description=""
-            concerns={projectConcerns}
-          />
-        </section>
-      ) : null}
     </main>
   );
 };

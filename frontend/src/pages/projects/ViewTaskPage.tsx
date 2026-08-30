@@ -157,6 +157,18 @@ export const ViewTaskPage = () => {
                   {task.description?.trim() || "No description"}
                 </p>
               </div>
+              <div className="project-create-page__field project-create-page__field--full">
+                <span className="project-create-page__label">Expected Work</span>
+                <p className="project-create-page__readonly">
+                  {task.expected_work?.trim() || "Not defined"}
+                </p>
+              </div>
+              <div className="project-create-page__field project-create-page__field--full">
+                <span className="project-create-page__label">Completion Requirement</span>
+                <p className="project-create-page__readonly">
+                  {task.completion_requirement?.trim() || "Not defined"}
+                </p>
+              </div>
               <div className="project-create-page__field">
                 <span className="project-create-page__label">Start Date</span>
                 <p className="project-create-page__readonly">

@@ -32,6 +32,9 @@ interface ProjectListProps {
   onView: (project: ProjectSummary) => void;
   onEdit: (project: ProjectSummary) => void;
   onDelete: (project: ProjectSummary) => void;
+  /** Live client-side filtering — hides Search button. */
+  liveFilter?: boolean;
+  resetLabel?: string;
 }
 
 export const ProjectList = ({
@@ -49,6 +52,8 @@ export const ProjectList = ({
   onView,
   onEdit,
   onDelete,
+  liveFilter = false,
+  resetLabel = "Clear",
 }: ProjectListProps) => {
   return (
     <section className="page-list project-list">
@@ -74,6 +79,8 @@ export const ProjectList = ({
             onSelectChange={onStatusFilterChange}
             onSubmit={onSearchSubmit}
             onReset={onResetFilters}
+            showSubmitButton={!liveFilter}
+            resetLabel={resetLabel}
           />
         }
       />

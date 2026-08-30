@@ -30,9 +30,13 @@ interface FilterBarProps {
   onSelectChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onReset: () => void;
+  /** When false, filters apply as the user types (no Search button). Default true. */
+  showSubmitButton?: boolean;
+  submitLabel?: string;
+  resetLabel?: string;
 }
 
-/** Shared search + dropdown + Search/Reset controls for admin list pages. */
+/** Shared search + dropdown + Search/Clear controls for list pages. */
 export const FilterBar = ({
   searchValue,
   searchPlaceholder,
@@ -43,6 +47,9 @@ export const FilterBar = ({
   onSelectChange,
   onSubmit,
   onReset,
+  showSubmitButton = true,
+  submitLabel = "Search",
+  resetLabel = "Clear",
 }: FilterBarProps) => {
   return (
     <form className="filter-bar" onSubmit={onSubmit}>
@@ -67,11 +74,13 @@ export const FilterBar = ({
         ))}
       </select>
       <div className="filter-bar__actions">
-        <button type="submit" className="admin-btn admin-btn--primary">
-          Search
-        </button>
+        {showSubmitButton ? (
+          <button type="submit" className="admin-btn admin-btn--primary">
+            {submitLabel}
+          </button>
+        ) : null}
         <button type="button" className="admin-btn admin-btn--secondary" onClick={onReset}>
-          Reset
+          {resetLabel}
         </button>
       </div>
     </form>

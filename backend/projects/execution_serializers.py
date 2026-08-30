@@ -13,7 +13,9 @@ from .manpower_services import (
 from .models import DailyTaskUpdate, Milestone, MilestoneExtension, MilestoneTask, TaskWorkerAssignment
 from .serializers import (
     ProjectUserSummarySerializer,
+    SCHEDULE_STATUS_LABELS,
     calculate_expected_progress,
+    compute_schedule_status,
     get_task_progress_percentage,
 )
 
@@ -78,6 +80,8 @@ class TaskApprovalSerializer(serializers.Serializer):
 class MilestoneTaskWriteSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=200, required=False)
     description = serializers.CharField(required=False, allow_blank=True)
+    expected_work = serializers.CharField(required=False, allow_blank=True)
+    completion_requirement = serializers.CharField(required=False, allow_blank=True)
     planned_start_date = serializers.DateField(required=False, allow_null=True)
     planned_end_date = serializers.DateField(required=False, allow_null=True)
     required_worker_count = serializers.IntegerField(required=False, min_value=1)
@@ -107,6 +111,24 @@ class MilestoneTaskWriteSerializer(serializers.Serializer):
 
         if not self.partial and "title" not in attrs:
             raise serializers.ValidationError({"title": ["This field is required."]})
+
+        if not self.partial:
+            expected_work = (attrs.get("expected_work") or "").strip()
+            completion_requirement = (attrs.get("completion_requirement") or "").strip()
+            if not expected_work:
+                raise serializers.ValidationError(
+                    {"expected_work": ["Expected work is required when creating a task."]},
+                )
+            if not completion_requirement:
+                raise serializers.ValidationError(
+                    {
+                        "completion_requirement": [
+                            "Completion requirement is required when creating a task."
+                        ]
+                    },
+                )
+            attrs["expected_work"] = expected_work
+            attrs["completion_requirement"] = completion_requirement
 
         start_date = attrs.get("planned_start_date")
         end_date = attrs.get("planned_end_date")
@@ -152,6 +174,12 @@ class DailyTaskUpdateCreateSerializer(serializers.Serializer):
     status = serializers.ChoiceField(choices=DailyTaskUpdate.STATUS_CHOICES)
     remark = serializers.CharField(required=False, allow_blank=True)
     concern_text = serializers.CharField(required=False, allow_blank=True)
+    incomplete_reason = serializers.ChoiceField(
+        choices=DailyTaskUpdate.INCOMPLETE_REASON_CHOICES,
+        required=False,
+        allow_blank=True,
+    )
+    incomplete_reason_detail = serializers.CharField(required=False, allow_blank=True)
     has_safety_issue = serializers.BooleanField(required=False, default=False)
 
     def validate_work_date(self, value):
@@ -161,11 +189,38 @@ class DailyTaskUpdateCreateSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         status_value = attrs.get("status")
+        completion = attrs.get("completion_percentage")
         concern_text = (attrs.get("concern_text") or "").strip()
-        if status_value == DailyTaskUpdate.STATUS_BLOCKED and not concern_text:
+        incomplete_reason = (attrs.get("incomplete_reason") or "").strip()
+        incomplete_detail = (attrs.get("incomplete_reason_detail") or "").strip()
+
+        if status_value == DailyTaskUpdate.STATUS_BLOCKED and not concern_text and not incomplete_detail:
             raise serializers.ValidationError(
                 {"concern_text": ["Reason is required when work is marked incomplete/blocked."]},
             )
+
+        is_incomplete = (
+            status_value != DailyTaskUpdate.STATUS_COMPLETED
+            or (completion is not None and completion < Decimal("100.00"))
+        )
+        if is_incomplete and not incomplete_reason:
+            raise serializers.ValidationError(
+                {
+                    "incomplete_reason": [
+                        "Incomplete work reason is required when completion is below 100% "
+                        "or status is not completed."
+                    ]
+                },
+            )
+
+        if incomplete_reason == DailyTaskUpdate.INCOMPLETE_REASON_OTHER and not incomplete_detail:
+            raise serializers.ValidationError(
+                {"incomplete_reason_detail": ["Please explain the incomplete work reason."]},
+            )
+
+        attrs["concern_text"] = concern_text
+        attrs["incomplete_reason"] = incomplete_reason
+        attrs["incomplete_reason_detail"] = incomplete_detail
         return attrs
 
 
@@ -177,6 +232,16 @@ class DailyTaskReviewSerializer(serializers.Serializer):
         ),
     )
     review_note = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        if attrs.get("review_status") == DailyTaskUpdate.REVIEW_REJECTED:
+            note = (attrs.get("review_note") or "").strip()
+            if not note:
+                raise serializers.ValidationError(
+                    {"review_note": ["A rejection reason is required."]},
+                )
+            attrs["review_note"] = note
+        return attrs
 
 
 class ConcernResolveSerializer(serializers.Serializer):
@@ -213,6 +278,8 @@ class DailyTaskUpdateSerializer(serializers.ModelSerializer):
             "status",
             "remark",
             "concern_text",
+            "incomplete_reason",
+            "incomplete_reason_detail",
             "has_safety_issue",
             "concern_resolved",
             "concern_resolved_at",
@@ -303,6 +370,8 @@ class MilestoneTaskSerializer(serializers.ModelSerializer):
     approved_by = ProjectUserSummarySerializer(read_only=True)
     progress_percentage = serializers.SerializerMethodField()
     expected_progress_percentage = serializers.SerializerMethodField()
+    schedule_status = serializers.SerializerMethodField()
+    schedule_status_label = serializers.SerializerMethodField()
     planned_man_hours = serializers.SerializerMethodField()
     actual_man_hours = serializers.SerializerMethodField()
     manpower_utilization_percentage = serializers.SerializerMethodField()
@@ -317,6 +386,8 @@ class MilestoneTaskSerializer(serializers.ModelSerializer):
             "milestone",
             "title",
             "description",
+            "expected_work",
+            "completion_requirement",
             "planned_start_date",
             "planned_end_date",
             "required_worker_count",
@@ -334,6 +405,8 @@ class MilestoneTaskSerializer(serializers.ModelSerializer):
             "approval_note",
             "progress_percentage",
             "expected_progress_percentage",
+            "schedule_status",
+            "schedule_status_label",
             "active_assignment_count",
             "active_assignments",
             "created_by",
@@ -346,6 +419,14 @@ class MilestoneTaskSerializer(serializers.ModelSerializer):
 
     def get_expected_progress_percentage(self, obj):
         return str(calculate_expected_progress(obj.effective_start_date, obj.effective_end_date))
+
+    def get_schedule_status(self, obj):
+        actual = get_task_progress_percentage(obj)
+        expected = calculate_expected_progress(obj.effective_start_date, obj.effective_end_date)
+        return compute_schedule_status(actual, expected, entity_status=obj.status)
+
+    def get_schedule_status_label(self, obj):
+        return SCHEDULE_STATUS_LABELS.get(self.get_schedule_status(obj), "On Schedule")
 
     def get_planned_man_hours(self, obj):
         planned = obj.planned_man_hours

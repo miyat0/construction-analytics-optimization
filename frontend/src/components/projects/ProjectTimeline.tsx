@@ -98,13 +98,29 @@ export const ProjectTimeline = ({ milestones, hideTitle = false }: ProjectTimeli
                   <div className="project-timeline__status">
                     <StatusBadge
                       className="status-badge--compact"
-                      label={statusLabel(milestone.status)}
-                      tone={milestone.status}
+                      label={
+                        milestone.schedule_status_label || statusLabel(milestone.status)
+                      }
+                      tone={
+                        milestone.schedule_status === "behind_schedule"
+                          ? "delayed"
+                          : milestone.schedule_status === "ahead_of_schedule"
+                            ? "active"
+                            : milestone.schedule_status === "completed"
+                              ? "completed"
+                              : milestone.schedule_status === "on_schedule"
+                                ? "in_progress"
+                                : milestone.status
+                      }
                     />
                   </div>
 
                   <div className="project-timeline__progress">
-                    <span className="project-timeline__progress-value">{progress.toFixed(0)}%</span>
+                    <span className="project-timeline__progress-value">
+                      {progress.toFixed(0)}% actual
+                      {" · "}
+                      {Number(milestone.expected_progress_percentage || 0).toFixed(0)}% planned
+                    </span>
                     <div
                       className="project-timeline__progress-bar"
                       role="progressbar"

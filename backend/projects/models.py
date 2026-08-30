@@ -184,6 +184,14 @@ class MilestoneTask(TimeStampedModel):
     )
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
+    expected_work = models.TextField(
+        blank=True,
+        help_text="Clear description of work expected from assigned workers.",
+    )
+    completion_requirement = models.TextField(
+        blank=True,
+        help_text="What constitutes completion of this task.",
+    )
     planned_start_date = models.DateField(blank=True, null=True)
     planned_end_date = models.DateField(blank=True, null=True)
     required_worker_count = models.PositiveIntegerField(default=1)
@@ -308,6 +316,23 @@ class DailyTaskUpdate(TimeStampedModel):
         (STATUS_BLOCKED, "Blocked"),
     )
 
+    INCOMPLETE_REASON_MATERIAL = "material_unavailable"
+    INCOMPLETE_REASON_EQUIPMENT = "equipment_unavailable"
+    INCOMPLETE_REASON_SAFETY = "safety_issue"
+    INCOMPLETE_REASON_MANPOWER = "insufficient_manpower"
+    INCOMPLETE_REASON_WEATHER = "weather"
+    INCOMPLETE_REASON_TECHNICAL = "technical_issue"
+    INCOMPLETE_REASON_OTHER = "other"
+    INCOMPLETE_REASON_CHOICES = (
+        (INCOMPLETE_REASON_MATERIAL, "Material unavailable"),
+        (INCOMPLETE_REASON_EQUIPMENT, "Equipment unavailable"),
+        (INCOMPLETE_REASON_SAFETY, "Safety issue"),
+        (INCOMPLETE_REASON_MANPOWER, "Insufficient manpower"),
+        (INCOMPLETE_REASON_WEATHER, "Weather"),
+        (INCOMPLETE_REASON_TECHNICAL, "Technical issue"),
+        (INCOMPLETE_REASON_OTHER, "Other"),
+    )
+
     REVIEW_PENDING = "pending"
     REVIEW_APPROVED = "approved"
     REVIEW_REJECTED = "rejected"
@@ -334,6 +359,18 @@ class DailyTaskUpdate(TimeStampedModel):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_NOT_STARTED)
     remark = models.TextField(blank=True)
     concern_text = models.TextField(blank=True)
+    incomplete_reason = models.CharField(
+        max_length=40,
+        choices=INCOMPLETE_REASON_CHOICES,
+        blank=True,
+        default="",
+        help_text="Required when work is incomplete (status not completed or completion below 100%).",
+    )
+    incomplete_reason_detail = models.TextField(
+        blank=True,
+        default="",
+        help_text="Free-text explanation for incomplete work.",
+    )
     has_safety_issue = models.BooleanField(default=False)
     concern_resolved = models.BooleanField(default=False)
     concern_resolved_at = models.DateTimeField(blank=True, null=True)
@@ -441,3 +478,142 @@ class ProjectDocument(TimeStampedModel):
 
     def __str__(self):
         return f"{self.project.project_name} - {self.title}"
+
+
+class WorkplaceNeed(TimeStampedModel):
+    CATEGORY_SAFETY = "safety"
+    CATEGORY_TOOLS_EQUIPMENT = "tools_equipment"
+    CATEGORY_PPE = "ppe"
+    CATEGORY_WORKPLACE_FACILITIES = "workplace_facilities"
+    CATEGORY_TRANSPORTATION = "transportation"
+    CATEGORY_ACCOMMODATION = "accommodation"
+    CATEGORY_WORKING_CONDITIONS = "working_conditions"
+    CATEGORY_OTHER = "other"
+    CATEGORY_CHOICES = (
+        (CATEGORY_SAFETY, "Safety"),
+        (CATEGORY_TOOLS_EQUIPMENT, "Tools/Equipment"),
+        (CATEGORY_PPE, "PPE"),
+        (CATEGORY_WORKPLACE_FACILITIES, "Workplace Facilities"),
+        (CATEGORY_TRANSPORTATION, "Transportation"),
+        (CATEGORY_ACCOMMODATION, "Accommodation"),
+        (CATEGORY_WORKING_CONDITIONS, "Working Conditions"),
+        (CATEGORY_OTHER, "Other"),
+    )
+
+    PRIORITY_LOW = "low"
+    PRIORITY_MEDIUM = "medium"
+    PRIORITY_HIGH = "high"
+    PRIORITY_URGENT = "urgent"
+    PRIORITY_CHOICES = (
+        (PRIORITY_LOW, "Low"),
+        (PRIORITY_MEDIUM, "Medium"),
+        (PRIORITY_HIGH, "High"),
+        (PRIORITY_URGENT, "Urgent"),
+    )
+
+    STATUS_SUBMITTED = "submitted"
+    STATUS_UNDER_SUPERVISOR_REVIEW = "under_supervisor_review"
+    STATUS_VERIFIED = "verified"
+    STATUS_FORWARDED_TO_PM = "forwarded_to_pm"
+    STATUS_IN_PROGRESS = "in_progress"
+    STATUS_RESOLVED = "resolved"
+    STATUS_REJECTED = "rejected"
+    STATUS_CHOICES = (
+        (STATUS_SUBMITTED, "Submitted"),
+        (STATUS_UNDER_SUPERVISOR_REVIEW, "Under Supervisor Review"),
+        (STATUS_VERIFIED, "Verified"),
+        (STATUS_FORWARDED_TO_PM, "Forwarded to Project Manager"),
+        (STATUS_IN_PROGRESS, "In Progress"),
+        (STATUS_RESOLVED, "Resolved"),
+        (STATUS_REJECTED, "Rejected"),
+    )
+
+    request_id = models.BigAutoField(primary_key=True)
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="workplace_needs",
+        db_column="project_id",
+    )
+    milestone = models.ForeignKey(
+        Milestone,
+        on_delete=models.SET_NULL,
+        related_name="workplace_needs",
+        db_column="milestone_id",
+        blank=True,
+        null=True,
+    )
+    submitted_by = models.ForeignKey(
+        UserProfile,
+        on_delete=models.CASCADE,
+        related_name="workplace_needs",
+        db_column="submitted_by_user_id",
+    )
+    category = models.CharField(max_length=40, choices=CATEGORY_CHOICES)
+    description = models.TextField()
+    priority = models.CharField(
+        max_length=20,
+        choices=PRIORITY_CHOICES,
+        default=PRIORITY_MEDIUM,
+    )
+    status = models.CharField(
+        max_length=40,
+        choices=STATUS_CHOICES,
+        default=STATUS_UNDER_SUPERVISOR_REVIEW,
+    )
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    supervisor_remarks = models.TextField(blank=True)
+    supervisor_reviewed_by = models.ForeignKey(
+        UserProfile,
+        on_delete=models.SET_NULL,
+        related_name="supervised_workplace_needs",
+        db_column="supervisor_reviewed_by_user_id",
+        blank=True,
+        null=True,
+    )
+    supervisor_reviewed_at = models.DateTimeField(blank=True, null=True)
+    pm_comments = models.TextField(blank=True)
+    pm_reviewed_by = models.ForeignKey(
+        UserProfile,
+        on_delete=models.SET_NULL,
+        related_name="managed_workplace_needs",
+        db_column="pm_reviewed_by_user_id",
+        blank=True,
+        null=True,
+    )
+    pm_reviewed_at = models.DateTimeField(blank=True, null=True)
+    resolved_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        db_table = "tbl_workplace_need"
+        ordering = ("-submitted_at", "-request_id")
+
+    def __str__(self):
+        return f"WN-{self.request_id} ({self.get_status_display()})"
+
+
+class WorkplaceNeedAttachment(TimeStampedModel):
+    attachment_id = models.BigAutoField(primary_key=True)
+    need = models.ForeignKey(
+        WorkplaceNeed,
+        on_delete=models.CASCADE,
+        related_name="attachments",
+        db_column="request_id",
+    )
+    uploaded_by = models.ForeignKey(
+        UserProfile,
+        on_delete=models.SET_NULL,
+        related_name="workplace_need_attachments",
+        db_column="uploaded_by_user_id",
+        blank=True,
+        null=True,
+    )
+    file = models.FileField(upload_to="workplace_needs/%Y/%m/%d/")
+    original_name = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        db_table = "tbl_workplace_need_attachment"
+        ordering = ("attachment_id",)
+
+    def __str__(self):
+        return self.original_name or f"Attachment {self.attachment_id}"

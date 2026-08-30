@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 import {
+  INCOMPLETE_WORK_REASON_OPTIONS,
   TASK_UPDATE_STATUS_OPTIONS,
   type DailyTaskUpdatePayload,
+  type IncompleteWorkReason,
   type TaskAssignment,
   type TaskUpdateStatus,
 } from "../../types/project";
@@ -12,6 +14,8 @@ import "./WorkerTaskBoard.css";
 interface WorkerTaskBoardProps {
   assignments: TaskAssignment[];
   onSubmitUpdate: (assignmentId: number, payload: DailyTaskUpdatePayload) => Promise<void>;
+  title?: string;
+  showHeader?: boolean;
 }
 
 type WorkerUpdateFormState = {
@@ -19,6 +23,8 @@ type WorkerUpdateFormState = {
   status: TaskUpdateStatus;
   remark: string;
   concern_text: string;
+  incomplete_reason: IncompleteWorkReason | "";
+  incomplete_reason_detail: string;
   has_safety_issue: boolean;
 };
 
@@ -27,12 +33,16 @@ const defaultFormState: WorkerUpdateFormState = {
   status: "not_started",
   remark: "",
   concern_text: "",
+  incomplete_reason: "",
+  incomplete_reason_detail: "",
   has_safety_issue: false,
 };
 
 export const WorkerTaskBoard = ({
   assignments,
   onSubmitUpdate,
+  title = "Tasks",
+  showHeader = true,
 }: WorkerTaskBoardProps) => {
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | null>(null);
   const [formState, setFormState] = useState<WorkerUpdateFormState>(defaultFormState);
@@ -63,9 +73,15 @@ export const WorkerTaskBoard = ({
       status: selectedAssignment.latest_update.status,
       remark: selectedAssignment.latest_update.remark,
       concern_text: selectedAssignment.latest_update.concern_text,
+      incomplete_reason: selectedAssignment.latest_update.incomplete_reason || "",
+      incomplete_reason_detail:
+        selectedAssignment.latest_update.incomplete_reason_detail || "",
       has_safety_issue: selectedAssignment.latest_update.has_safety_issue,
     });
   }, [selectedAssignment]);
+
+  const isIncomplete =
+    formState.status !== "completed" || Number(formState.completion_percentage) < 100;
 
   const updateField = <K extends keyof WorkerUpdateFormState>(
     field: K,
@@ -92,6 +108,20 @@ export const WorkerTaskBoard = ({
       return;
     }
 
+    const incomplete =
+      formState.status !== "completed" || completion < 100;
+    if (incomplete && !formState.incomplete_reason) {
+      setErrorMessage("Select a reason when work is incomplete.");
+      return;
+    }
+    if (
+      formState.incomplete_reason === "other" &&
+      !formState.incomplete_reason_detail.trim()
+    ) {
+      setErrorMessage("Please explain the incomplete work reason.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -100,6 +130,10 @@ export const WorkerTaskBoard = ({
         status: formState.status,
         remark: formState.remark.trim(),
         concern_text: formState.concern_text.trim(),
+        incomplete_reason: incomplete ? formState.incomplete_reason : "",
+        incomplete_reason_detail: incomplete
+          ? formState.incomplete_reason_detail.trim()
+          : "",
         has_safety_issue: formState.has_safety_issue,
       });
     } finally {
@@ -109,30 +143,32 @@ export const WorkerTaskBoard = ({
 
   return (
     <section className="worker-task-board">
-      <div className="worker-task-board__header">
-        <h2>
-          <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none">
-            <path
-              d="M7.5 4.5h5M8 3h4a1 1 0 0 1 1 1v1.5H7V4a1 1 0 0 1 1-1Z"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-            />
-            <path
-              d="M6.5 5.5h7A1.5 1.5 0 0 1 15 7v8.5A1.5 1.5 0 0 1 13.5 17h-7A1.5 1.5 0 0 1 5 15.5V7a1.5 1.5 0 0 1 1.5-1.5Z"
-              stroke="currentColor"
-              strokeWidth="1.6"
-            />
-          </svg>
-          <span>My Tasks</span>
-          <span className="worker-task-board__count">{assignments.length}</span>
-        </h2>
-      </div>
+      {showHeader ? (
+        <div className="worker-task-board__header">
+          <h2>
+            <svg aria-hidden="true" viewBox="0 0 20 20" width="18" height="18" fill="none">
+              <path
+                d="M7.5 4.5h5M8 3h4a1 1 0 0 1 1 1v1.5H7V4a1 1 0 0 1 1-1Z"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+              <path
+                d="M6.5 5.5h7A1.5 1.5 0 0 1 15 7v8.5A1.5 1.5 0 0 1 13.5 17h-7A1.5 1.5 0 0 1 5 15.5V7a1.5 1.5 0 0 1 1.5-1.5Z"
+                stroke="currentColor"
+                strokeWidth="1.6"
+              />
+            </svg>
+            <span>{title}</span>
+            <span className="worker-task-board__count">{assignments.length}</span>
+          </h2>
+        </div>
+      ) : null}
 
       {assignments.length === 0 ? (
         <div className="worker-task-board__empty">
           <span className="worker-task-board__empty-icon" aria-hidden="true">
-            <svg viewBox="0 0 20 20" width="28" height="28" fill="none">
+            <svg viewBox="0 0 20 20" width="24" height="24" fill="none">
               <path
                 d="M7.5 4.5h5M8 3h4a1 1 0 0 1 1 1v1.5H7V4a1 1 0 0 1 1-1Z"
                 stroke="currentColor"
@@ -146,7 +182,8 @@ export const WorkerTaskBoard = ({
               />
             </svg>
           </span>
-          <span>No tasks assigned for today.</span>
+          <strong className="worker-task-board__empty-title">No tasks in this filter</strong>
+          <span>Try another filter to see assigned work.</span>
         </div>
       ) : (
         <div className="worker-task-board__layout">
@@ -192,6 +229,16 @@ export const WorkerTaskBoard = ({
                   {selectedAssignment.duty_instructions ? (
                     <p>{selectedAssignment.duty_instructions}</p>
                   ) : null}
+                  {selectedAssignment.latest_update?.supervisor_review_status ===
+                  "rejected" ? (
+                    <div className="worker-task-board__feedback" role="status">
+                      <strong>Supervisor rejected this update</strong>
+                      <span>
+                        {selectedAssignment.latest_update.supervisor_review_note ||
+                          "Please correct and resubmit."}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="worker-task-board__grid">
@@ -221,6 +268,48 @@ export const WorkerTaskBoard = ({
                       ))}
                     </select>
                   </label>
+
+                  {isIncomplete ? (
+                    <>
+                      <label className="worker-task-board__field worker-task-board__field--full">
+                        <span className="worker-task-board__label">
+                          Incomplete Work Reason
+                        </span>
+                        <select
+                          className="form-select"
+                          value={formState.incomplete_reason}
+                          onChange={(event) =>
+                            updateField(
+                              "incomplete_reason",
+                              event.target.value as IncompleteWorkReason | "",
+                            )
+                          }
+                          required
+                        >
+                          <option value="">Select reason</option>
+                          {INCOMPLETE_WORK_REASON_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="worker-task-board__field worker-task-board__field--full">
+                        <span className="worker-task-board__label">
+                          Incomplete Work Details
+                        </span>
+                        <textarea
+                          className="form-control"
+                          rows={2}
+                          value={formState.incomplete_reason_detail}
+                          onChange={(event) =>
+                            updateField("incomplete_reason_detail", event.target.value)
+                          }
+                          placeholder="Explain why work is incomplete..."
+                        />
+                      </label>
+                    </>
+                  ) : null}
 
                   <label className="worker-task-board__field worker-task-board__field--full">
                     <span className="worker-task-board__label">Remark</span>

@@ -21,6 +21,14 @@ def quantize_percentage(value: Decimal) -> Decimal:
     return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
+SCHEDULE_STATUS_AHEAD = "ahead_of_schedule"
+SCHEDULE_STATUS_ON = "on_schedule"
+SCHEDULE_STATUS_BEHIND = "behind_schedule"
+SCHEDULE_STATUS_COMPLETED = "completed"
+SCHEDULE_STATUS_NOT_STARTED = "not_started"
+SCHEDULE_TOLERANCE = Decimal("2.00")
+
+
 def calculate_expected_progress(start_date, end_date):
     if not start_date or not end_date:
         return ZERO_DECIMAL
@@ -46,6 +54,35 @@ def calculate_expected_progress(start_date, end_date):
     return quantize_percentage((Decimal(elapsed_days) / Decimal(total_days)) * HUNDRED_DECIMAL)
 
 
+def compute_schedule_status(
+    actual_progress: Decimal,
+    expected_progress: Decimal,
+    *,
+    entity_status=None,
+) -> str:
+    """Compare verified actual progress vs planned progress with a small tolerance."""
+    if entity_status == "completed" or actual_progress >= HUNDRED_DECIMAL:
+        return SCHEDULE_STATUS_COMPLETED
+
+    if expected_progress <= ZERO_DECIMAL and actual_progress <= ZERO_DECIMAL:
+        return SCHEDULE_STATUS_NOT_STARTED
+
+    delta = actual_progress - expected_progress
+    if abs(delta) <= SCHEDULE_TOLERANCE:
+        return SCHEDULE_STATUS_ON
+    if delta > SCHEDULE_TOLERANCE:
+        return SCHEDULE_STATUS_AHEAD
+    return SCHEDULE_STATUS_BEHIND
+
+
+SCHEDULE_STATUS_LABELS = {
+    SCHEDULE_STATUS_AHEAD: "Ahead of Schedule",
+    SCHEDULE_STATUS_ON: "On Schedule",
+    SCHEDULE_STATUS_BEHIND: "Behind Schedule",
+    SCHEDULE_STATUS_COMPLETED: "Completed",
+    SCHEDULE_STATUS_NOT_STARTED: "Not Started",
+}
+
 def get_task_progress_percentage(task: MilestoneTask) -> Decimal:
     if task.status == MilestoneTask.STATUS_COMPLETED:
         return HUNDRED_DECIMAL
@@ -69,7 +106,8 @@ def get_task_progress_percentage(task: MilestoneTask) -> Decimal:
                 (
                     update
                     for update in ordered_updates
-                    if update.engineer_review_status == DailyTaskUpdate.REVIEW_APPROVED
+                    if update.supervisor_review_status == DailyTaskUpdate.REVIEW_APPROVED
+                    and update.engineer_review_status == DailyTaskUpdate.REVIEW_APPROVED
                 ),
                 None,
             )
@@ -77,12 +115,25 @@ def get_task_progress_percentage(task: MilestoneTask) -> Decimal:
         if approved_update is None:
             approved_updates = list(getattr(assignment, "approved_engineer_updates", []))
             if approved_updates:
-                approved_update = approved_updates[0]
+                # Prefer dual-verified updates only (supervisor + engineer approved).
+                approved_update = next(
+                    (
+                        update
+                        for update in approved_updates
+                        if update.supervisor_review_status == DailyTaskUpdate.REVIEW_APPROVED
+                    ),
+                    None,
+                )
 
         if approved_update is None:
-            approved_update = assignment.daily_updates.filter(
-                engineer_review_status=DailyTaskUpdate.REVIEW_APPROVED,
-            ).order_by("-work_date", "-created_at", "-update_id").first()
+            approved_update = (
+                assignment.daily_updates.filter(
+                    supervisor_review_status=DailyTaskUpdate.REVIEW_APPROVED,
+                    engineer_review_status=DailyTaskUpdate.REVIEW_APPROVED,
+                )
+                .order_by("-work_date", "-created_at", "-update_id")
+                .first()
+            )
 
         completion_values.append(
             approved_update.completion_percentage if approved_update is not None else ZERO_DECIMAL,
@@ -218,6 +269,8 @@ class MilestoneSerializer(serializers.ModelSerializer):
     effective_end_date = serializers.SerializerMethodField()
     progress_percentage = serializers.SerializerMethodField()
     expected_progress_percentage = serializers.SerializerMethodField()
+    schedule_status = serializers.SerializerMethodField()
+    schedule_status_label = serializers.SerializerMethodField()
     task_count = serializers.SerializerMethodField()
     extension_count = serializers.SerializerMethodField()
 
@@ -238,6 +291,8 @@ class MilestoneSerializer(serializers.ModelSerializer):
             "extension_count",
             "progress_percentage",
             "expected_progress_percentage",
+            "schedule_status",
+            "schedule_status_label",
             "created_at",
             "updated_at",
         )
@@ -250,6 +305,14 @@ class MilestoneSerializer(serializers.ModelSerializer):
 
     def get_expected_progress_percentage(self, obj):
         return str(calculate_expected_progress(obj.planned_start_date, obj.effective_end_date))
+
+    def get_schedule_status(self, obj):
+        actual = get_milestone_progress_percentage(obj)
+        expected = calculate_expected_progress(obj.planned_start_date, obj.effective_end_date)
+        return compute_schedule_status(actual, expected, entity_status=obj.status)
+
+    def get_schedule_status_label(self, obj):
+        return SCHEDULE_STATUS_LABELS.get(self.get_schedule_status(obj), "On Schedule")
 
     def get_task_count(self, obj):
         prefetched_tasks = getattr(obj, "prefetched_tasks", None)

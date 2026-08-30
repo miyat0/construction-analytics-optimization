@@ -35,6 +35,13 @@ import "./ProjectWorkspace.css";
 
 interface ProjectWorkspaceProps {
   scope: ProjectWorkspaceScope;
+  /**
+   * When true, the parent page owns the primary title.
+   * Workspace shows a compact section header (count + New Project).
+   */
+  embedded?: boolean;
+  pageTitle?: string;
+  pageSubtitle?: string;
 }
 
 const emptyLookups: ProjectLookupData = {
@@ -52,10 +59,15 @@ const getErrorMessage = (error: unknown, fallbackMessage: string): string => {
   return fallbackMessage;
 };
 
-export const ProjectWorkspace = ({ scope }: ProjectWorkspaceProps) => {
+export const ProjectWorkspace = ({
+  scope,
+  embedded = false,
+  pageTitle = "Projects",
+  pageSubtitle = "Create, track, and manage all construction projects in one place.",
+}: ProjectWorkspaceProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-  useProjectCreateChrome("Management / Projects");
+  useProjectCreateChrome(scope === "admin" ? "Management / Projects" : "Projects");
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [lookups, setLookups] = useState<ProjectLookupData>(emptyLookups);
   const [quickViewProject, setQuickViewProject] = useState<ProjectDetail | null>(null);
@@ -74,9 +86,12 @@ export const ProjectWorkspace = ({ scope }: ProjectWorkspaceProps) => {
   const [statusFilter, setStatusFilter] = useState("");
 
   const canSelectProjectManager = scope === "admin";
+  /** Backend allows Company Admin + Project Manager to create projects. */
+  const canCreateProjects = scope === "admin" || scope === "project-manager";
+  const useLiveFilter = embedded || scope === "project-manager";
 
   const filteredProjects = useMemo(() => {
-    const query = submittedSearch.trim().toLowerCase();
+    const query = (useLiveFilter ? searchInput : submittedSearch).trim().toLowerCase();
     return projects.filter((project) => {
       if (statusFilter === "archived") {
         if (!project.is_archived) {
@@ -101,7 +116,10 @@ export const ProjectWorkspace = ({ scope }: ProjectWorkspaceProps) => {
         .toLowerCase();
       return haystack.includes(query);
     });
-  }, [projects, statusFilter, submittedSearch]);
+  }, [projects, statusFilter, searchInput, submittedSearch, useLiveFilter]);
+
+  const projectCountLabel =
+    filteredProjects.length === 1 ? "1 project" : `${filteredProjects.length} projects`;
 
   const loadWorkspace = useCallback(async () => {
     setIsLoading(true);
@@ -243,7 +261,9 @@ export const ProjectWorkspace = ({ scope }: ProjectWorkspaceProps) => {
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSubmittedSearch(searchInput);
+    if (!useLiveFilter) {
+      setSubmittedSearch(searchInput);
+    }
   };
 
   const handleResetFilters = () => {
@@ -295,25 +315,48 @@ export const ProjectWorkspace = ({ scope }: ProjectWorkspaceProps) => {
   };
 
   return (
-    <div className="project-workspace">
-      <div className="project-workspace__page-header">
-        <div className="project-workspace__page-heading">
-          <h1 className="project-workspace__page-title">Projects</h1>
-          <p className="project-workspace__page-subtitle">
-            Create, track, and manage all construction projects in one place.
-          </p>
+    <div className={`project-workspace${embedded ? " project-workspace--embedded" : ""}`}>
+      {embedded ? (
+        <div className="project-workspace__section-header">
+          <div className="project-workspace__section-heading">
+            <h2 className="project-workspace__section-title">Projects</h2>
+            <span className="project-workspace__section-count">{projectCountLabel}</span>
+          </div>
+          {canCreateProjects ? (
+            <button
+              type="button"
+              className="admin-btn admin-btn--primary project-workspace__new-btn"
+              onClick={handleOpenCreateModal}
+            >
+              New Project
+              <span className="admin-btn__plus" aria-hidden="true">
+                +
+              </span>
+            </button>
+          ) : null}
         </div>
-        <button
-          type="button"
-          className="admin-btn admin-btn--primary project-workspace__new-btn"
-          onClick={handleOpenCreateModal}
-        >
-          New Project
-          <span className="admin-btn__plus" aria-hidden="true">
-            +
-          </span>
-        </button>
-      </div>
+      ) : (
+        <div className="project-workspace__page-header">
+          <div className="project-workspace__page-heading">
+            <h1 className="project-workspace__page-title">{pageTitle}</h1>
+            {pageSubtitle ? (
+              <p className="project-workspace__page-subtitle">{pageSubtitle}</p>
+            ) : null}
+          </div>
+          {canCreateProjects ? (
+            <button
+              type="button"
+              className="admin-btn admin-btn--primary project-workspace__new-btn"
+              onClick={handleOpenCreateModal}
+            >
+              New Project
+              <span className="admin-btn__plus" aria-hidden="true">
+                +
+              </span>
+            </button>
+          ) : null}
+        </div>
+      )}
 
       {noticeMessage ? <div className="alert alert-success mb-0">{noticeMessage}</div> : null}
       {errorMessage ? <div className="alert alert-danger mb-0">{errorMessage}</div> : null}
@@ -333,6 +376,8 @@ export const ProjectWorkspace = ({ scope }: ProjectWorkspaceProps) => {
         onView={(project) => void handleOpenQuickView(project.project_id)}
         onEdit={(project) => void handleOpenEditModal(project)}
         onDelete={(project) => void handleDeleteProject(project)}
+        liveFilter={useLiveFilter}
+        resetLabel="Clear"
       />
 
       <ProjectQuickViewModal

@@ -45,6 +45,8 @@ export const EditTaskPage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [expectedWork, setExpectedWork] = useState("");
+  const [completionRequirement, setCompletionRequirement] = useState("");
   const [plannedStartDate, setPlannedStartDate] = useState("");
   const [plannedEndDate, setPlannedEndDate] = useState("");
   const [requiredWorkerCount, setRequiredWorkerCount] = useState("1");
@@ -106,6 +108,8 @@ export const EditTaskPage = () => {
         setMilestones(milestoneData.results);
         setTitle(task.title);
         setDescription(task.description ?? "");
+        setExpectedWork(task.expected_work ?? "");
+        setCompletionRequirement(task.completion_requirement ?? "");
         setPlannedStartDate(task.planned_start_date ?? "");
         setPlannedEndDate(task.planned_end_date ?? "");
         setRequiredWorkerCount(String(task.required_worker_count ?? 1));
@@ -142,6 +146,16 @@ export const EditTaskPage = () => {
       return;
     }
 
+    if (!expectedWork.trim()) {
+      setErrorMessage("Expected work is required.");
+      return;
+    }
+
+    if (!completionRequirement.trim()) {
+      setErrorMessage("Completion requirement is required.");
+      return;
+    }
+
     if (
       plannedStartDate &&
       plannedEndDate &&
@@ -156,6 +170,8 @@ export const EditTaskPage = () => {
       await updateMilestoneTask(parsedProjectId, parsedMilestoneId, parsedTaskId, {
         title: title.trim(),
         description: description.trim(),
+        expected_work: expectedWork.trim(),
+        completion_requirement: completionRequirement.trim(),
         planned_start_date: plannedStartDate || null,
         planned_end_date: plannedEndDate || null,
         required_worker_count: Number(requiredWorkerCount || "1"),
@@ -211,6 +227,30 @@ export const EditTaskPage = () => {
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
                 placeholder="Optional notes"
+              />
+            </label>
+
+            <label className="project-create-page__field project-create-page__field--full">
+              <span className="project-create-page__label">Expected Work</span>
+              <textarea
+                className="form-control"
+                rows={3}
+                value={expectedWork}
+                onChange={(event) => setExpectedWork(event.target.value)}
+                placeholder="Describe the work expected from assigned workers"
+                required
+              />
+            </label>
+
+            <label className="project-create-page__field project-create-page__field--full">
+              <span className="project-create-page__label">Completion Requirement</span>
+              <textarea
+                className="form-control"
+                rows={2}
+                value={completionRequirement}
+                onChange={(event) => setCompletionRequirement(event.target.value)}
+                placeholder="What constitutes completion of this task"
+                required
               />
             </label>
 

@@ -566,8 +566,21 @@ export const MilestoneManager = ({
                   <div className="milestone-manager__title-row">
                     <h3>{milestone.title}</h3>
                     <StatusBadge
-                      label={statusLabel(milestone.status)}
-                      tone={milestone.status}
+                      label={
+                        milestone.schedule_status_label ||
+                        statusLabel(milestone.status)
+                      }
+                      tone={
+                        milestone.schedule_status === "behind_schedule"
+                          ? "delayed"
+                          : milestone.schedule_status === "ahead_of_schedule"
+                            ? "active"
+                            : milestone.schedule_status === "completed"
+                              ? "completed"
+                              : milestone.schedule_status === "on_schedule"
+                                ? "in_progress"
+                                : milestone.status
+                      }
                     />
                   </div>
                   <div className="milestone-manager__dates">
@@ -579,7 +592,10 @@ export const MilestoneManager = ({
                   <div className="milestone-manager__meta-line">
                     {span ? <span>{span}</span> : null}
                     {span ? <span aria-hidden="true">•</span> : null}
-                    <span>{progress}% progress</span>
+                    <span>
+                      Actual {progress}% · Planned{" "}
+                      {Number(milestone.expected_progress_percentage || 0).toFixed(0)}%
+                    </span>
                   </div>
                   <div
                     className="milestone-manager__progress-bar"

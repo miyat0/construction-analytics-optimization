@@ -80,6 +80,62 @@
   font-size: 0.875rem;
 }
 
+.task-manager__form textarea.form-control {
+  height: auto;
+  min-height: 4.5rem;
+  resize: vertical;
+}
+
+.task-manager__progress-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 0.9rem;
+  border: 1px solid #34383c;
+  border-radius: 0.65rem;
+  background: #1a1e22;
+}
+
+.task-manager__progress-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.task-manager__progress-table th,
+.task-manager__progress-table td {
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+}
+
+.task-manager__progress-table th {
+  color: #78838f;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.task-manager__progress-table td.is-behind {
+  color: #fbbf24;
+}
+
+.task-manager__progress-table td.is-ahead {
+  color: #86efac;
+}
+
+.task-manager__expected {
+  margin: 0.35rem 0 0;
+  color: #aab3bd;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.task-manager__expected strong {
+  color: #d7dde4;
+  font-weight: 600;
+}
+
 .task-manager__form .form-control:focus,
 .task-manager__form .form-select:focus,
 .task-manager__toolbar .form-select:focus {

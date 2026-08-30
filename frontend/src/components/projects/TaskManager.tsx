@@ -36,6 +36,8 @@ interface TaskManagerProps {
 type TaskFormState = {
   title: string;
   description: string;
+  expected_work: string;
+  completion_requirement: string;
   planned_start_date: string;
   planned_end_date: string;
   required_worker_count: string;
@@ -49,6 +51,8 @@ type TaskFormState = {
 const defaultTaskFormState: TaskFormState = {
   title: "",
   description: "",
+  expected_work: "",
+  completion_requirement: "",
   planned_start_date: "",
   planned_end_date: "",
   required_worker_count: "1",
@@ -131,6 +135,8 @@ export const TaskManager = ({
     setFormState({
       title: task.title,
       description: task.description,
+      expected_work: task.expected_work ?? "",
+      completion_requirement: task.completion_requirement ?? "",
       planned_start_date: task.planned_start_date ?? "",
       planned_end_date: task.planned_end_date ?? "",
       required_worker_count: String(task.required_worker_count),
@@ -224,6 +230,16 @@ export const TaskManager = ({
       return;
     }
 
+    if (!formState.expected_work.trim()) {
+      setErrorMessage("Expected work is required.");
+      return;
+    }
+
+    if (!formState.completion_requirement.trim()) {
+      setErrorMessage("Completion requirement is required.");
+      return;
+    }
+
     if (
       formState.planned_start_date &&
       formState.planned_end_date &&
@@ -237,6 +253,8 @@ export const TaskManager = ({
     const payload: MilestoneTaskPayload = {
       title: formState.title.trim(),
       description: formState.description.trim(),
+      expected_work: formState.expected_work.trim(),
+      completion_requirement: formState.completion_requirement.trim(),
       planned_start_date: formState.planned_start_date || null,
       planned_end_date: formState.planned_end_date || null,
       required_worker_count: Number(formState.required_worker_count || "1"),
@@ -330,6 +348,30 @@ export const TaskManager = ({
                 value={formState.description}
                 onChange={(event) => updateField("description", event.target.value)}
                 placeholder="Optional notes"
+              />
+            </label>
+
+            <label className="task-manager__field task-manager__field--full">
+              <span className="task-manager__label">Expected Work</span>
+              <textarea
+                className="form-control"
+                rows={3}
+                value={formState.expected_work}
+                onChange={(event) => updateField("expected_work", event.target.value)}
+                placeholder="Describe the work expected from assigned workers"
+                required
+              />
+            </label>
+
+            <label className="task-manager__field task-manager__field--full">
+              <span className="task-manager__label">Completion Requirement</span>
+              <textarea
+                className="form-control"
+                rows={2}
+                value={formState.completion_requirement}
+                onChange={(event) => updateField("completion_requirement", event.target.value)}
+                placeholder="What constitutes completion of this task"
+                required
               />
             </label>
 
@@ -454,7 +496,48 @@ export const TaskManager = ({
           description="Create tasks to track work within this milestone."
         />
       ) : tasks.length > 0 ? (
-        <div className="task-manager__list">
+        <>
+          <div className="task-manager__progress-table-wrap">
+            <table className="task-manager__progress-table">
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Planned %</th>
+                  <th>Actual Verified %</th>
+                  <th>Difference</th>
+                  <th>Schedule</th>
+                  <th>Workers</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tasks.map((task) => {
+                  const actual = Number(task.progress_percentage || 0);
+                  const planned = Number(task.expected_progress_percentage || 0);
+                  const diff = actual - planned;
+                  return (
+                    <tr key={`progress-${task.task_id}`}>
+                      <td>{task.title}</td>
+                      <td>{planned.toFixed(0)}%</td>
+                      <td>{actual.toFixed(0)}%</td>
+                      <td className={diff < 0 ? "is-behind" : diff > 0 ? "is-ahead" : ""}>
+                        {diff > 0 ? "+" : ""}
+                        {diff.toFixed(0)}%
+                      </td>
+                      <td>{task.schedule_status_label || "—"}</td>
+                      <td>{task.required_worker_count}</td>
+                      <td>
+                        {statusLabel(task.status)}
+                        {!task.is_approved ? " · Pending approval" : ""}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="task-manager__list">
           {tasks.map((task) => {
             const progress = Number(task.progress_percentage || 0);
 
@@ -469,13 +552,30 @@ export const TaskManager = ({
                       {statusLabel(task.status)}
                     </span>
                   </div>
+                  {task.expected_work ? (
+                    <p className="task-manager__expected">
+                      <strong>Expected work:</strong> {task.expected_work}
+                    </p>
+                  ) : null}
+                  {task.completion_requirement ? (
+                    <p className="task-manager__expected">
+                      <strong>Completion:</strong> {task.completion_requirement}
+                    </p>
+                  ) : null}
                   <div className="task-manager__dates">
                     <span>
                       {formatDate(task.planned_start_date)} – {formatDate(task.planned_end_date)}
                     </span>
                   </div>
                   <div className="task-manager__meta-line">
-                    <span>{progress.toFixed(0)}% progress</span>
+                    <span>
+                      Actual {progress.toFixed(0)}% · Planned{" "}
+                      {Number(task.expected_progress_percentage || 0).toFixed(0)}%
+                    </span>
+                    <span aria-hidden="true">•</span>
+                    <span>
+                      {task.schedule_status_label || statusLabel(task.status)}
+                    </span>
                     <span aria-hidden="true">•</span>
                     <span>{task.required_worker_count} workers</span>
                     <span aria-hidden="true">•</span>
@@ -520,7 +620,8 @@ export const TaskManager = ({
               </article>
             );
           })}
-        </div>
+          </div>
+        </>
       ) : null}
     </section>
   );

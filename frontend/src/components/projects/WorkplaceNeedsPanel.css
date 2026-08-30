@@ -1,0 +1,726 @@
+.workplace-needs-panel {
+  display: grid;
+  gap: 18px;
+  color: #f4f6f8;
+  min-width: 0;
+  width: 100%;
+}
+
+.workplace-needs-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.workplace-needs-panel--worker .workplace-needs-panel__header {
+  align-items: center;
+}
+
+.workplace-needs-panel__header-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.workplace-needs-panel__title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.workplace-needs-panel__title {
+  margin: 0;
+  color: #f4f6f8;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.workplace-needs-panel__count {
+  color: #a7adb4;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.workplace-needs-panel__description {
+  margin: 4px 0 0;
+  color: #aab3bd;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.45;
+  max-width: 36rem;
+}
+
+.workplace-needs-panel--worker .workplace-needs-panel__description {
+  margin: 0;
+}
+
+.workplace-needs-panel__header-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 38px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--brand-accent, #ff5a1f);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.workplace-needs-panel__header-action:hover,
+.workplace-needs-panel__header-action:focus-visible {
+  background: #ff6a35;
+  color: #ffffff;
+  outline: none;
+}
+
+.workplace-needs-panel__loading,
+.workplace-needs-panel__empty-state,
+.workplace-needs-panel__table-wrap,
+.workplace-needs-panel__card {
+  border: 1px solid #30363d;
+  border-radius: 9px;
+  background: #1a1f23;
+}
+
+.workplace-needs-panel__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+  padding: 16px;
+  color: #aab3bd;
+  font-size: 0.8125rem;
+}
+
+.workplace-needs-panel__empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 170px;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.workplace-needs-panel__empty-icon {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 12px;
+  color: #77818c;
+}
+
+.workplace-needs-panel__empty-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.workplace-needs-panel__empty-title {
+  margin: 0 0 6px;
+  color: #f4f6f8;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.workplace-needs-panel__empty-text {
+  margin: 0;
+  max-width: 28rem;
+  color: #aab3bd;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.workplace-needs-panel__table-wrap {
+  overflow-x: auto;
+}
+
+.workplace-needs-panel__table {
+  width: 100%;
+  min-width: 44rem;
+  border-collapse: collapse;
+}
+
+.workplace-needs-panel__table th,
+.workplace-needs-panel__table td {
+  height: 50px;
+  padding: 0 14px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  white-space: nowrap;
+}
+
+.workplace-needs-panel__table th {
+  color: #77818c;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.workplace-needs-panel__table td {
+  color: #d7dde4;
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.workplace-needs-panel__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.workplace-needs-panel__list {
+  display: grid;
+  gap: 10px;
+}
+
+.workplace-needs-panel__card {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.workplace-needs-panel__card-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px 14px;
+}
+
+.workplace-needs-panel__identity {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.workplace-needs-panel__id-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.workplace-needs-panel__code {
+  color: #f4f6f8;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.workplace-needs-panel__context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  color: #aab3bd;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.workplace-needs-panel__dot {
+  color: #5f6770;
+}
+
+.workplace-needs-panel__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
+.workplace-needs-panel__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.25rem;
+  padding: 4px 7px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.workplace-needs-panel__chip--muted {
+  color: #c9d0d6;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.workplace-needs-panel__chip--accent {
+  color: #ffc4a0;
+  background: rgba(255, 90, 31, 0.16);
+  border-color: rgba(255, 90, 31, 0.28);
+}
+
+.workplace-needs-panel__chip--success {
+  color: #bbf7d0;
+  background: rgba(61, 155, 106, 0.16);
+  border-color: rgba(61, 155, 106, 0.3);
+}
+
+.workplace-needs-panel__chip--danger {
+  color: #ffd0cb;
+  background: rgba(212, 83, 74, 0.16);
+  border-color: rgba(212, 83, 74, 0.3);
+}
+
+.workplace-needs-panel__priority--low {
+  color: #c9d0d6;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.workplace-needs-panel__priority--medium {
+  color: #b7d9ff;
+  background: rgba(90, 168, 255, 0.12);
+  border-color: rgba(90, 168, 255, 0.28);
+}
+
+.workplace-needs-panel__priority--high {
+  color: #ffd59a;
+  background: rgba(255, 176, 32, 0.12);
+  border-color: rgba(255, 176, 32, 0.3);
+}
+
+.workplace-needs-panel__priority--urgent {
+  color: #ffd0cb;
+  background: rgba(212, 83, 74, 0.16);
+  border-color: rgba(212, 83, 74, 0.3);
+}
+
+.workplace-needs-panel__body {
+  margin: 0;
+  color: #d7dde4;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.workplace-needs-panel__footer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.85rem;
+  color: #77818c;
+  font-size: 0.75rem;
+}
+
+.workplace-needs-panel__attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.workplace-needs-panel__attachment {
+  color: #ffc4a0;
+  font-size: 0.75rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.workplace-needs-panel__attachment:hover,
+.workplace-needs-panel__attachment:focus {
+  text-decoration: underline;
+}
+
+.workplace-needs-panel__note {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.workplace-needs-panel__note-label {
+  color: #77818c;
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.workplace-needs-panel__note p {
+  margin: 0;
+  color: #c9d0d6;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.workplace-needs-panel__actions-block {
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.workplace-needs-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.workplace-needs-panel__primary-action {
+  border: 0;
+  border-radius: 8px;
+  background: var(--brand-accent, #ff5a1f);
+  color: #fff;
+  min-height: 2.5rem;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.workplace-needs-panel__primary-action:hover,
+.workplace-needs-panel__primary-action:focus-visible {
+  background: #ff6a35;
+  color: #fff;
+}
+
+.workplace-needs-panel__primary-action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* —— Submit modal —— */
+.workplace-need-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: workplace-need-modal-fade 160ms ease;
+}
+
+.workplace-need-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: rgba(6, 8, 12, 0.72);
+  cursor: pointer;
+}
+
+.workplace-need-modal__backdrop:disabled {
+  cursor: default;
+}
+
+.workplace-need-modal__dialog {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: calc(100% - 32px);
+  max-width: 760px;
+  max-height: min(90vh, 820px);
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  background: #1a1f23;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.workplace-need-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid #30363d;
+}
+
+.workplace-need-modal__heading {
+  min-width: 0;
+}
+
+.workplace-need-modal__title {
+  margin: 0;
+  color: #f4f6f8;
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.workplace-need-modal__subtitle {
+  margin: 3px 0 0;
+  color: #aab3bd;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.workplace-need-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 7px;
+  color: #aab3bd;
+  background: transparent;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.workplace-need-modal__close:hover,
+.workplace-need-modal__close:focus-visible {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  outline: none;
+}
+
+.workplace-need-modal__form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.workplace-need-modal__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 20px 22px;
+  overflow-y: auto;
+}
+
+.workplace-need-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 16px;
+}
+
+.workplace-need-modal__field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.workplace-need-modal__field--full {
+  grid-column: 1 / -1;
+}
+
+.workplace-need-modal__label {
+  color: #c9d0d6;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.workplace-need-modal__control {
+  width: 100%;
+  height: 42px;
+  padding: 0 13px;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  color: #f4f6f8;
+  background: #15191c;
+  font-size: 0.875rem;
+  font-weight: 400;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.workplace-need-modal__control:focus {
+  border-color: var(--brand-accent, #ff5a1f);
+  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.16);
+  outline: none;
+}
+
+.workplace-need-modal__control:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.workplace-need-modal__textarea {
+  height: auto;
+  min-height: 90px;
+  max-height: 160px;
+  padding: 11px 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.workplace-need-modal__textarea::placeholder {
+  color: #77818c;
+}
+
+.workplace-need-modal__upload {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  background: #15191c;
+}
+
+.workplace-need-modal__upload-btn {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #3a424a;
+  border-radius: 7px;
+  color: #e8edf2;
+  background: #22282d;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.workplace-need-modal__upload-btn:hover,
+.workplace-need-modal__upload-btn:focus-visible {
+  border-color: rgba(255, 90, 31, 0.4);
+  color: #ffffff;
+  outline: none;
+}
+
+.workplace-need-modal__upload-name {
+  min-width: 0;
+  color: #77818c;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workplace-need-modal__file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.workplace-need-modal__hint {
+  color: #77818c;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.workplace-need-modal__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px 18px;
+  border-top: 1px solid #30363d;
+}
+
+.workplace-need-modal__cancel {
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid #3a424a;
+  border-radius: 8px;
+  color: #d7dde4;
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.workplace-need-modal__cancel:hover,
+.workplace-need-modal__cancel:focus-visible {
+  color: #ffffff;
+  border-color: #4a535c;
+  outline: none;
+}
+
+.workplace-need-modal__submit {
+  height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  color: #ffffff;
+  background: var(--brand-accent, #ff5a1f);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.workplace-need-modal__submit:hover,
+.workplace-need-modal__submit:focus-visible {
+  background: #ff6a35;
+  outline: none;
+}
+
+.workplace-need-modal__submit:disabled,
+.workplace-need-modal__cancel:disabled,
+.workplace-need-modal__close:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@keyframes workplace-need-modal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .workplace-needs-panel__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .workplace-needs-panel__header-action {
+    width: 100%;
+  }
+
+  .workplace-need-modal__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .workplace-need-modal__dialog {
+    width: calc(100% - 24px);
+  }
+
+  .workplace-need-modal__footer {
+    justify-content: stretch;
+  }
+
+  .workplace-need-modal__cancel,
+  .workplace-need-modal__submit {
+    flex: 1 1 auto;
+  }
+
+  .workplace-needs-panel__actions {
+    justify-content: stretch;
+  }
+
+  .workplace-needs-panel__actions > * {
+    flex: 1 1 auto;
+  }
+}

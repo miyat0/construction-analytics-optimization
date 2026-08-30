@@ -1,4 +1,244 @@
 .project-manager-projects-page {
   display: grid;
-  gap: var(--section-gap);
+  gap: 0;
+  width: 100%;
+  max-width: 1380px;
+  margin: 0 auto;
+  min-width: 0;
+  padding: 0 0 24px;
+}
+
+.project-manager-projects-page__header {
+  margin: 0 0 22px;
+}
+
+.project-manager-projects-page__title {
+  margin: 0;
+  color: #f5f7fa;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.project-manager-projects-page__subtitle {
+  margin: 6px 0 0;
+  max-width: 36rem;
+  color: #aab3bd;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.project-manager-projects-page__alert {
+  margin: 0 0 16px;
+  padding: 0.65rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+/* Projects section (embedded workspace) */
+.project-manager-projects-page .project-workspace--embedded {
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.project-manager-projects-page .project-workspace__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+  margin: 0 0 2px;
+}
+
+.project-manager-projects-page .project-workspace__section-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.project-manager-projects-page .project-workspace__section-title {
+  margin: 0;
+  color: #f5f7fa;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.project-manager-projects-page .project-workspace__section-count,
+.project-manager-projects-page .project-workspace__section-meta {
+  color: #aab3bd;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.project-manager-projects-page .project-workspace__new-btn {
+  height: 38px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.project-manager-projects-page .project-workspace > .project-list.page-list {
+  gap: 14px;
+}
+
+.project-manager-projects-page .project-workspace .filter-bar {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(9rem, 12rem) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  background: #1a1e22;
+}
+
+.project-manager-projects-page .project-workspace .filter-bar__input,
+.project-manager-projects-page .project-workspace .filter-bar__select {
+  height: 38px;
+  min-height: 38px;
+  border-radius: 8px;
+  border-color: #3a424a;
+  background: #15191d;
+  font-size: 0.8125rem;
+}
+
+.project-manager-projects-page .project-workspace .filter-bar__actions {
+  gap: 8px;
+}
+
+.project-manager-projects-page .project-workspace .filter-bar__actions .admin-btn {
+  height: 38px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.project-manager-projects-page .project-workspace .filter-bar__actions .admin-btn--secondary {
+  border-color: #3a424a;
+  background: transparent;
+  color: #d7dde4;
+}
+
+.project-manager-projects-page .page-list__items,
+.project-manager-projects-page .project-list__items {
+  display: grid;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+/* Workplace needs — secondary, compact */
+.project-manager-projects-page .workplace-needs-panel {
+  gap: 14px;
+  margin-top: 30px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.project-manager-projects-page .workplace-needs-panel__title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.project-manager-projects-page .workplace-needs-panel__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.4rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  color: #aab3bd;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.project-manager-projects-page .workplace-needs-panel__description {
+  margin-top: 2px;
+  font-size: 0.8125rem;
+  color: #aab3bd;
+}
+
+.project-manager-projects-page .workplace-needs-panel__empty-state,
+.project-manager-projects-page .workplace-needs-panel__loading {
+  min-height: 0;
+  padding: 24px 16px;
+  border-radius: 10px;
+  background: #1a1e22;
+  border: 1px solid #30363d;
+}
+
+.project-manager-projects-page .workplace-needs-panel__empty-icon {
+  margin-bottom: 8px;
+}
+
+.project-manager-projects-page .workplace-needs-panel__empty-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.project-manager-projects-page .workplace-needs-panel__empty-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.project-manager-projects-page .workplace-needs-panel__empty-text {
+  font-size: 0.75rem;
+  max-width: 22rem;
+  color: #78838f;
+}
+
+@media (max-width: 767.98px) {
+  .project-manager-projects-page__title {
+    font-size: 1.5rem;
+  }
+
+  .project-manager-projects-page .project-workspace .filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .project-manager-projects-page .project-workspace .filter-bar__actions {
+    width: 100%;
+  }
+
+  .project-manager-projects-page .project-workspace .filter-bar__actions .admin-btn {
+    flex: 1 1 auto;
+  }
+
+  .project-manager-projects-page .project-workspace__new-btn {
+    width: 100%;
+  }
+
+  .project-manager-projects-page .workplace-needs-panel {
+    margin-top: 24px;
+    padding-top: 22px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .project-manager-projects-page .project-workspace .filter-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .project-manager-projects-page .project-workspace .filter-bar__input {
+    grid-column: 1 / -1;
+  }
+
+  .project-manager-projects-page .project-workspace .filter-bar__actions {
+    justify-self: stretch;
+  }
 }

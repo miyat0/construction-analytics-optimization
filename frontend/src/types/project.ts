@@ -29,10 +29,28 @@ export const TASK_UPDATE_STATUS_OPTIONS = [
   { value: "blocked", label: "Blocked" },
 ] as const;
 
+export const INCOMPLETE_WORK_REASON_OPTIONS = [
+  { value: "material_unavailable", label: "Material unavailable" },
+  { value: "equipment_unavailable", label: "Equipment unavailable" },
+  { value: "safety_issue", label: "Safety issue" },
+  { value: "insufficient_manpower", label: "Insufficient manpower" },
+  { value: "weather", label: "Weather" },
+  { value: "technical_issue", label: "Technical issue" },
+  { value: "other", label: "Other" },
+] as const;
+
 export const TASK_REVIEW_STATUS_OPTIONS = [
   { value: "pending", label: "Pending" },
   { value: "approved", label: "Approved" },
   { value: "rejected", label: "Rejected" },
+] as const;
+
+export const SCHEDULE_STATUS_OPTIONS = [
+  { value: "not_started", label: "Not Started" },
+  { value: "ahead_of_schedule", label: "Ahead of Schedule" },
+  { value: "on_schedule", label: "On Schedule" },
+  { value: "behind_schedule", label: "Behind Schedule" },
+  { value: "completed", label: "Completed" },
 ] as const;
 
 export const PROJECT_DOCUMENT_TYPE_OPTIONS = [
@@ -48,7 +66,9 @@ export type ProjectStatus = (typeof PROJECT_STATUS_OPTIONS)[number]["value"];
 export type MilestoneStatus = (typeof MILESTONE_STATUS_OPTIONS)[number]["value"];
 export type MilestoneTaskStatus = (typeof MILESTONE_TASK_STATUS_OPTIONS)[number]["value"];
 export type TaskUpdateStatus = (typeof TASK_UPDATE_STATUS_OPTIONS)[number]["value"];
+export type IncompleteWorkReason = (typeof INCOMPLETE_WORK_REASON_OPTIONS)[number]["value"];
 export type TaskReviewStatus = (typeof TASK_REVIEW_STATUS_OPTIONS)[number]["value"];
+export type ScheduleStatus = (typeof SCHEDULE_STATUS_OPTIONS)[number]["value"];
 export type ProjectDocumentType = (typeof PROJECT_DOCUMENT_TYPE_OPTIONS)[number]["value"];
 
 export interface ProjectUserSummary {
@@ -131,6 +151,8 @@ export interface Milestone {
   extension_count: number;
   progress_percentage: string;
   expected_progress_percentage: string;
+  schedule_status?: ScheduleStatus;
+  schedule_status_label?: string;
   created_at: string;
   updated_at: string;
 }
@@ -204,6 +226,8 @@ export interface DailyTaskUpdate {
   status: TaskUpdateStatus;
   remark: string;
   concern_text: string;
+  incomplete_reason: IncompleteWorkReason | "";
+  incomplete_reason_detail: string;
   has_safety_issue: boolean;
   concern_resolved: boolean;
   concern_resolved_at: string | null;
@@ -252,6 +276,8 @@ export interface MilestoneTask {
   milestone: TaskMilestoneSummary;
   title: string;
   description: string;
+  expected_work: string;
+  completion_requirement: string;
   planned_start_date: string | null;
   planned_end_date: string | null;
   required_worker_count: number;
@@ -269,6 +295,8 @@ export interface MilestoneTask {
   approval_note: string;
   progress_percentage: string;
   expected_progress_percentage: string;
+  schedule_status?: ScheduleStatus;
+  schedule_status_label?: string;
   active_assignment_count: number;
   active_assignments: TaskAssignment[];
   created_by: ProjectUserSummary | null;
@@ -284,6 +312,8 @@ export interface MilestoneTaskListData {
 export interface MilestoneTaskPayload {
   title: string;
   description?: string;
+  expected_work?: string;
+  completion_requirement?: string;
   planned_start_date?: string | null;
   planned_end_date?: string | null;
   required_worker_count?: number;
@@ -316,6 +346,8 @@ export interface DailyTaskUpdatePayload {
   status: TaskUpdateStatus;
   remark?: string;
   concern_text?: string;
+  incomplete_reason?: IncompleteWorkReason | "";
+  incomplete_reason_detail?: string;
   has_safety_issue?: boolean;
 }
 
@@ -348,6 +380,91 @@ export interface ProjectDocumentListData {
 export interface WorkerLookupListData {
   count: number;
   results: ProjectLookupUser[];
+}
+
+export type WorkplaceNeedCategory =
+  | "safety"
+  | "tools_equipment"
+  | "ppe"
+  | "workplace_facilities"
+  | "transportation"
+  | "accommodation"
+  | "working_conditions"
+  | "other";
+
+export type WorkplaceNeedPriority = "low" | "medium" | "high" | "urgent";
+
+export type WorkplaceNeedStatus =
+  | "submitted"
+  | "under_supervisor_review"
+  | "verified"
+  | "forwarded_to_pm"
+  | "in_progress"
+  | "resolved"
+  | "rejected";
+
+export interface WorkplaceNeedAttachment {
+  attachment_id: number;
+  file_url: string | null;
+  original_name: string;
+  created_at: string;
+}
+
+export interface WorkplaceNeed {
+  request_id: number;
+  tracking_code: string;
+  project_id: number;
+  project_name: string;
+  milestone_id: number | null;
+  milestone_title: string | null;
+  submitted_by: ProjectUserSummary;
+  category: WorkplaceNeedCategory;
+  category_label: string;
+  description: string;
+  priority: WorkplaceNeedPriority;
+  priority_label: string;
+  status: WorkplaceNeedStatus;
+  status_label: string;
+  submitted_at: string;
+  supervisor_remarks: string;
+  supervisor_reviewed_by: ProjectUserSummary | null;
+  supervisor_reviewed_at: string | null;
+  pm_comments: string;
+  pm_reviewed_by: ProjectUserSummary | null;
+  pm_reviewed_at: string | null;
+  resolved_at: string | null;
+  attachments: WorkplaceNeedAttachment[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkplaceNeedListData {
+  results: WorkplaceNeed[];
+}
+
+export interface WorkplaceNeedContextMilestone {
+  milestone_id: number;
+  title: string;
+}
+
+export interface WorkplaceNeedContextProject {
+  project_id: number;
+  project_name: string;
+  milestones: WorkplaceNeedContextMilestone[];
+}
+
+export interface WorkplaceNeedContextData {
+  results: WorkplaceNeedContextProject[];
+}
+
+export interface WorkplaceNeedSupervisorReviewPayload {
+  action: "verify" | "reject";
+  remarks?: string;
+}
+
+export interface WorkplaceNeedPmActionPayload {
+  action: "start" | "resolve" | "comment";
+  comments?: string;
 }
 
 export type ProjectListResponse = ApiSuccessResponse<ProjectListData>;

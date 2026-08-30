@@ -84,6 +84,30 @@ class IsProjectExecutionWorker(RolePermission):
     message = "Only Worker can access worker execution updates."
 
 
+class IsWorkplaceNeedWorker(RolePermission):
+    allowed_roles = (WORKER_ROLE_NAME,)
+    message = "Only Worker can submit and track workplace needs."
+
+
+class IsWorkplaceNeedSupervisorReviewer(RolePermission):
+    allowed_roles = (SUPERVISOR_ROLE_NAME, COMPANY_ADMIN_ROLE_NAME)
+    message = "Only Supervisor can verify or reject workplace needs."
+
+
+class IsWorkplaceNeedPmActor(RolePermission):
+    allowed_roles = (PROJECT_MANAGER_ROLE_NAME, COMPANY_ADMIN_ROLE_NAME)
+    message = "Only Project Manager can act on verified workplace needs."
+
+
+class IsWorkplaceNeedWorkspaceViewer(RolePermission):
+    allowed_roles = (
+        COMPANY_ADMIN_ROLE_NAME,
+        PROJECT_MANAGER_ROLE_NAME,
+        SUPERVISOR_ROLE_NAME,
+    )
+    message = "Only Supervisor, Project Manager, or Company Administrator can view project workplace needs."
+
+
 class IsProjectExecutionTeamViewer(RolePermission):
     allowed_roles = (
         COMPANY_ADMIN_ROLE_NAME,

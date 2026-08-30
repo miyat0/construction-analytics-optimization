@@ -596,6 +596,34 @@ class ProjectExecutionService:
         return list(getattr(milestone, "prefetched_tasks", []))
 
     @classmethod
+    def _validate_task_timeline_against_milestone(cls, milestone, *, planned_start_date, planned_end_date):
+        """Ensure task dates sit within the milestone window when both sides are set."""
+        errors = {}
+        milestone_start = milestone.planned_start_date
+        milestone_end = milestone.effective_end_date
+
+        if planned_start_date and planned_end_date and planned_end_date < planned_start_date:
+            errors["planned_end_date"] = ["Task end date cannot be earlier than the start date."]
+
+        if planned_start_date and milestone_start and planned_start_date < milestone_start:
+            errors["planned_start_date"] = [
+                "Task start date cannot be earlier than the milestone start date."
+            ]
+
+        if planned_end_date and milestone_end and planned_end_date > milestone_end:
+            errors["planned_end_date"] = [
+                "Task end date cannot be later than the applicable milestone deadline."
+            ]
+
+        if errors:
+            raise ProjectServiceError(
+                message="Task timeline is outside the milestone schedule.",
+                error_code="validation_error",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                errors=errors,
+            )
+
+    @classmethod
     @transaction.atomic
     def create_milestone_task(cls, *, login_account, project_id, milestone_id, **validated_data):
         profile, role_name = cls._ensure_role(
@@ -607,6 +635,12 @@ class ProjectExecutionService:
             login_account=login_account,
             project_id=project_id,
             milestone_id=milestone_id,
+        )
+
+        cls._validate_task_timeline_against_milestone(
+            milestone,
+            planned_start_date=validated_data.get("planned_start_date"),
+            planned_end_date=validated_data.get("planned_end_date"),
         )
 
         sort_order = validated_data.get("sort_order")
@@ -641,6 +675,15 @@ class ProjectExecutionService:
             milestone_id=milestone_id,
             task_id=task_id,
         )
+
+        next_start = validated_data.get("planned_start_date", task.planned_start_date)
+        next_end = validated_data.get("planned_end_date", task.planned_end_date)
+        if "planned_start_date" in validated_data or "planned_end_date" in validated_data:
+            cls._validate_task_timeline_against_milestone(
+                task.milestone,
+                planned_start_date=next_start,
+                planned_end_date=next_end,
+            )
 
         for field_name, value in validated_data.items():
             setattr(task, field_name, value)
@@ -918,6 +961,8 @@ class ProjectExecutionService:
             "status": validated_data["status"],
             "remark": validated_data.get("remark", ""),
             "concern_text": validated_data.get("concern_text", ""),
+            "incomplete_reason": validated_data.get("incomplete_reason", ""),
+            "incomplete_reason_detail": validated_data.get("incomplete_reason_detail", ""),
             "has_safety_issue": validated_data.get("has_safety_issue", False),
         }
 
@@ -932,6 +977,8 @@ class ProjectExecutionService:
             update.status = defaults["status"]
             update.remark = defaults["remark"]
             update.concern_text = defaults["concern_text"]
+            update.incomplete_reason = defaults["incomplete_reason"]
+            update.incomplete_reason_detail = defaults["incomplete_reason_detail"]
             update.has_safety_issue = defaults["has_safety_issue"]
 
         update.supervisor_review_status = DailyTaskUpdate.REVIEW_PENDING
@@ -982,12 +1029,16 @@ class ProjectExecutionService:
         update = cls._get_task_update(update_id=update_id)
         cls._validate_engineer_access_to_assignment(login_account=login_account, assignment=update.assignment)
 
-        if update.supervisor_review_status == DailyTaskUpdate.REVIEW_PENDING:
+        if update.supervisor_review_status != DailyTaskUpdate.REVIEW_APPROVED:
             raise ProjectServiceError(
-                message="Supervisor review must be completed before Site Engineer verification.",
+                message="Only supervisor-verified updates can be reviewed by the Site Engineer.",
                 error_code="validation_error",
                 status_code=status.HTTP_400_BAD_REQUEST,
-                errors={"review_status": ["Supervisor review must be completed before Site Engineer verification."]},
+                errors={
+                    "review_status": [
+                        "Only supervisor-verified updates can be reviewed by the Site Engineer."
+                    ]
+                },
             )
 
         update.engineer_review_status = review_status

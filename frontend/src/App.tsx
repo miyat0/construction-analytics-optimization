@@ -30,8 +30,16 @@ import ClientProjectsPage from "./pages/client/ClientProjectsPage";
 import LandingPage from "./pages/marketing/LandingPage";
 import ProjectManagerProjectsPage from "./pages/projectManager/ProjectManagerProjectsPage";
 import SiteEngineerDashboardPage from "./pages/siteEngineer/SiteEngineerDashboardPage";
+import SiteEngineerProjectsPage from "./pages/siteEngineer/SiteEngineerProjectsPage";
+import SiteEngineerTasksPage from "./pages/siteEngineer/SiteEngineerTasksPage";
+import SiteEngineerVerificationsPage from "./pages/siteEngineer/SiteEngineerVerificationsPage";
 import SupervisorDashboardPage from "./pages/supervisor/SupervisorDashboardPage";
+import SupervisorVerificationsPage from "./pages/supervisor/SupervisorVerificationsPage";
+import SupervisorProjectsPage from "./pages/supervisor/SupervisorProjectsPage";
 import WorkerDashboardPage from "./pages/worker/WorkerDashboardPage";
+import WorkerTasksPage from "./pages/worker/WorkerTasksPage";
+import WorkerAttendancePage from "./pages/worker/WorkerAttendancePage";
+import WorkerWorkplaceNeedsPage from "./pages/worker/WorkerWorkplaceNeedsPage";
 import DashboardRedirect from "./routes/DashboardRedirect";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 import { RoleProtectedRoute } from "./routes/RoleProtectedRoute";
@@ -246,6 +254,9 @@ export const App = () => {
             <Route element={<UserWorkspaceLayout />} path="/site-engineer">
               <Route element={<Navigate replace to="dashboard" />} index />
               <Route element={<SiteEngineerDashboardPage />} path="dashboard" />
+              <Route element={<SiteEngineerProjectsPage />} path="projects" />
+              <Route element={<SiteEngineerTasksPage />} path="tasks" />
+              <Route element={<SiteEngineerVerificationsPage />} path="verifications" />
             </Route>
           </Route>
 
@@ -260,6 +271,8 @@ export const App = () => {
             <Route element={<UserWorkspaceLayout />} path="/supervisor">
               <Route element={<Navigate replace to="dashboard" />} index />
               <Route element={<SupervisorDashboardPage />} path="dashboard" />
+              <Route element={<SupervisorVerificationsPage />} path="verifications" />
+              <Route element={<SupervisorProjectsPage />} path="projects" />
             </Route>
           </Route>
 
@@ -274,6 +287,9 @@ export const App = () => {
             <Route element={<UserWorkspaceLayout />} path="/worker">
               <Route element={<Navigate replace to="dashboard" />} index />
               <Route element={<WorkerDashboardPage />} path="dashboard" />
+              <Route element={<WorkerTasksPage />} path="tasks" />
+              <Route element={<WorkerAttendancePage />} path="attendance" />
+              <Route element={<WorkerWorkplaceNeedsPage />} path="workplace-needs" />
             </Route>
           </Route>
 

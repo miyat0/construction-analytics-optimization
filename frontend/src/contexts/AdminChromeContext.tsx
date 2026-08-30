@@ -19,6 +19,9 @@ type AdminChromeContextValue = {
   /** Muted breadcrumb shown in the top app bar (create flows). */
   topbarBreadcrumb: string | null;
   setTopbarBreadcrumb: (breadcrumb: string | null) => void;
+  /** Explicit page title for workspace modules (e.g. Worker pages). */
+  pageTitle: string | null;
+  setPageTitle: (title: string | null) => void;
 };
 
 const AdminChromeContext = createContext<AdminChromeContextValue | null>(null);
@@ -28,6 +31,7 @@ export const AdminChromeProvider = ({ children }: { children: ReactNode }) => {
     null,
   );
   const [topbarBreadcrumb, setTopbarBreadcrumbState] = useState<string | null>(null);
+  const [pageTitle, setPageTitleState] = useState<string | null>(null);
 
   const setPrimaryAction = useCallback((action: AdminPrimaryAction | null) => {
     setPrimaryActionState(action);
@@ -37,14 +41,27 @@ export const AdminChromeProvider = ({ children }: { children: ReactNode }) => {
     setTopbarBreadcrumbState(breadcrumb);
   }, []);
 
+  const setPageTitle = useCallback((title: string | null) => {
+    setPageTitleState(title);
+  }, []);
+
   const value = useMemo(
     () => ({
       primaryAction,
       setPrimaryAction,
       topbarBreadcrumb,
       setTopbarBreadcrumb,
+      pageTitle,
+      setPageTitle,
     }),
-    [primaryAction, setPrimaryAction, topbarBreadcrumb, setTopbarBreadcrumb],
+    [
+      primaryAction,
+      setPrimaryAction,
+      topbarBreadcrumb,
+      setTopbarBreadcrumb,
+      pageTitle,
+      setPageTitle,
+    ],
   );
 
   return (
@@ -81,4 +98,21 @@ export const useProjectCreateChrome = (breadcrumb: string | null) => {
       setTopbarBreadcrumb(null);
     };
   }, [breadcrumb, setTopbarBreadcrumb]);
+};
+
+/** Sets the workspace page title in the shared top bar; clears on unmount. */
+export const useWorkspacePageTitle = (title: string | null) => {
+  const chrome = useOptionalAdminChrome();
+  const setPageTitle = chrome?.setPageTitle;
+
+  useEffect(() => {
+    if (!setPageTitle) {
+      return;
+    }
+
+    setPageTitle(title);
+    return () => {
+      setPageTitle(null);
+    };
+  }, [title, setPageTitle]);
 };

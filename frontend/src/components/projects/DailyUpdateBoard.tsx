@@ -40,7 +40,7 @@ export const DailyUpdateBoard = ({
     if (mode === "site-engineer") {
       return updates.filter(
         (update) =>
-          update.supervisor_review_status !== "pending" &&
+          update.supervisor_review_status === "approved" &&
           update.engineer_review_status === "pending",
       );
     }
@@ -159,6 +159,34 @@ export const DailyUpdateBoard = ({
                 </div>
               ) : null}
 
+              {update.incomplete_reason ? (
+                <div className="daily-update-board__concern">
+                  Incomplete reason:{" "}
+                  {update.incomplete_reason.replace(/_/g, " ")}
+                  {update.incomplete_reason_detail
+                    ? ` — ${update.incomplete_reason_detail}`
+                    : ""}
+                </div>
+              ) : null}
+
+              <div className="daily-update-board__meta">
+                {update.supervisor_reviewed_at ? (
+                  <span>
+                    Supervisor {update.supervisor_review_status}:{" "}
+                    {new Date(update.supervisor_reviewed_at).toLocaleString()}
+                  </span>
+                ) : null}
+                {update.engineer_reviewed_at ? (
+                  <span>
+                    Engineer {update.engineer_review_status}:{" "}
+                    {new Date(update.engineer_reviewed_at).toLocaleString()}
+                  </span>
+                ) : null}
+                {update.supervisor_review_note ? (
+                  <span>Supervisor note: {update.supervisor_review_note}</span>
+                ) : null}
+              </div>
+
               {mode !== "readonly" && onReview ? (
                 <div className="daily-update-board__review-panel">
                   <textarea
@@ -173,8 +201,8 @@ export const DailyUpdateBoard = ({
                     }
                     placeholder={
                       mode === "supervisor"
-                        ? "Add verification notes for the worker update."
-                        : "Add site engineer verification notes."
+                        ? "Verification notes (required when rejecting)."
+                        : "Site engineer notes (required when rejecting)."
                     }
                   />
                   <div className="daily-update-board__actions">
@@ -192,7 +220,11 @@ export const DailyUpdateBoard = ({
                       disabled={processingUpdateId === update.update_id}
                       onClick={() => void handleReview(update.update_id, "approved")}
                     >
-                      {processingUpdateId === update.update_id ? "Saving..." : "Approve"}
+                      {processingUpdateId === update.update_id
+                        ? "Saving..."
+                        : mode === "site-engineer"
+                          ? "Verify"
+                          : "Approve"}
                     </button>
                   </div>
                 </div>

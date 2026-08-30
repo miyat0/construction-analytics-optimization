@@ -31,11 +31,50 @@ from .views import (
     ProjectMilestoneDetailView,
     ProjectMilestoneListCreateView,
 )
+from .workplace_need_views import (
+    ProjectWorkplaceNeedListView,
+    WorkplaceNeedMineListCreateView,
+    WorkplaceNeedPmActionView,
+    WorkplaceNeedPmInboxView,
+    WorkplaceNeedSupervisorInboxView,
+    WorkplaceNeedSupervisorReviewView,
+    WorkplaceNeedWorkerContextView,
+)
 
 urlpatterns = [
     path("", ProjectListCreateView.as_view(), name="project-list-create"),
     path("lookups/", ProjectLookupsView.as_view(), name="project-lookups"),
     path("admin-dashboard/", AdminDashboardView.as_view(), name="admin-dashboard"),
+    path(
+        "workplace-needs/context/",
+        WorkplaceNeedWorkerContextView.as_view(),
+        name="workplace-need-worker-context",
+    ),
+    path(
+        "workplace-needs/mine/",
+        WorkplaceNeedMineListCreateView.as_view(),
+        name="workplace-need-mine-list-create",
+    ),
+    path(
+        "workplace-needs/inbox/supervisor/",
+        WorkplaceNeedSupervisorInboxView.as_view(),
+        name="workplace-need-supervisor-inbox",
+    ),
+    path(
+        "workplace-needs/inbox/project-manager/",
+        WorkplaceNeedPmInboxView.as_view(),
+        name="workplace-need-pm-inbox",
+    ),
+    path(
+        "workplace-needs/<int:request_id>/supervisor-review/",
+        WorkplaceNeedSupervisorReviewView.as_view(),
+        name="workplace-need-supervisor-review",
+    ),
+    path(
+        "workplace-needs/<int:request_id>/pm-action/",
+        WorkplaceNeedPmActionView.as_view(),
+        name="workplace-need-pm-action",
+    ),
     path("<int:project_id>/", ProjectDetailView.as_view(), name="project-detail"),
     path("<int:project_id>/archive/", ProjectArchiveView.as_view(), name="project-archive"),
     path(
@@ -127,6 +166,11 @@ urlpatterns = [
         "<int:project_id>/concerns/<int:update_id>/resolve/",
         ProjectConcernResolveView.as_view(),
         name="project-concern-resolve",
+    ),
+    path(
+        "<int:project_id>/workplace-needs/",
+        ProjectWorkplaceNeedListView.as_view(),
+        name="project-workplace-need-list",
     ),
     path(
         "task-assignments/<int:assignment_id>/updates/",

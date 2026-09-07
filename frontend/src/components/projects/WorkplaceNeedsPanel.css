@@ -625,6 +625,27 @@
   line-height: 1.35;
 }
 
+.workplace-need-modal__banner,
+.workplace-need-modal__error {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.workplace-need-modal__banner {
+  color: #d7dde4;
+  border: 1px solid #3a424a;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.workplace-need-modal__error {
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.1);
+}
+
 .workplace-need-modal__footer {
   display: flex;
   flex-wrap: wrap;
@@ -659,7 +680,7 @@
   padding: 0 18px;
   border: 0;
   border-radius: 8px;
-  color: #ffffff;
+  color: #ffffff !important;
   background: var(--brand-accent, #ff5a1f);
   font-size: 0.8125rem;
   font-weight: 600;

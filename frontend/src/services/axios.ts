@@ -25,6 +25,12 @@ apiClient.interceptors.request.use((config) => {
     config.headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
+  // FormData must let the browser set multipart Content-Type + boundary.
+  // A default application/json (or bare multipart/form-data) breaks parsing.
+  if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+    config.headers.delete("Content-Type");
+  }
+
   return config;
 });
 

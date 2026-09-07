@@ -14,6 +14,7 @@ import type {
   ProjectSummary,
 } from "../../types/project";
 import { ProjectTimeline } from "../../components/projects/ProjectTimeline";
+import { formatDisplayTitle } from "../../utils/formatDisplayTitle";
 
 import "./ClientProjectsPage.css";
 
@@ -35,6 +36,19 @@ const formatDate = (value: string | null): string => {
     day: "numeric",
     year: "numeric",
   }).format(new Date(value));
+};
+
+const formatStatus = (status: string): string => status.replace(/_/g, " ");
+
+const formatPeople = (
+  people: Array<{ name: string }> | null | undefined,
+  fallbackName?: string | null,
+): string => {
+  const names = (people ?? []).map((person) => person.name).filter(Boolean);
+  if (names.length > 0) {
+    return names.join(", ");
+  }
+  return fallbackName?.trim() || "Not assigned";
 };
 
 export const ClientProjectsPage = () => {
@@ -78,9 +92,10 @@ export const ClientProjectsPage = () => {
       setProjects(projectData.results);
 
       const nextProjectId =
-        preferredProjectId && projectData.results.some((project) => project.project_id === preferredProjectId)
+        preferredProjectId &&
+        projectData.results.some((project) => project.project_id === preferredProjectId)
           ? preferredProjectId
-          : projectData.results[0]?.project_id ?? null;
+          : (projectData.results[0]?.project_id ?? null);
 
       setSelectedProjectId(nextProjectId);
 
@@ -92,9 +107,7 @@ export const ClientProjectsPage = () => {
         setDocuments([]);
       }
     } catch (error) {
-      setErrorMessage(
-        getErrorMessage(error, "Unable to load your shared projects right now."),
-      );
+      setErrorMessage(getErrorMessage(error, "Unable to load your shared projects right now."));
     } finally {
       setIsLoading(false);
     }
@@ -105,150 +118,190 @@ export const ClientProjectsPage = () => {
   }, []);
 
   const handleSelectProject = async (projectId: number) => {
+    if (projectId === selectedProjectId) {
+      return;
+    }
     setSelectedProjectId(projectId);
+    setErrorMessage(null);
     await loadProjectBundle(projectId);
   };
 
   return (
     <main className="client-projects-page">
-      <section className="client-projects-page__hero">
-        <h1>Projects</h1>
-      </section>
+      <header className="client-projects-page__intro">
+        <div>
+          <p className="client-projects-page__eyebrow">Client workspace</p>
+          <h1 className="client-projects-page__title">Your projects</h1>
+          <p className="client-projects-page__subtitle">
+            Review progress, milestones, and shared documents for projects assigned to you.
+          </p>
+        </div>
+      </header>
 
-      {errorMessage ? <div className="alert alert-danger">{errorMessage}</div> : null}
+      {errorMessage ? (
+        <div className="alert alert-danger client-projects-page__alert" role="alert">
+          {errorMessage}
+        </div>
+      ) : null}
 
-      <div className="client-projects-page__grid">
-        <section className="client-projects-page__surface">
-          <div className="client-projects-page__surface-header">
-            <div>
-              <h2>Your Projects</h2>
-            </div>
+      <section className="client-projects-page__surface client-projects-page__chooser">
+        <div className="client-projects-page__surface-header">
+          <h2>Select project</h2>
+          <span className="client-projects-page__count">
+            {isLoading ? "…" : `${projects.length} total`}
+          </span>
+        </div>
+
+        {isLoading ? (
+          <div className="client-projects-page__empty">Loading projects…</div>
+        ) : projects.length === 0 ? (
+          <div className="client-projects-page__empty">
+            No projects have been shared with you yet.
           </div>
-
-          {isLoading ? (
-            <div className="client-projects-page__empty">Loading projects...</div>
-          ) : projects.length === 0 ? (
-            <div className="client-projects-page__empty">
-              No projects shared yet.
-            </div>
-          ) : (
-            <div className="client-projects-page__project-list">
-              {projects.map((project) => (
+        ) : (
+          <div className="client-projects-page__project-list" role="list">
+            {projects.map((project) => {
+              const isActive = selectedProjectId === project.project_id;
+              return (
                 <button
                   key={project.project_id}
                   type="button"
-                  className={`client-projects-page__project-card ${
-                    selectedProjectId === project.project_id
-                      ? "client-projects-page__project-card--active"
-                      : ""
+                  role="listitem"
+                  className={`client-projects-page__project-card${
+                    isActive ? " client-projects-page__project-card--active" : ""
                   }`}
+                  aria-pressed={isActive}
                   onClick={() => void handleSelectProject(project.project_id)}
                 >
-                  <strong>{project.project_name}</strong>
-                  <span>{project.status.replace(/_/g, " ")}</span>
-                  <small>
-                    Milestones: {project.milestone_count} | Documents: {project.document_count}
-                  </small>
+                  <span className="client-projects-page__project-card-top">
+                    <strong>
+                      {formatDisplayTitle(project.project_name) || project.project_name}
+                    </strong>
+                    <span className="client-projects-page__badge">
+                      {formatStatus(project.status)}
+                    </span>
+                  </span>
+                  <span className="client-projects-page__project-card-meta">
+                    {project.milestone_count} milestones · {project.document_count} documents
+                  </span>
                 </button>
-              ))}
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <div className="client-projects-page__details">
+        <section className="client-projects-page__surface">
+          <div className="client-projects-page__surface-header">
+            <h2>Overview</h2>
+          </div>
+
+          {isDetailLoading ? (
+            <div className="client-projects-page__empty">Loading project details…</div>
+          ) : !selectedProject ? (
+            <div className="client-projects-page__empty">Select a project to view details.</div>
+          ) : (
+            <div className="client-projects-page__overview">
+              <div className="client-projects-page__overview-header">
+                <div className="client-projects-page__overview-copy">
+                  <h3>
+                    {formatDisplayTitle(selectedProject.project_name) ||
+                      selectedProject.project_name}
+                  </h3>
+                  <p>
+                    {selectedProject.description?.trim()
+                      ? selectedProject.description
+                      : "No description provided for this project."}
+                  </p>
+                </div>
+                <span className="client-projects-page__badge client-projects-page__badge--lg">
+                  {formatStatus(selectedProject.status)}
+                </span>
+              </div>
+
+              <div className="client-projects-page__meta-grid">
+                <div className="client-projects-page__meta-item">
+                  <span className="client-projects-page__meta-label">Start date</span>
+                  <strong className="client-projects-page__meta-value">
+                    {formatDate(selectedProject.start_date)}
+                  </strong>
+                </div>
+                <div className="client-projects-page__meta-item">
+                  <span className="client-projects-page__meta-label">End date</span>
+                  <strong className="client-projects-page__meta-value">
+                    {formatDate(selectedProject.end_date)}
+                  </strong>
+                </div>
+                <div className="client-projects-page__meta-item">
+                  <span className="client-projects-page__meta-label">Project manager</span>
+                  <strong className="client-projects-page__meta-value">
+                    {selectedProject.project_manager?.name ?? "Not assigned"}
+                  </strong>
+                </div>
+                <div className="client-projects-page__meta-item">
+                  <span className="client-projects-page__meta-label">Site engineer</span>
+                  <strong className="client-projects-page__meta-value">
+                    {formatPeople(
+                      selectedProject.site_engineers,
+                      selectedProject.site_engineer?.name,
+                    )}
+                  </strong>
+                </div>
+              </div>
             </div>
           )}
         </section>
 
-        <div className="client-projects-page__details">
+        {selectedProject ? (
+          <section className="client-projects-page__surface client-projects-page__timeline">
+            <ProjectTimeline milestones={milestones} />
+          </section>
+        ) : null}
+
+        {selectedProject ? (
           <section className="client-projects-page__surface">
             <div className="client-projects-page__surface-header">
-              <div>
-                <h2>Overview</h2>
-              </div>
+              <h2>Documents</h2>
+              <span className="client-projects-page__count">{documents.length}</span>
             </div>
 
-            {isDetailLoading ? (
-              <div className="client-projects-page__empty">Loading project details...</div>
-            ) : !selectedProject ? (
+            {documents.length === 0 ? (
               <div className="client-projects-page__empty">
-                Select a project.
+                No documents have been shared yet.
               </div>
             ) : (
-              <div className="client-projects-page__overview">
-                <div className="client-projects-page__overview-header">
-                  <div>
-                    <h3>{selectedProject.project_name}</h3>
-                    <p>{selectedProject.description || "No description"}</p>
-                  </div>
-                  <span className="client-projects-page__badge">
-                    {selectedProject.status.replace(/_/g, " ")}
-                  </span>
-                </div>
-
-                <div className="client-projects-page__meta-grid">
-                  <div>
-                    <span>Start Date</span>
-                    <strong>{formatDate(selectedProject.start_date)}</strong>
-                  </div>
-                  <div>
-                    <span>End Date</span>
-                    <strong>{formatDate(selectedProject.end_date)}</strong>
-                  </div>
-                  <div>
-                    <span>Project Manager</span>
-                    <strong>{selectedProject.project_manager?.name ?? "Not assigned"}</strong>
-                  </div>
-                  <div>
-                    <span>Site Engineer</span>
-                    <strong>{selectedProject.site_engineer?.name ?? "Not assigned"}</strong>
-                  </div>
-                </div>
+              <div className="client-projects-page__document-list">
+                {documents.map((document) => (
+                  <article
+                    key={document.document_id}
+                    className="client-projects-page__document-card"
+                  >
+                    <div className="client-projects-page__document-copy">
+                      <h3>{formatDisplayTitle(document.title) || document.title}</h3>
+                      <p>{document.description?.trim() || "No notes"}</p>
+                    </div>
+                    <div className="client-projects-page__document-meta">
+                      <span>{formatStatus(document.document_type)}</span>
+                      <span>{document.milestone_title ?? "Project level"}</span>
+                      <span>{document.file_name ?? "File unavailable"}</span>
+                    </div>
+                    {document.file_url ? (
+                      <a
+                        className="client-projects-page__document-link"
+                        href={document.file_url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Open document
+                      </a>
+                    ) : null}
+                  </article>
+                ))}
               </div>
             )}
           </section>
-
-          {selectedProject ? (
-            <section className="client-projects-page__surface">
-              <ProjectTimeline milestones={milestones} />
-            </section>
-          ) : null}
-
-          {selectedProject ? (
-            <section className="client-projects-page__surface">
-              <div className="client-projects-page__surface-header">
-                <div>
-                  <h2>Documents</h2>
-                </div>
-              </div>
-
-              {documents.length === 0 ? (
-                <div className="client-projects-page__empty">
-                  No documents yet.
-                </div>
-              ) : (
-                <div className="client-projects-page__document-list">
-                  {documents.map((document) => (
-                    <article
-                      key={document.document_id}
-                      className="client-projects-page__document-card"
-                    >
-                      <div>
-                        <h3>{document.title}</h3>
-                        <p>{document.description || "No notes"}</p>
-                      </div>
-                      <div className="client-projects-page__document-meta">
-                        <span>{document.document_type.replace(/_/g, " ")}</span>
-                        <span>{document.milestone_title ?? "Project level"}</span>
-                        <span>{document.file_name ?? "File unavailable"}</span>
-                      </div>
-                      {document.file_url ? (
-                        <a href={document.file_url} target="_blank" rel="noreferrer">
-                          Open Document
-                        </a>
-                      ) : null}
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
-          ) : null}
-        </div>
+        ) : null}
       </div>
     </main>
   );

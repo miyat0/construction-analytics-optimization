@@ -64,14 +64,21 @@ export const WorkerWorkplaceNeedsPage = () => {
       setSuccessMessage("Workplace need submitted.");
       await loadWorkplaceNeeds();
     } catch (error) {
+      let message = "Unable to submit the workplace need.";
       if (isAxiosError<ApiErrorResponse>(error)) {
-        setErrorMessage(
-          error.response?.data?.message ?? "Unable to submit the workplace need.",
-        );
-      } else {
-        setErrorMessage("Unable to submit the workplace need.");
+        const apiErrors = error.response?.data?.errors;
+        const firstFieldError =
+          apiErrors &&
+          Object.values(apiErrors)
+            .flatMap((value) => (Array.isArray(value) ? value : [value]))
+            .find(Boolean);
+        message =
+          (typeof firstFieldError === "string" ? firstFieldError : undefined) ??
+          error.response?.data?.message ??
+          message;
       }
-      throw error;
+      setErrorMessage(message);
+      throw new Error(message);
     }
   };
 

@@ -138,6 +138,7 @@ export const WorkplaceNeedsPanel = ({
   const [needDescription, setNeedDescription] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [remarksById, setRemarksById] = useState<Record<number, string>>({});
   const [commentsById, setCommentsById] = useState<Record<number, string>>({});
@@ -167,6 +168,7 @@ export const WorkplaceNeedsPanel = ({
     setNeedDescription("");
     setAttachment(null);
     setMilestoneId("");
+    setFormError(null);
     if (contextProjects.length === 1) {
       setProjectId(contextProjects[0].project_id);
     } else {
@@ -186,6 +188,7 @@ export const WorkplaceNeedsPanel = ({
           // Still open the modal with existing context if refresh fails.
         }
       }
+      setFormError(null);
       setIsModalOpen(true);
     })();
   };
@@ -246,7 +249,24 @@ export const WorkplaceNeedsPanel = ({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!onSubmitNeed || !projectId || !needDescription.trim()) {
+    if (!onSubmitNeed) {
+      return;
+    }
+
+    if (contextProjects.length === 0) {
+      setFormError(
+        "No assigned projects found. Ask your supervisor to assign you to a task first.",
+      );
+      return;
+    }
+
+    if (!projectId) {
+      setFormError("Select a project before submitting.");
+      return;
+    }
+
+    if (!needDescription.trim()) {
+      setFormError("Enter a description of the workplace need.");
       return;
     }
 
@@ -262,6 +282,7 @@ export const WorkplaceNeedsPanel = ({
       formData.append("attachment", attachment);
     }
 
+    setFormError(null);
     setIsSubmitting(true);
     try {
       await onSubmitNeed(formData);
@@ -270,6 +291,12 @@ export const WorkplaceNeedsPanel = ({
       window.setTimeout(() => {
         openButtonRef.current?.focus();
       }, 0);
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : "Unable to submit the workplace need. Please try again.";
+      setFormError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -607,6 +634,17 @@ export const WorkplaceNeedsPanel = ({
               onSubmit={(event) => void handleSubmit(event)}
             >
               <div className="workplace-need-modal__body">
+                {contextProjects.length === 0 ? (
+                  <p className="workplace-need-modal__banner" role="status">
+                    No projects available yet. You need an active task assignment
+                    before you can submit a workplace need.
+                  </p>
+                ) : null}
+                {formError ? (
+                  <p className="workplace-need-modal__error" role="alert">
+                    {formError}
+                  </p>
+                ) : null}
                 <div className="workplace-need-modal__grid">
                   <label className="workplace-need-modal__field">
                     <span className="workplace-need-modal__label">Category</span>
@@ -647,9 +685,10 @@ export const WorkplaceNeedsPanel = ({
                     <select
                       className="workplace-need-modal__control"
                       value={projectId}
-                      onChange={(event) =>
-                        setProjectId(event.target.value ? Number(event.target.value) : "")
-                      }
+                      onChange={(event) => {
+                        setFormError(null);
+                        setProjectId(event.target.value ? Number(event.target.value) : "");
+                      }}
                       required
                     >
                       <option value="">Select project</option>
@@ -691,7 +730,10 @@ export const WorkplaceNeedsPanel = ({
                     <textarea
                       className="workplace-need-modal__control workplace-need-modal__textarea"
                       value={needDescription}
-                      onChange={(event) => setNeedDescription(event.target.value)}
+                      onChange={(event) => {
+                        setFormError(null);
+                        setNeedDescription(event.target.value);
+                      }}
                       placeholder="Describe the need or issue clearly..."
                       required
                     />
@@ -739,7 +781,7 @@ export const WorkplaceNeedsPanel = ({
                 <button
                   type="submit"
                   className="workplace-need-modal__submit"
-                  disabled={isSubmitting || !projectId || !needDescription.trim()}
+                  disabled={isSubmitting}
                 >
                   {isSubmitting ? "Submitting..." : "Submit Request"}
                 </button>

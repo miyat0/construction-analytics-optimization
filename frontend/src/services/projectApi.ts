@@ -34,10 +34,10 @@ import type {
 } from "../types/project";
 import type { ApiSuccessResponse } from "../types/auth";
 
+// Do not set Content-Type here — axios deletes it for FormData so the browser
+// can attach the multipart boundary. Setting "multipart/form-data" alone breaks uploads.
 const multipartHeaders = {
-  headers: {
-    "Content-Type": "multipart/form-data",
-  },
+  headers: {} as Record<string, string>,
 };
 
 export const listProjects = async (): Promise<ProjectListData> => {

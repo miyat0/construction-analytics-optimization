@@ -1,10 +1,19 @@
+from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
+from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.mail import send_mail
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import status
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from .models import LoginAccount, UserProfile
+
+password_reset_token_generator = PasswordResetTokenGenerator()
 
 
 class AuthenticationServiceError(Exception):
@@ -17,6 +26,10 @@ class AuthenticationServiceError(Exception):
 
 
 class AuthenticationService:
+    GENERIC_RESET_MESSAGE = (
+        "If an account exists for that email, password reset instructions are ready."
+    )
+
     @staticmethod
     def _get_login_account(login_id):
         try:
@@ -148,3 +161,99 @@ class AuthenticationService:
             ) from exc
 
         return {"logged_out": True}
+
+    @classmethod
+    def _build_reset_path(cls, login_account):
+        uid = urlsafe_base64_encode(force_bytes(login_account.pk))
+        token = password_reset_token_generator.make_token(login_account)
+        return f"/reset-password?uid={uid}&token={token}"
+
+    @classmethod
+    def request_password_reset(cls, *, email):
+        """Always return a generic message. Never reveal whether the email exists."""
+        payload = {"requested": True}
+        normalized_email = email.strip().lower()
+
+        login_account = (
+            LoginAccount.objects.select_related("user")
+            .filter(email__iexact=normalized_email, is_active=True)
+            .first()
+        )
+
+        if (
+            login_account is None
+            or login_account.user.status != UserProfile.STATUS_ACTIVE
+        ):
+            return payload
+
+        reset_path = cls._build_reset_path(login_account)
+        frontend_base = getattr(settings, "FRONTEND_BASE_URL", "http://localhost:5173").rstrip(
+            "/"
+        )
+        reset_link = f"{frontend_base}{reset_path}"
+
+        try:
+            send_mail(
+                subject="Reset your FORTESITE password",
+                message=(
+                    "Use this link to reset your password. It expires after a short time "
+                    "and can be used only once.\n\n"
+                    f"{reset_link}\n\n"
+                    "If you did not request this, you can ignore this email."
+                ),
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@fortesite.local"),
+                recipient_list=[login_account.email],
+                fail_silently=True,
+            )
+        except Exception:
+            # Email failures must not break forgot-password or reveal account existence.
+            pass
+
+        # Local/dev convenience when SMTP is not configured: return the path so the UI works.
+        if settings.DEBUG:
+            payload["reset_path"] = reset_path
+
+        return payload
+
+    @classmethod
+    def reset_password(cls, *, uid, token, password):
+        try:
+            login_id = force_str(urlsafe_base64_decode(uid))
+            login_account = LoginAccount.objects.select_related("user").get(pk=login_id)
+        except (LoginAccount.DoesNotExist, ValueError, TypeError, OverflowError) as exc:
+            raise AuthenticationServiceError(
+                message="This password reset link is invalid or has expired.",
+                error_code="invalid_reset_token",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                errors={"token": ["This password reset link is invalid or has expired."]},
+            ) from exc
+
+        if not login_account.is_active or login_account.user.status != UserProfile.STATUS_ACTIVE:
+            raise AuthenticationServiceError(
+                message="This account cannot reset its password right now.",
+                error_code="inactive_account",
+                status_code=status.HTTP_403_FORBIDDEN,
+                errors={"account": ["This account cannot reset its password right now."]},
+            )
+
+        if not password_reset_token_generator.check_token(login_account, token):
+            raise AuthenticationServiceError(
+                message="This password reset link is invalid or has expired.",
+                error_code="invalid_reset_token",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                errors={"token": ["This password reset link is invalid or has expired."]},
+            )
+
+        try:
+            validate_password(password, user=login_account)
+        except DjangoValidationError as exc:
+            raise AuthenticationServiceError(
+                message="Unable to set that password.",
+                error_code="invalid_password",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                errors={"password": list(exc.messages)},
+            ) from exc
+
+        login_account.set_password(password)
+        login_account.save(update_fields=["password", "updated_at"])
+        return {"reset": True}

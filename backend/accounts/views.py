@@ -3,7 +3,13 @@ from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
 from .responses import error_response, success_response
-from .serializers import LoginSerializer, LogoutSerializer, RefreshSerializer
+from .serializers import (
+    ForgotPasswordSerializer,
+    LoginSerializer,
+    LogoutSerializer,
+    RefreshSerializer,
+    ResetPasswordSerializer,
+)
 from .services import AuthenticationService, AuthenticationServiceError
 
 
@@ -108,3 +114,74 @@ class RefreshView(APIView):
             )
 
         return success_response(message="Token refreshed successfully.", data=refresh_data)
+
+
+class ForgotPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return error_response(
+                message="Forgot password request validation failed.",
+                errors=serializer.errors,
+                error_code="validation_error",
+            )
+
+        try:
+            data = AuthenticationService.request_password_reset(
+                email=serializer.validated_data["email"],
+            )
+        except Exception:
+            return error_response(
+                message="Unable to process the password reset request right now.",
+                errors={"server": ["Please try again later."]},
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                error_code="password_reset_error",
+            )
+
+        return success_response(
+            message=AuthenticationService.GENERIC_RESET_MESSAGE,
+            data=data,
+        )
+
+
+class ResetPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return error_response(
+                message="Reset password request validation failed.",
+                errors=serializer.errors,
+                error_code="validation_error",
+            )
+
+        try:
+            data = AuthenticationService.reset_password(
+                uid=serializer.validated_data["uid"],
+                token=serializer.validated_data["token"],
+                password=serializer.validated_data["password"],
+            )
+        except AuthenticationServiceError as exc:
+            return error_response(
+                message=exc.message,
+                errors=exc.errors,
+                status_code=exc.status_code,
+                error_code=exc.error_code,
+            )
+        except Exception:
+            return error_response(
+                message="Unable to reset the password right now.",
+                errors={"server": ["Please try again later."]},
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                error_code="password_reset_error",
+            )
+
+        return success_response(
+            message="Password updated successfully. You can sign in with your new password.",
+            data=data,
+        )

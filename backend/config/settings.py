@@ -128,3 +128,12 @@ SIMPLE_JWT = {
     "USER_ID_FIELD": "login_id",
     "USER_ID_CLAIM": "user_id",
 }
+
+# Password reset email (console backend is fine for local/dev).
+EMAIL_BACKEND = os.getenv(
+    "DJANGO_EMAIL_BACKEND",
+    "django.core.mail.backends.console.EmailBackend",
+)
+DEFAULT_FROM_EMAIL = os.getenv("DJANGO_DEFAULT_FROM_EMAIL", "noreply@fortesite.local")
+FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173")
+

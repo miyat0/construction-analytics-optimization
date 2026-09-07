@@ -56,3 +56,35 @@ export const refreshTokenRequest = async (
 
   return response.data.data;
 };
+
+export type ForgotPasswordResult = {
+  requested: boolean;
+  reset_path?: string;
+};
+
+export const forgotPasswordRequest = async (
+  email: string,
+): Promise<{ message: string; data: ForgotPasswordResult }> => {
+  const response = await publicApiClient.post<
+    ApiSuccessResponse<ForgotPasswordResult>
+  >("/auth/forgot-password/", { email });
+
+  return {
+    message: response.data.message,
+    data: response.data.data,
+  };
+};
+
+export const resetPasswordRequest = async (payload: {
+  uid: string;
+  token: string;
+  password: string;
+  confirm_password: string;
+}): Promise<string> => {
+  const response = await publicApiClient.post<ApiSuccessResponse<{ reset: boolean }>>(
+    "/auth/reset-password/",
+    payload,
+  );
+
+  return response.data.message;
+};

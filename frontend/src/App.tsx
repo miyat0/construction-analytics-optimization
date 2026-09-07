@@ -1,10 +1,11 @@
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 
-import { AuthSplitLayout } from "./components/auth/AuthSplitLayout";
 import { BrandLogo } from "./components/branding/BrandLogo";
 import { ROLE_NAMES } from "./types/auth";
 import { AuthProvider } from "./context/AuthContext";
 import LoginPage from "./pages/auth/LoginPage";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import AccessDeniedPage from "./pages/access/AccessDeniedPage";
 import AdminLayout from "./layouts/admin/AdminLayout";
 import UserWorkspaceLayout from "./layouts/user/UserWorkspaceLayout";
@@ -74,26 +75,6 @@ const MessageScreen = ({
   );
 };
 
-const ForgotPasswordPage = () => {
-  return (
-    <AuthSplitLayout
-      visualFooter={
-        <Link className="auth-split-layout__return-link" to="/login">
-          Back to Login
-        </Link>
-      }
-    >
-      <section className="auth-split-layout__message-card">
-        <h2>Forgot password</h2>
-        <p>Password recovery is not available yet.</p>
-        <Link className="auth-split-layout__message-action" to="/login">
-          Back to Login
-        </Link>
-      </section>
-    </AuthSplitLayout>
-  );
-};
-
 const sessionCheckFallback = (
   <MessageScreen
     eyebrow="Session"
@@ -121,6 +102,7 @@ export const App = () => {
         <Route element={<LandingPage />} path="/" />
         <Route element={<LoginPage />} path="/login" />
         <Route element={<ForgotPasswordPage />} path="/forgot-password" />
+        <Route element={<ResetPasswordPage />} path="/reset-password" />
 
         <Route element={<ProtectedRoute fallback={sessionCheckFallback} />}>
           <Route element={<DashboardRedirect />} path="/dashboard" />

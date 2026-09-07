@@ -454,8 +454,17 @@ export const SupervisorProjectsPage = () => {
               <DetailField label="Start Date" value={formatDate(selectedProject.start_date)} />
               <DetailField label="End Date" value={formatDate(selectedProject.end_date)} />
               <DetailField
-                label="Site Engineer"
-                value={selectedProject.site_engineer?.name ?? "Not assigned"}
+                label="Site Engineers"
+                value={
+                  (selectedProject.site_engineers?.length
+                    ? selectedProject.site_engineers
+                    : selectedProject.site_engineer
+                      ? [selectedProject.site_engineer]
+                      : []
+                  )
+                    .map((member) => member.name)
+                    .join(", ") || "Not assigned"
+                }
               />
               <DetailField
                 label="Budget"

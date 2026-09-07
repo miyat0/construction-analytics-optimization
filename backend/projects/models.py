@@ -74,6 +74,15 @@ class ProjectAssignment(TimeStampedModel):
     )
     assignment_role = models.CharField(max_length=30, choices=ROLE_CHOICES)
     is_active = models.BooleanField(default=True)
+    assigned_by = models.ForeignKey(
+        UserProfile,
+        on_delete=models.SET_NULL,
+        related_name="created_project_assignments",
+        db_column="assigned_by_user_id",
+        blank=True,
+        null=True,
+    )
+    deactivated_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         db_table = "tbl_project_assignment"
@@ -83,10 +92,14 @@ class ProjectAssignment(TimeStampedModel):
                 fields=("project", "user", "assignment_role"),
                 name="unique_project_assignment_per_user_role",
             ),
+            # PM and Client remain singular; Site Engineers and Supervisors may be many.
             models.UniqueConstraint(
                 fields=("project", "assignment_role"),
-                condition=models.Q(is_active=True),
-                name="unique_active_project_assignment_role",
+                condition=models.Q(
+                    is_active=True,
+                    assignment_role__in=("project_manager", "client"),
+                ),
+                name="unique_active_singular_project_assignment_role",
             ),
         ]
 

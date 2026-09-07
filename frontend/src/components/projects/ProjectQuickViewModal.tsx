@@ -99,12 +99,30 @@ export const ProjectQuickViewModal = ({
               value={`${Number(project.progress_percentage || 0).toFixed(0)}%`}
             />
             <DetailField
-              label="Site Engineer"
-              value={project.site_engineer?.name ?? "Not assigned"}
+              label="Site Engineers"
+              value={
+                (project.site_engineers?.length
+                  ? project.site_engineers
+                  : project.site_engineer
+                    ? [project.site_engineer]
+                    : []
+                )
+                  .map((member) => member.name)
+                  .join(", ") || "Not assigned"
+              }
             />
             <DetailField
-              label="Supervisor"
-              value={project.supervisor?.name ?? "Not assigned"}
+              label="Supervisors"
+              value={
+                (project.supervisors?.length
+                  ? project.supervisors
+                  : project.supervisor
+                    ? [project.supervisor]
+                    : []
+                )
+                  .map((member) => member.name)
+                  .join(", ") || "Not assigned"
+              }
             />
             <DetailField label="Milestones" value={milestoneCount} />
             <DetailField label="Documents" value={documentCount} />

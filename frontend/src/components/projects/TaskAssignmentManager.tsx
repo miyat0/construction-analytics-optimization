@@ -97,6 +97,11 @@ export const TaskAssignmentManager = ({
       return;
     }
 
+    if (!formState.duty_instructions.trim()) {
+      setErrorMessage("Define the specific duty/work expected from this worker.");
+      return;
+    }
+
     const payload: TaskWorkerAssignmentPayload = {
       worker_id: Number(formState.worker_id),
       duty_instructions: formState.duty_instructions.trim(),
@@ -155,8 +160,35 @@ export const TaskAssignmentManager = ({
       {selectedTask ? (
         <div className="task-assignment-manager__task-meta">
           <span>Required Workers: {selectedTask.required_worker_count}</span>
-          <span>Assigned: {selectedTask.active_assignment_count}</span>
+          <span>
+            Assigned: {selectedTask.active_assignment_count} / {selectedTask.required_worker_count}
+          </span>
           <span>{selectedTask.is_approved ? "Approved Task" : "Awaiting Approval"}</span>
+          {selectedTask.active_assignment_count < selectedTask.required_worker_count ? (
+            <span className="task-assignment-manager__warning">
+              {selectedTask.required_worker_count - selectedTask.active_assignment_count}{" "}
+              additional worker
+              {selectedTask.required_worker_count - selectedTask.active_assignment_count === 1
+                ? ""
+                : "s"}{" "}
+              required.
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+
+      {selectedTask?.expected_work || selectedTask?.completion_requirement ? (
+        <div className="task-assignment-manager__task-brief">
+          {selectedTask.expected_work ? (
+            <p>
+              <strong>Expected work:</strong> {selectedTask.expected_work}
+            </p>
+          ) : null}
+          {selectedTask.completion_requirement ? (
+            <p>
+              <strong>Completion:</strong> {selectedTask.completion_requirement}
+            </p>
+          ) : null}
         </div>
       ) : null}
 

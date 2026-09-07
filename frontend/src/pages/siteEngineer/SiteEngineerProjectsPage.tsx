@@ -161,8 +161,15 @@ export const SiteEngineerProjectsPage = () => {
               <>
                 <p className="site-engineer-page__support" style={{ marginBottom: 14 }}>
                   {selectedProject.description || "No project description."} PM:{" "}
-                  {selectedProject.project_manager?.name ?? "Unassigned"} · Supervisor:{" "}
-                  {selectedProject.supervisor?.name ?? "Unassigned"}
+                  {selectedProject.project_manager?.name ?? "Unassigned"} · Supervisors:{" "}
+                  {(selectedProject.supervisors?.length
+                    ? selectedProject.supervisors
+                    : selectedProject.supervisor
+                      ? [selectedProject.supervisor]
+                      : []
+                  )
+                    .map((member) => member.name)
+                    .join(", ") || "Unassigned"}
                 </p>
 
                 {milestones.length === 0 ? (

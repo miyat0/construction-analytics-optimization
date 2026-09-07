@@ -29,6 +29,30 @@
   font-weight: 600;
 }
 
+.task-assignment-manager__warning {
+  color: #fbbf24;
+}
+
+.task-assignment-manager__task-brief {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #30363d;
+  border-radius: 0.5rem;
+  background: #1a1e22;
+  color: #aab3bd;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.task-assignment-manager__task-brief p {
+  margin: 0;
+}
+
+.task-assignment-manager__task-brief strong {
+  color: #d7dde4;
+}
+
 .task-assignment-manager__form,
 .task-assignment-manager__list {
   display: grid;

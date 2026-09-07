@@ -68,28 +68,41 @@ export const ProjectOverviewPage = () => {
       <section className="project-detail-overview__card">
         <h2 className="project-detail-overview__card-title">Project Information</h2>
         <div className="project-detail-overview__grid">
-          <div className="project-detail-overview__field">
-            <span className="project-detail-overview__field-label">Project Manager</span>
-            <p className="project-detail-overview__field-value">
-              {project.project_manager?.name ?? "Unassigned"}
-            </p>
+          <div className="project-detail-overview__field project-detail-overview__field--full">
+            <span className="project-detail-overview__field-label">Project Team</span>
+            <div className="project-detail-overview__team">
+              <p className="project-detail-overview__field-value">
+                <strong>Project Manager:</strong>{" "}
+                {project.project_manager?.name ?? "Unassigned"}
+              </p>
+              <p className="project-detail-overview__field-value">
+                <strong>Site Engineers:</strong>{" "}
+                {(project.site_engineers?.length
+                  ? project.site_engineers
+                  : project.site_engineer
+                    ? [project.site_engineer]
+                    : []
+                )
+                  .map((member) => member.name)
+                  .join(", ") || "Not assigned"}
+              </p>
+              <p className="project-detail-overview__field-value">
+                <strong>Supervisors:</strong>{" "}
+                {(project.supervisors?.length
+                  ? project.supervisors
+                  : project.supervisor
+                    ? [project.supervisor]
+                    : []
+                )
+                  .map((member) => member.name)
+                  .join(", ") || "Not assigned"}
+              </p>
+            </div>
           </div>
           <div className="project-detail-overview__field">
             <span className="project-detail-overview__field-label">Client</span>
             <p className="project-detail-overview__field-value">
               {project.client?.name ?? "Unassigned"}
-            </p>
-          </div>
-          <div className="project-detail-overview__field">
-            <span className="project-detail-overview__field-label">Site Engineer</span>
-            <p className="project-detail-overview__field-value">
-              {project.site_engineer?.name ?? "Not assigned"}
-            </p>
-          </div>
-          <div className="project-detail-overview__field">
-            <span className="project-detail-overview__field-label">Supervisor</span>
-            <p className="project-detail-overview__field-value">
-              {project.supervisor?.name ?? "Not assigned"}
             </p>
           </div>
           <div className="project-detail-overview__field">

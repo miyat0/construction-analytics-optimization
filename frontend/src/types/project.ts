@@ -97,8 +97,12 @@ export interface ProjectSummary {
   created_by: ProjectUserSummary | null;
   project_manager: ProjectUserSummary | null;
   client: ProjectUserSummary | null;
+  /** @deprecated Prefer site_engineers — kept for backward compatibility. */
   site_engineer: ProjectUserSummary | null;
+  /** @deprecated Prefer supervisors — kept for backward compatibility. */
   supervisor: ProjectUserSummary | null;
+  site_engineers: ProjectUserSummary[];
+  supervisors: ProjectUserSummary[];
   milestone_count: number;
   document_count: number;
   progress_percentage: string;
@@ -130,8 +134,12 @@ export interface ProjectPayload {
   initial_budget?: string;
   project_manager_id?: number | null;
   client_id?: number | null;
+  /** @deprecated Prefer site_engineer_ids. */
   site_engineer_id?: number | null;
+  /** @deprecated Prefer supervisor_ids. */
   supervisor_id?: number | null;
+  site_engineer_ids?: number[];
+  supervisor_ids?: number[];
 }
 
 export interface ProjectUpdatePayload extends Partial<ProjectPayload> {}

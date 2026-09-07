@@ -19,8 +19,8 @@ type ProjectFormState = {
   initial_budget: string;
   project_manager_id: string;
   client_id: string;
-  site_engineer_id: string;
-  supervisor_id: string;
+  site_engineer_ids: number[];
+  supervisor_ids: number[];
 };
 
 interface ProjectFormProps {
@@ -39,6 +39,19 @@ interface ProjectFormProps {
   onCancel?: () => void;
 }
 
+const resolveTeamIds = (
+  project: ProjectDetail | null | undefined,
+  pluralKey: "site_engineers" | "supervisors",
+  singularKey: "site_engineer" | "supervisor",
+): number[] => {
+  const plural = project?.[pluralKey];
+  if (Array.isArray(plural) && plural.length > 0) {
+    return plural.map((member) => member.user_id);
+  }
+  const singular = project?.[singularKey];
+  return singular?.user_id ? [singular.user_id] : [];
+};
+
 const createDefaultState = (project?: ProjectDetail | null): ProjectFormState => ({
   project_name: project?.project_name ?? "",
   description: project?.description ?? "",
@@ -50,10 +63,8 @@ const createDefaultState = (project?: ProjectDetail | null): ProjectFormState =>
     ? String(project.project_manager.user_id)
     : "",
   client_id: project?.client?.user_id ? String(project.client.user_id) : "",
-  site_engineer_id: project?.site_engineer?.user_id
-    ? String(project.site_engineer.user_id)
-    : "",
-  supervisor_id: project?.supervisor?.user_id ? String(project.supervisor.user_id) : "",
+  site_engineer_ids: resolveTeamIds(project, "site_engineers", "site_engineer"),
+  supervisor_ids: resolveTeamIds(project, "supervisors", "supervisor"),
 });
 
 export const ProjectForm = ({
@@ -75,10 +86,14 @@ export const ProjectForm = ({
     createDefaultState(initialProject),
   );
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  const [pendingSiteEngineerId, setPendingSiteEngineerId] = useState("");
+  const [pendingSupervisorId, setPendingSupervisorId] = useState("");
 
   useEffect(() => {
     setFormState(createDefaultState(initialProject));
     setValidationMessage(null);
+    setPendingSiteEngineerId("");
+    setPendingSupervisorId("");
   }, [initialProject]);
 
   const selectedProjectManager = useMemo(() => {
@@ -89,6 +104,30 @@ export const ProjectForm = ({
     return `${initialProject.project_manager.name} (${initialProject.project_manager.email})`;
   }, [initialProject]);
 
+  const selectedSiteEngineers = useMemo(() => {
+    return formState.site_engineer_ids
+      .map((id) => siteEngineers.find((engineer) => engineer.user_id === id))
+      .filter((engineer): engineer is ProjectLookupUser => Boolean(engineer));
+  }, [formState.site_engineer_ids, siteEngineers]);
+
+  const selectedSupervisors = useMemo(() => {
+    return formState.supervisor_ids
+      .map((id) => supervisors.find((supervisor) => supervisor.user_id === id))
+      .filter((supervisor): supervisor is ProjectLookupUser => Boolean(supervisor));
+  }, [formState.supervisor_ids, supervisors]);
+
+  const availableSiteEngineers = useMemo(() => {
+    return siteEngineers.filter(
+      (engineer) => !formState.site_engineer_ids.includes(engineer.user_id),
+    );
+  }, [formState.site_engineer_ids, siteEngineers]);
+
+  const availableSupervisors = useMemo(() => {
+    return supervisors.filter(
+      (supervisor) => !formState.supervisor_ids.includes(supervisor.user_id),
+    );
+  }, [formState.supervisor_ids, supervisors]);
+
   const updateField = <K extends keyof ProjectFormState>(
     field: K,
     value: ProjectFormState[K],
@@ -97,6 +136,39 @@ export const ProjectForm = ({
       ...currentState,
       [field]: value,
     }));
+  };
+
+  const addTeamMember = (role: "site_engineer" | "supervisor") => {
+    if (role === "site_engineer") {
+      const userId = Number(pendingSiteEngineerId);
+      if (!userId || formState.site_engineer_ids.includes(userId)) {
+        return;
+      }
+      updateField("site_engineer_ids", [...formState.site_engineer_ids, userId]);
+      setPendingSiteEngineerId("");
+      return;
+    }
+
+    const userId = Number(pendingSupervisorId);
+    if (!userId || formState.supervisor_ids.includes(userId)) {
+      return;
+    }
+    updateField("supervisor_ids", [...formState.supervisor_ids, userId]);
+    setPendingSupervisorId("");
+  };
+
+  const removeTeamMember = (role: "site_engineer" | "supervisor", userId: number) => {
+    if (role === "site_engineer") {
+      updateField(
+        "site_engineer_ids",
+        formState.site_engineer_ids.filter((id) => id !== userId),
+      );
+      return;
+    }
+    updateField(
+      "supervisor_ids",
+      formState.supervisor_ids.filter((id) => id !== userId),
+    );
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -129,8 +201,8 @@ export const ProjectForm = ({
           ? Number(formState.project_manager_id)
           : undefined,
       client_id: formState.client_id ? Number(formState.client_id) : null,
-      site_engineer_id: formState.site_engineer_id ? Number(formState.site_engineer_id) : null,
-      supervisor_id: formState.supervisor_id ? Number(formState.supervisor_id) : null,
+      site_engineer_ids: formState.site_engineer_ids,
+      supervisor_ids: formState.supervisor_ids,
     });
   };
 
@@ -282,42 +354,150 @@ export const ProjectForm = ({
           </select>
         </div>
 
-        <div className="project-form__field">
-          <label className="project-form__label" htmlFor="site_engineer_id">
-            Site Engineer
-          </label>
-          <select
-            id="site_engineer_id"
-            className="form-select"
-            value={formState.site_engineer_id}
-            onChange={(event) => updateField("site_engineer_id", event.target.value)}
-          >
-            <option value="">No site engineer</option>
-            {siteEngineers.map((engineer) => (
-              <option key={engineer.user_id} value={engineer.user_id}>
-                {engineer.name} ({engineer.email})
-              </option>
-            ))}
-          </select>
-        </div>
+        <div className="project-form__team project-form__field--full">
+          <div className="project-form__team-header">
+            <h3 className="project-form__team-title">Project Team</h3>
+            <p className="project-form__team-hint">
+              Assign Site Engineers and Supervisors. Only assigned users will see this project on
+              their dashboards.
+            </p>
+          </div>
 
-        <div className="project-form__field">
-          <label className="project-form__label" htmlFor="supervisor_id">
-            Supervisor
-          </label>
-          <select
-            id="supervisor_id"
-            className="form-select"
-            value={formState.supervisor_id}
-            onChange={(event) => updateField("supervisor_id", event.target.value)}
-          >
-            <option value="">No supervisor</option>
-            {supervisors.map((supervisor) => (
-              <option key={supervisor.user_id} value={supervisor.user_id}>
-                {supervisor.name} ({supervisor.email})
-              </option>
-            ))}
-          </select>
+          <div className="project-form__team-panels">
+            <section className="project-form__team-panel" aria-labelledby="team-site-engineers">
+              <div className="project-form__team-panel-head">
+                <div>
+                  <h4 id="team-site-engineers" className="project-form__team-heading">
+                    Site Engineers
+                  </h4>
+                  <p className="project-form__team-sub">Design tasks and verify progress</p>
+                </div>
+                <span className="project-form__team-count">
+                  {selectedSiteEngineers.length}
+                </span>
+              </div>
+
+              {selectedSiteEngineers.length === 0 ? (
+                <div className="project-form__team-empty">
+                  <span className="project-form__team-empty-title">No Site Engineers assigned</span>
+                  <span className="project-form__team-empty-text">
+                    Choose a Site Engineer below to allocate them to this project.
+                  </span>
+                </div>
+              ) : (
+                <ul className="project-form__team-list">
+                  {selectedSiteEngineers.map((engineer) => (
+                    <li key={engineer.user_id} className="project-form__team-item">
+                      <span className="project-form__team-avatar" aria-hidden="true">
+                        {(engineer.name?.trim()?.charAt(0) || "S").toUpperCase()}
+                      </span>
+                      <span className="project-form__team-copy">
+                        <span className="project-form__team-name">{engineer.name}</span>
+                        <small className="project-form__team-email">{engineer.email}</small>
+                      </span>
+                      <button
+                        type="button"
+                        className="project-form__team-remove"
+                        onClick={() => removeTeamMember("site_engineer", engineer.user_id)}
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="project-form__team-add">
+                <select
+                  className="form-select project-form__team-select"
+                  value={pendingSiteEngineerId}
+                  onChange={(event) => setPendingSiteEngineerId(event.target.value)}
+                  aria-label="Select Site Engineer"
+                >
+                  <option value="">Select Site Engineer</option>
+                  {availableSiteEngineers.map((engineer) => (
+                    <option key={engineer.user_id} value={engineer.user_id}>
+                      {engineer.name} ({engineer.email})
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="project-form__team-assign"
+                  disabled={!pendingSiteEngineerId}
+                  onClick={() => addTeamMember("site_engineer")}
+                >
+                  Assign
+                </button>
+              </div>
+            </section>
+
+            <section className="project-form__team-panel" aria-labelledby="team-supervisors">
+              <div className="project-form__team-panel-head">
+                <div>
+                  <h4 id="team-supervisors" className="project-form__team-heading">
+                    Supervisors
+                  </h4>
+                  <p className="project-form__team-sub">Assign workers and verify daily updates</p>
+                </div>
+                <span className="project-form__team-count">{selectedSupervisors.length}</span>
+              </div>
+
+              {selectedSupervisors.length === 0 ? (
+                <div className="project-form__team-empty">
+                  <span className="project-form__team-empty-title">No Supervisors assigned</span>
+                  <span className="project-form__team-empty-text">
+                    Choose a Supervisor below to allocate them to this project.
+                  </span>
+                </div>
+              ) : (
+                <ul className="project-form__team-list">
+                  {selectedSupervisors.map((supervisor) => (
+                    <li key={supervisor.user_id} className="project-form__team-item">
+                      <span className="project-form__team-avatar" aria-hidden="true">
+                        {(supervisor.name?.trim()?.charAt(0) || "S").toUpperCase()}
+                      </span>
+                      <span className="project-form__team-copy">
+                        <span className="project-form__team-name">{supervisor.name}</span>
+                        <small className="project-form__team-email">{supervisor.email}</small>
+                      </span>
+                      <button
+                        type="button"
+                        className="project-form__team-remove"
+                        onClick={() => removeTeamMember("supervisor", supervisor.user_id)}
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="project-form__team-add">
+                <select
+                  className="form-select project-form__team-select"
+                  value={pendingSupervisorId}
+                  onChange={(event) => setPendingSupervisorId(event.target.value)}
+                  aria-label="Select Supervisor"
+                >
+                  <option value="">Select Supervisor</option>
+                  {availableSupervisors.map((supervisor) => (
+                    <option key={supervisor.user_id} value={supervisor.user_id}>
+                      {supervisor.name} ({supervisor.email})
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="project-form__team-assign"
+                  disabled={!pendingSupervisorId}
+                  onClick={() => addTeamMember("supervisor")}
+                >
+                  Assign
+                </button>
+              </div>
+            </section>
+          </div>
         </div>
 
         <div className="project-form__actions project-form__field--full">

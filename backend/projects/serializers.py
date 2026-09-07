@@ -202,6 +202,8 @@ class ProjectSummarySerializer(serializers.ModelSerializer):
     client = serializers.SerializerMethodField()
     site_engineer = serializers.SerializerMethodField()
     supervisor = serializers.SerializerMethodField()
+    site_engineers = serializers.SerializerMethodField()
+    supervisors = serializers.SerializerMethodField()
     milestone_count = serializers.IntegerField(read_only=True)
     document_count = serializers.IntegerField(read_only=True)
     progress_percentage = serializers.SerializerMethodField()
@@ -222,6 +224,8 @@ class ProjectSummarySerializer(serializers.ModelSerializer):
             "client",
             "site_engineer",
             "supervisor",
+            "site_engineers",
+            "supervisors",
             "milestone_count",
             "document_count",
             "progress_percentage",
@@ -232,18 +236,25 @@ class ProjectSummarySerializer(serializers.ModelSerializer):
     def get_progress_percentage(self, obj):
         return str(get_project_progress_percentage(obj))
 
-    def _get_assignment_user(self, obj, assignment_role):
+    def _iter_assignment_users(self, obj, assignment_role):
         assignments = getattr(obj, "active_assignments", [])
-
+        users = []
         for assignment in assignments:
-            if assignment.assignment_role == assignment_role and assignment.is_active:
-                return assignment.user
+            if assignment.assignment_role == assignment_role and assignment.is_active and assignment.user:
+                users.append(assignment.user)
+        return users
 
-        return None
+    def _get_assignment_user(self, obj, assignment_role):
+        users = self._iter_assignment_users(obj, assignment_role)
+        return users[0] if users else None
 
     def _serialize_assignment_user(self, obj, assignment_role):
         user = self._get_assignment_user(obj, assignment_role)
         return ProjectUserSummarySerializer(user).data if user else None
+
+    def _serialize_assignment_users(self, obj, assignment_role):
+        users = self._iter_assignment_users(obj, assignment_role)
+        return ProjectUserSummarySerializer(users, many=True).data
 
     def get_project_manager(self, obj):
         return self._serialize_assignment_user(obj, ProjectAssignment.ROLE_PROJECT_MANAGER)
@@ -252,10 +263,18 @@ class ProjectSummarySerializer(serializers.ModelSerializer):
         return self._serialize_assignment_user(obj, ProjectAssignment.ROLE_CLIENT)
 
     def get_site_engineer(self, obj):
+        # Backward-compatible singular field (first active Site Engineer).
         return self._serialize_assignment_user(obj, ProjectAssignment.ROLE_SITE_ENGINEER)
 
     def get_supervisor(self, obj):
+        # Backward-compatible singular field (first active Supervisor).
         return self._serialize_assignment_user(obj, ProjectAssignment.ROLE_SUPERVISOR)
+
+    def get_site_engineers(self, obj):
+        return self._serialize_assignment_users(obj, ProjectAssignment.ROLE_SITE_ENGINEER)
+
+    def get_supervisors(self, obj):
+        return self._serialize_assignment_users(obj, ProjectAssignment.ROLE_SUPERVISOR)
 
 
 class ProjectDetailSerializer(ProjectSummarySerializer):
@@ -397,6 +416,16 @@ class ProjectWriteSerializer(serializers.Serializer):
         required=False,
         allow_null=True,
     )
+    site_engineer_ids = serializers.PrimaryKeyRelatedField(
+        queryset=UserProfile.objects.select_related("role").all(),
+        many=True,
+        required=False,
+    )
+    supervisor_ids = serializers.PrimaryKeyRelatedField(
+        queryset=UserProfile.objects.select_related("role").all(),
+        many=True,
+        required=False,
+    )
 
     def validate(self, attrs):
         if not attrs and self.partial:
@@ -471,6 +500,26 @@ class ProjectWriteSerializer(serializers.Serializer):
             SUPERVISOR_ROLE_NAME,
             "Selected Supervisor account is inactive.",
         )
+
+    def validate_site_engineer_ids(self, value):
+        return [
+            self._validate_role_user(
+                item,
+                SITE_ENGINEER_ROLE_NAME,
+                "Selected Site Engineer account is inactive.",
+            )
+            for item in value
+        ]
+
+    def validate_supervisor_ids(self, value):
+        return [
+            self._validate_role_user(
+                item,
+                SUPERVISOR_ROLE_NAME,
+                "Selected Supervisor account is inactive.",
+            )
+            for item in value
+        ]
 
 
 class MilestoneWriteSerializer(serializers.Serializer):

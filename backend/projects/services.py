@@ -268,7 +268,8 @@ class ProjectService:
         return user_profile
 
     @classmethod
-    def _sync_assignment(cls, project, assignment_role, user_profile):
+    def _sync_assignment(cls, project, assignment_role, user_profile, assigned_by=None):
+        """Singular role sync (Project Manager / Client). Soft-deactivates previous holders."""
         active_queryset = ProjectAssignment.objects.filter(
             project=project,
             assignment_role=assignment_role,
@@ -276,11 +277,16 @@ class ProjectService:
         )
 
         if user_profile is None:
-            active_queryset.update(is_active=False, updated_at=timezone.now())
+            active_queryset.update(
+                is_active=False,
+                deactivated_at=timezone.now(),
+                updated_at=timezone.now(),
+            )
             return
 
         active_queryset.exclude(user=user_profile).update(
             is_active=False,
+            deactivated_at=timezone.now(),
             updated_at=timezone.now(),
         )
 
@@ -288,12 +294,83 @@ class ProjectService:
             project=project,
             user=user_profile,
             assignment_role=assignment_role,
-            defaults={"is_active": True},
+            defaults={"is_active": True, "assigned_by": assigned_by},
         )
 
+        updates = []
         if not created and not assignment.is_active:
             assignment.is_active = True
-            assignment.save(update_fields=["is_active", "updated_at"])
+            assignment.deactivated_at = None
+            updates.extend(["is_active", "deactivated_at", "updated_at"])
+        if assigned_by is not None and assignment.assigned_by_id != getattr(assigned_by, "pk", None):
+            assignment.assigned_by = assigned_by
+            updates.append("assigned_by")
+            if "updated_at" not in updates:
+                updates.append("updated_at")
+        if updates:
+            assignment.save(update_fields=list(dict.fromkeys(updates)))
+
+    @classmethod
+    def _sync_role_assignees(cls, project, assignment_role, user_profiles, assigned_by=None):
+        """
+        Multi-member role sync (Site Engineer / Supervisor).
+        Soft-deactivates removed members; reactivates or creates desired ones.
+        Historical assignment rows are preserved.
+        """
+        desired_profiles = [profile for profile in (user_profiles or []) if profile is not None]
+        desired_ids = {profile.pk for profile in desired_profiles}
+
+        active_assignments = list(
+            ProjectAssignment.objects.filter(
+                project=project,
+                assignment_role=assignment_role,
+                is_active=True,
+            ).select_related("user"),
+        )
+
+        for assignment in active_assignments:
+            if assignment.user_id not in desired_ids:
+                assignment.is_active = False
+                assignment.deactivated_at = timezone.now()
+                assignment.save(update_fields=["is_active", "deactivated_at", "updated_at"])
+
+        for profile in desired_profiles:
+            assignment, created = ProjectAssignment.objects.get_or_create(
+                project=project,
+                user=profile,
+                assignment_role=assignment_role,
+                defaults={"is_active": True, "assigned_by": assigned_by},
+            )
+            if created:
+                continue
+
+            updates = []
+            if not assignment.is_active:
+                assignment.is_active = True
+                assignment.deactivated_at = None
+                updates.extend(["is_active", "deactivated_at"])
+            if assigned_by is not None and assignment.assigned_by_id != assigned_by.pk:
+                assignment.assigned_by = assigned_by
+                updates.append("assigned_by")
+            if updates:
+                updates.append("updated_at")
+                assignment.save(update_fields=updates)
+
+    @classmethod
+    def _normalize_role_profiles(cls, *, profiles=None, single_profile=None, role_name=None, inactive_message=None):
+        """Prefer a list of profiles; fall back to wrapping a singular profile."""
+        if profiles is not None:
+            return [
+                cls._validate_assignment_user(profile, role_name, inactive_message)
+                for profile in profiles
+                if profile is not None
+            ]
+
+        if single_profile is None:
+            return []
+
+        validated = cls._validate_assignment_user(single_profile, role_name, inactive_message)
+        return [validated] if validated is not None else []
 
     @staticmethod
     def _validate_document_milestone(project, milestone):
@@ -347,6 +424,8 @@ class ProjectService:
         role_name = get_user_role_name(login_account)
         project_manager_profile = validated_data.pop("project_manager_id", None)
         client_profile = validated_data.pop("client_id", None)
+        site_engineer_profiles = validated_data.pop("site_engineer_ids", None)
+        supervisor_profiles = validated_data.pop("supervisor_ids", None)
         site_engineer_profile = validated_data.pop("site_engineer_id", None)
         supervisor_profile = validated_data.pop("supervisor_id", None)
 
@@ -363,23 +442,45 @@ class ProjectService:
             CLIENT_ROLE_NAME,
             "Selected Client account is inactive.",
         )
-        site_engineer_profile = cls._validate_assignment_user(
-            site_engineer_profile,
-            SITE_ENGINEER_ROLE_NAME,
-            "Selected Site Engineer account is inactive.",
+        site_engineer_list = cls._normalize_role_profiles(
+            profiles=site_engineer_profiles,
+            single_profile=site_engineer_profile,
+            role_name=SITE_ENGINEER_ROLE_NAME,
+            inactive_message="Selected Site Engineer account is inactive.",
         )
-        supervisor_profile = cls._validate_assignment_user(
-            supervisor_profile,
-            SUPERVISOR_ROLE_NAME,
-            "Selected Supervisor account is inactive.",
+        supervisor_list = cls._normalize_role_profiles(
+            profiles=supervisor_profiles,
+            single_profile=supervisor_profile,
+            role_name=SUPERVISOR_ROLE_NAME,
+            inactive_message="Selected Supervisor account is inactive.",
         )
 
         project = Project.objects.create(created_by=profile, **validated_data)
 
-        cls._sync_assignment(project, ProjectAssignment.ROLE_PROJECT_MANAGER, project_manager_profile)
-        cls._sync_assignment(project, ProjectAssignment.ROLE_CLIENT, client_profile)
-        cls._sync_assignment(project, ProjectAssignment.ROLE_SITE_ENGINEER, site_engineer_profile)
-        cls._sync_assignment(project, ProjectAssignment.ROLE_SUPERVISOR, supervisor_profile)
+        cls._sync_assignment(
+            project,
+            ProjectAssignment.ROLE_PROJECT_MANAGER,
+            project_manager_profile,
+            assigned_by=profile,
+        )
+        cls._sync_assignment(
+            project,
+            ProjectAssignment.ROLE_CLIENT,
+            client_profile,
+            assigned_by=profile,
+        )
+        cls._sync_role_assignees(
+            project,
+            ProjectAssignment.ROLE_SITE_ENGINEER,
+            site_engineer_list,
+            assigned_by=profile,
+        )
+        cls._sync_role_assignees(
+            project,
+            ProjectAssignment.ROLE_SUPERVISOR,
+            supervisor_list,
+            assigned_by=profile,
+        )
 
         return cls._detail_queryset().get(pk=project.pk)
 
@@ -393,6 +494,8 @@ class ProjectService:
         sentinel = object()
         project_manager_profile = validated_data.pop("project_manager_id", sentinel)
         client_profile = validated_data.pop("client_id", sentinel)
+        site_engineer_profiles = validated_data.pop("site_engineer_ids", sentinel)
+        supervisor_profiles = validated_data.pop("supervisor_ids", sentinel)
         site_engineer_profile = validated_data.pop("site_engineer_id", sentinel)
         supervisor_profile = validated_data.pop("supervisor_id", sentinel)
 
@@ -402,7 +505,12 @@ class ProjectService:
         project.save()
 
         if role_name == PROJECT_MANAGER_ROLE_NAME:
-            cls._sync_assignment(project, ProjectAssignment.ROLE_PROJECT_MANAGER, profile)
+            cls._sync_assignment(
+                project,
+                ProjectAssignment.ROLE_PROJECT_MANAGER,
+                profile,
+                assigned_by=profile,
+            )
         elif project_manager_profile is not sentinel:
             cls._sync_assignment(
                 project,
@@ -412,6 +520,7 @@ class ProjectService:
                     PROJECT_MANAGER_ROLE_NAME,
                     "Selected Project Manager account is inactive.",
                 ),
+                assigned_by=profile,
             )
 
         if client_profile is not sentinel:
@@ -423,28 +532,40 @@ class ProjectService:
                     CLIENT_ROLE_NAME,
                     "Selected Client account is inactive.",
                 ),
+                assigned_by=profile,
             )
 
-        if site_engineer_profile is not sentinel:
-            cls._sync_assignment(
+        if site_engineer_profiles is not sentinel or site_engineer_profile is not sentinel:
+            site_engineer_list = cls._normalize_role_profiles(
+                profiles=None if site_engineer_profiles is sentinel else site_engineer_profiles,
+                single_profile=None if site_engineer_profile is sentinel else site_engineer_profile,
+                role_name=SITE_ENGINEER_ROLE_NAME,
+                inactive_message="Selected Site Engineer account is inactive.",
+            )
+            # When only singular was sent as null with no list, clear the team.
+            if site_engineer_profiles is sentinel and site_engineer_profile is None:
+                site_engineer_list = []
+            cls._sync_role_assignees(
                 project,
                 ProjectAssignment.ROLE_SITE_ENGINEER,
-                cls._validate_assignment_user(
-                    site_engineer_profile,
-                    SITE_ENGINEER_ROLE_NAME,
-                    "Selected Site Engineer account is inactive.",
-                ),
+                site_engineer_list,
+                assigned_by=profile,
             )
 
-        if supervisor_profile is not sentinel:
-            cls._sync_assignment(
+        if supervisor_profiles is not sentinel or supervisor_profile is not sentinel:
+            supervisor_list = cls._normalize_role_profiles(
+                profiles=None if supervisor_profiles is sentinel else supervisor_profiles,
+                single_profile=None if supervisor_profile is sentinel else supervisor_profile,
+                role_name=SUPERVISOR_ROLE_NAME,
+                inactive_message="Selected Supervisor account is inactive.",
+            )
+            if supervisor_profiles is sentinel and supervisor_profile is None:
+                supervisor_list = []
+            cls._sync_role_assignees(
                 project,
                 ProjectAssignment.ROLE_SUPERVISOR,
-                cls._validate_assignment_user(
-                    supervisor_profile,
-                    SUPERVISOR_ROLE_NAME,
-                    "Selected Supervisor account is inactive.",
-                ),
+                supervisor_list,
+                assigned_by=profile,
             )
 
         return cls._detail_queryset().get(pk=project.pk)

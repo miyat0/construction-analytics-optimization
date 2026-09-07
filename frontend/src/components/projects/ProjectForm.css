@@ -57,6 +57,274 @@
   justify-content: center;
 }
 
+.project-form__team {
+  display: grid;
+  gap: 16px;
+  padding: 18px 18px 16px;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #1c2227 0%, #1a1e22 100%);
+}
+
+.project-form__team-header {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.project-form__team-title {
+  margin: 0;
+  color: #f5f7fa;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.project-form__team-hint {
+  margin: 0;
+  color: #8f969e;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  max-width: 42rem;
+}
+
+.project-form__team-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.project-form__team-panel {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  background: #14181c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.project-form__team-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.project-form__team-heading {
+  margin: 0;
+  color: #f5f7fa;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.project-form__team-sub {
+  margin: 3px 0 0;
+  color: #78838f;
+  font-size: 0.6875rem;
+  line-height: 1.35;
+}
+
+.project-form__team-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.55rem;
+  height: 1.55rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 90, 31, 0.25);
+  color: #ffc4a0;
+  background: rgba(255, 90, 31, 0.1);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.project-form__team-empty {
+  display: grid;
+  gap: 4px;
+  min-height: 76px;
+  padding: 16px 14px;
+  border: 1px dashed #3a424a;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  text-align: left;
+  place-content: center start;
+}
+
+.project-form__team-empty-title {
+  color: #d7dde4;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.project-form__team-empty-text {
+  color: #78838f;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  max-width: 18rem;
+}
+
+.project-form__team-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.project-form__team-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  background: #1c2227;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.project-form__team-item:hover {
+  border-color: #3d454e;
+  background: #202529;
+}
+
+.project-form__team-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 90, 31, 0.28);
+  color: #ffc4a0;
+  background: rgba(255, 90, 31, 0.12);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.project-form__team-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.project-form__team-name {
+  color: #f5f7fa;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-form__team-email {
+  color: #8f969e;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-form__team-remove {
+  flex-shrink: 0;
+  height: 1.875rem;
+  padding: 0 0.65rem;
+  border: 1px solid #3a424a;
+  border-radius: 6px;
+  color: #aab3bd;
+  background: transparent;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+
+.project-form__team-remove:hover,
+.project-form__team-remove:focus-visible {
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(248, 113, 113, 0.1);
+  outline: none;
+}
+
+.project-form__team-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.project-form__team-select.form-select,
+.project-form .project-form__team-select {
+  min-width: 0;
+  height: 38px !important;
+  min-height: 38px !important;
+  border-color: #3a424a !important;
+  border-radius: 8px !important;
+  background: #101315 !important;
+  color: #f5f7fa !important;
+  font-size: 0.8125rem !important;
+}
+
+.project-form__team-assign {
+  height: 38px;
+  min-height: 38px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  color: #ffffff;
+  background: var(--brand-accent, #ff5a1f);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 150ms ease, opacity 150ms ease;
+}
+
+.project-form__team-assign:hover:not(:disabled),
+.project-form__team-assign:focus-visible:not(:disabled) {
+  background: #ff6a35;
+  outline: none;
+}
+
+.project-form__team-assign:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 991.98px) {
+  .project-form__team-panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .project-form__team {
+    padding: 14px;
+  }
+
+  .project-form__team-add {
+    grid-template-columns: 1fr;
+  }
+
+  .project-form__team-assign {
+    width: 100%;
+  }
+}
+
 .project-form__note {
   padding: 0.7rem 0.8rem;
   border: 1px solid var(--brand-border);

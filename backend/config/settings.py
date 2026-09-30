@@ -75,16 +75,18 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 if os.getenv("POSTGRES_DB"):
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("POSTGRES_DB"),
-            "USER": os.getenv("POSTGRES_USER", ""),
-            "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
-            "HOST": os.getenv("POSTGRES_HOST", "localhost"),
-            "PORT": os.getenv("POSTGRES_PORT", "5432"),
-        }
+    postgres_host = os.getenv("POSTGRES_HOST", "localhost")
+    postgres_config = {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB"),
+        "USER": os.getenv("POSTGRES_USER", ""),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
+        "HOST": postgres_host,
+        "PORT": os.getenv("POSTGRES_PORT", "5432"),
     }
+    if postgres_host not in ("localhost", "127.0.0.1"):
+        postgres_config["OPTIONS"] = {"sslmode": "require"}
+    DATABASES = {"default": postgres_config}
 else:
     DATABASES = {
         "default": {

@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+from urllib.parse import unquote, urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -74,18 +75,44 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-if os.getenv("POSTGRES_DB"):
-    postgres_host = os.getenv("POSTGRES_HOST", "localhost")
-    postgres_config = {
+def build_postgres_config() -> dict | None:
+    database_url = (os.getenv("DATABASE_URL") or os.getenv("POSTGRES_HOST") or "").strip()
+    if database_url.startswith(("postgres://", "postgresql://")):
+        parsed = urlparse(database_url)
+        if not parsed.hostname:
+            return None
+        config = {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": (parsed.path or "").lstrip("/"),
+            "USER": unquote(parsed.username or ""),
+            "PASSWORD": unquote(parsed.password or ""),
+            "HOST": parsed.hostname,
+            "PORT": str(parsed.port or 5432),
+        }
+        if parsed.hostname not in ("localhost", "127.0.0.1"):
+            config["OPTIONS"] = {"sslmode": "require"}
+        return config
+
+    postgres_db = os.getenv("POSTGRES_DB")
+    if not postgres_db:
+        return None
+
+    postgres_host = (os.getenv("POSTGRES_HOST") or "localhost").strip()
+    config = {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB"),
+        "NAME": postgres_db,
         "USER": os.getenv("POSTGRES_USER", ""),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
         "HOST": postgres_host,
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
     }
     if postgres_host not in ("localhost", "127.0.0.1"):
-        postgres_config["OPTIONS"] = {"sslmode": "require"}
+        config["OPTIONS"] = {"sslmode": "require"}
+    return config
+
+
+postgres_config = build_postgres_config()
+if postgres_config:
     DATABASES = {"default": postgres_config}
 else:
     DATABASES = {

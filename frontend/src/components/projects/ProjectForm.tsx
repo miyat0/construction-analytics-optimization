@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 
+import { useLiveFieldValidation } from "../../hooks/useLiveFieldValidation";
 import {
   PROJECT_STATUS_OPTIONS,
   type ProjectDetail,
@@ -7,6 +8,7 @@ import {
   type ProjectPayload,
   type ProjectStatus,
 } from "../../types/project";
+import { validateProjectFormFields } from "../../utils/formValidation";
 
 import "./ProjectForm.css";
 
@@ -22,6 +24,13 @@ type ProjectFormState = {
   site_engineer_ids: number[];
   supervisor_ids: number[];
 };
+
+type ProjectLiveOverrides = Partial<{
+  projectName: string;
+  startDate: string;
+  endDate: string;
+  initialBudget: string;
+}>;
 
 interface ProjectFormProps {
   title: string;
@@ -88,13 +97,24 @@ export const ProjectForm = ({
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const [pendingSiteEngineerId, setPendingSiteEngineerId] = useState("");
   const [pendingSupervisorId, setPendingSupervisorId] = useState("");
+  const { fieldErrors, touchAndValidate, validateSubmit, resetFieldValidation } =
+    useLiveFieldValidation();
+
+  const validateWith = (overrides: ProjectLiveOverrides = {}) =>
+    validateProjectFormFields({
+      projectName: overrides.projectName ?? formState.project_name,
+      startDate: overrides.startDate ?? formState.start_date,
+      endDate: overrides.endDate ?? formState.end_date,
+      initialBudget: overrides.initialBudget ?? formState.initial_budget,
+    });
 
   useEffect(() => {
     setFormState(createDefaultState(initialProject));
     setValidationMessage(null);
     setPendingSiteEngineerId("");
     setPendingSupervisorId("");
-  }, [initialProject]);
+    resetFieldValidation();
+  }, [initialProject, resetFieldValidation]);
 
   const selectedProjectManager = useMemo(() => {
     if (!initialProject?.project_manager) {
@@ -131,11 +151,15 @@ export const ProjectForm = ({
   const updateField = <K extends keyof ProjectFormState>(
     field: K,
     value: ProjectFormState[K],
+    live?: { fields: string | string[]; overrides?: ProjectLiveOverrides },
   ) => {
     setFormState((currentState) => ({
       ...currentState,
       [field]: value,
     }));
+    if (live) {
+      touchAndValidate(live.fields, () => validateWith(live.overrides ?? {}));
+    }
   };
 
   const addTeamMember = (role: "site_engineer" | "supervisor") => {
@@ -175,19 +199,12 @@ export const ProjectForm = ({
     event.preventDefault();
     setValidationMessage(null);
 
-    if (!formState.project_name.trim()) {
-      setValidationMessage("Project name is required.");
+    const nextErrors = validateSubmit(() => validateWith());
+    if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
-    if (
-      formState.start_date &&
-      formState.end_date &&
-      new Date(formState.end_date).getTime() < new Date(formState.start_date).getTime()
-    ) {
-      setValidationMessage("End date cannot be earlier than the start date.");
-      return;
-    }
+    const budgetRaw = formState.initial_budget.trim();
 
     await onSubmit({
       project_name: formState.project_name.trim(),
@@ -195,7 +212,7 @@ export const ProjectForm = ({
       status: formState.status,
       start_date: formState.start_date || null,
       end_date: formState.end_date || null,
-      initial_budget: formState.initial_budget || "0.00",
+      initial_budget: budgetRaw || "0.00",
       project_manager_id:
         canSelectProjectManager && formState.project_manager_id
           ? Number(formState.project_manager_id)
@@ -216,23 +233,34 @@ export const ProjectForm = ({
       </div>
 
       {(validationMessage || errorMessage) && (
-        <div className="alert alert-danger mb-0">
+        <div className="alert alert-danger mb-0 project-form__alert">
           {validationMessage ?? errorMessage}
         </div>
       )}
 
-      <form className="project-form__grid" onSubmit={(event) => void handleSubmit(event)}>
+      <form className="project-form__shell" onSubmit={(event) => void handleSubmit(event)}>
+        <div className="project-form__grid">
         <div className="project-form__field project-form__field--full">
           <label className="project-form__label" htmlFor="project_name">
             Project Name
           </label>
           <input
             id="project_name"
-            className="form-control"
+            className={`form-control${fieldErrors.project_name ? " is-invalid" : ""}`}
             value={formState.project_name}
-            onChange={(event) => updateField("project_name", event.target.value)}
+            onChange={(event) => {
+              const value = event.target.value;
+              updateField("project_name", value, {
+                fields: "project_name",
+                overrides: { projectName: value },
+              });
+            }}
+            onBlur={() => touchAndValidate("project_name", () => validateWith())}
             placeholder="Enter project name"
           />
+          {fieldErrors.project_name ? (
+            <span className="project-form__field-error">{fieldErrors.project_name}</span>
+          ) : null}
         </div>
 
         <div className="project-form__field project-form__field--full">
@@ -273,12 +301,22 @@ export const ProjectForm = ({
           </label>
           <input
             id="initial_budget"
-            className="form-control"
+            className={`form-control${fieldErrors.initial_budget ? " is-invalid" : ""}`}
             inputMode="decimal"
             value={formState.initial_budget}
-            onChange={(event) => updateField("initial_budget", event.target.value)}
+            onChange={(event) => {
+              const value = event.target.value;
+              updateField("initial_budget", value, {
+                fields: "initial_budget",
+                overrides: { initialBudget: value },
+              });
+            }}
+            onBlur={() => touchAndValidate("initial_budget", () => validateWith())}
             placeholder="0.00"
           />
+          {fieldErrors.initial_budget ? (
+            <span className="project-form__field-error">{fieldErrors.initial_budget}</span>
+          ) : null}
         </div>
 
         <div className="project-form__field">
@@ -287,11 +325,23 @@ export const ProjectForm = ({
           </label>
           <input
             id="start_date"
-            className="form-control"
+            className={`form-control${fieldErrors.start_date ? " is-invalid" : ""}`}
             type="date"
             value={formState.start_date}
-            onChange={(event) => updateField("start_date", event.target.value)}
+            onChange={(event) => {
+              const value = event.target.value;
+              updateField("start_date", value, {
+                fields: ["start_date", "end_date"],
+                overrides: { startDate: value },
+              });
+            }}
+            onBlur={() =>
+              touchAndValidate(["start_date", "end_date"], () => validateWith())
+            }
           />
+          {fieldErrors.start_date ? (
+            <span className="project-form__field-error">{fieldErrors.start_date}</span>
+          ) : null}
         </div>
 
         <div className="project-form__field">
@@ -300,11 +350,23 @@ export const ProjectForm = ({
           </label>
           <input
             id="end_date"
-            className="form-control"
+            className={`form-control${fieldErrors.end_date ? " is-invalid" : ""}`}
             type="date"
             value={formState.end_date}
-            onChange={(event) => updateField("end_date", event.target.value)}
+            onChange={(event) => {
+              const value = event.target.value;
+              updateField("end_date", value, {
+                fields: ["start_date", "end_date"],
+                overrides: { endDate: value },
+              });
+            }}
+            onBlur={() =>
+              touchAndValidate(["start_date", "end_date"], () => validateWith())
+            }
           />
+          {fieldErrors.end_date ? (
+            <span className="project-form__field-error">{fieldErrors.end_date}</span>
+          ) : null}
         </div>
 
         {canSelectProjectManager ? (
@@ -500,7 +562,9 @@ export const ProjectForm = ({
           </div>
         </div>
 
-        <div className="project-form__actions project-form__field--full">
+        </div>
+
+        <div className="project-form__actions">
           {onCancel ? (
             <button
               type="button"

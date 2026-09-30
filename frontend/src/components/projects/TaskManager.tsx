@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 import { EmptyState } from "../ui/EmptyState";
 import { SectionHeader } from "../ui/SectionHeader";
+import { useLiveFieldValidation } from "../../hooks/useLiveFieldValidation";
 import {
   MILESTONE_TASK_STATUS_OPTIONS,
   type Milestone,
@@ -9,6 +10,7 @@ import {
   type MilestoneTaskPayload,
   type MilestoneTaskStatus,
 } from "../../types/project";
+import { validateTaskFormFields } from "../../utils/formValidation";
 
 import "./TaskManager.css";
 
@@ -110,17 +112,53 @@ export const TaskManager = ({
   const [formState, setFormState] = useState<TaskFormState>(defaultTaskFormState);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [processingTaskId, setProcessingTaskId] = useState<number | null>(null);
+  const { fieldErrors, touchAndValidate, validateSubmit, resetFieldValidation } =
+    useLiveFieldValidation();
 
   const selectedMilestone = useMemo(() => {
     return milestones.find((milestone) => milestone.milestone_id === selectedMilestoneId) ?? null;
   }, [milestones, selectedMilestoneId]);
 
+  const milestoneStartDate = selectedMilestone?.planned_start_date ?? null;
+  const milestoneEndDate =
+    selectedMilestone?.effective_end_date ?? selectedMilestone?.planned_end_date ?? null;
+
   const showForm = canManageTasks && Boolean(selectedMilestone) && (isFormOpen || editingTaskId !== null);
+
+  const validateWith = (
+    overrides: Partial<{
+      title: string;
+      expectedWork: string;
+      completionRequirement: string;
+      plannedStartDate: string;
+      plannedEndDate: string;
+      requiredWorkerCount: string;
+      plannedDurationDays: string;
+      plannedHoursPerDay: string;
+      dailyTargetPercentage: string;
+      sortOrder: string;
+    }> = {},
+  ) =>
+    validateTaskFormFields({
+      title: overrides.title ?? formState.title,
+      expectedWork: overrides.expectedWork ?? formState.expected_work,
+      completionRequirement: overrides.completionRequirement ?? formState.completion_requirement,
+      plannedStartDate: overrides.plannedStartDate ?? formState.planned_start_date,
+      plannedEndDate: overrides.plannedEndDate ?? formState.planned_end_date,
+      requiredWorkerCount: overrides.requiredWorkerCount ?? formState.required_worker_count,
+      plannedDurationDays: overrides.plannedDurationDays ?? formState.planned_duration_days,
+      plannedHoursPerDay: overrides.plannedHoursPerDay ?? formState.planned_hours_per_day,
+      dailyTargetPercentage: overrides.dailyTargetPercentage ?? formState.daily_target_percentage,
+      sortOrder: overrides.sortOrder ?? formState.sort_order,
+      milestoneStartDate,
+      milestoneEndDate,
+    });
 
   useEffect(() => {
     if (!editingTaskId) {
       if (!isFormOpen) {
         setFormState(defaultTaskFormState);
+        resetFieldValidation();
       }
       return;
     }
@@ -129,6 +167,7 @@ export const TaskManager = ({
     if (!task) {
       setEditingTaskId(null);
       setFormState(defaultTaskFormState);
+      resetFieldValidation();
       return;
     }
 
@@ -147,7 +186,8 @@ export const TaskManager = ({
       status: task.status,
       sort_order: String(task.sort_order),
     });
-  }, [editingTaskId, isFormOpen, tasks]);
+    resetFieldValidation();
+  }, [editingTaskId, isFormOpen, resetFieldValidation, tasks]);
 
   useEffect(() => {
     if (!showForm || editingTaskId || formState.daily_target_percentage) {
@@ -191,6 +231,7 @@ export const TaskManager = ({
     setEditingTaskId(null);
     setFormState(defaultTaskFormState);
     setErrorMessage(null);
+    resetFieldValidation();
   };
 
   const openCreateForm = () => {
@@ -202,6 +243,7 @@ export const TaskManager = ({
     setEditingTaskId(null);
     setFormState(defaultTaskFormState);
     setErrorMessage(null);
+    resetFieldValidation();
     setIsFormOpen(true);
   };
 
@@ -214,6 +256,7 @@ export const TaskManager = ({
     setEditingTaskId(taskId);
     setIsFormOpen(true);
     setErrorMessage(null);
+    resetFieldValidation();
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -225,28 +268,8 @@ export const TaskManager = ({
       return;
     }
 
-    if (!formState.title.trim()) {
-      setErrorMessage("Task title is required.");
-      return;
-    }
-
-    if (!formState.expected_work.trim()) {
-      setErrorMessage("Expected work is required.");
-      return;
-    }
-
-    if (!formState.completion_requirement.trim()) {
-      setErrorMessage("Completion requirement is required.");
-      return;
-    }
-
-    if (
-      formState.planned_start_date &&
-      formState.planned_end_date &&
-      new Date(formState.planned_end_date).getTime() <
-        new Date(formState.planned_start_date).getTime()
-    ) {
-      setErrorMessage("Task end date cannot be earlier than the task start date.");
+    const nextErrors = validateSubmit(() => validateWith());
+    if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
@@ -333,11 +356,19 @@ export const TaskManager = ({
             <label className="task-manager__field task-manager__field--full">
               <span className="task-manager__label">Task Title</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.title ? " is-invalid" : ""}`}
                 value={formState.title}
-                onChange={(event) => updateField("title", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("title", value);
+                  touchAndValidate("title", () => validateWith({ title: value }));
+                }}
+                onBlur={() => touchAndValidate("title", () => validateWith())}
                 placeholder="Task title"
               />
+              {fieldErrors.title ? (
+                <span className="task-manager__field-error">{fieldErrors.title}</span>
+              ) : null}
             </label>
 
             <label className="task-manager__field task-manager__field--full">
@@ -354,86 +385,182 @@ export const TaskManager = ({
             <label className="task-manager__field task-manager__field--full">
               <span className="task-manager__label">Expected Work</span>
               <textarea
-                className="form-control"
+                className={`form-control${fieldErrors.expected_work ? " is-invalid" : ""}`}
                 rows={3}
                 value={formState.expected_work}
-                onChange={(event) => updateField("expected_work", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("expected_work", value);
+                  touchAndValidate("expected_work", () => validateWith({ expectedWork: value }));
+                }}
+                onBlur={() => touchAndValidate("expected_work", () => validateWith())}
                 placeholder="Describe the work expected from assigned workers"
                 required
               />
+              {fieldErrors.expected_work ? (
+                <span className="task-manager__field-error">{fieldErrors.expected_work}</span>
+              ) : null}
             </label>
 
             <label className="task-manager__field task-manager__field--full">
               <span className="task-manager__label">Completion Requirement</span>
               <textarea
-                className="form-control"
+                className={`form-control${fieldErrors.completion_requirement ? " is-invalid" : ""}`}
                 rows={2}
                 value={formState.completion_requirement}
-                onChange={(event) => updateField("completion_requirement", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("completion_requirement", value);
+                  touchAndValidate("completion_requirement", () =>
+                    validateWith({ completionRequirement: value }),
+                  );
+                }}
+                onBlur={() => touchAndValidate("completion_requirement", () => validateWith())}
                 placeholder="What constitutes completion of this task"
                 required
               />
+              {fieldErrors.completion_requirement ? (
+                <span className="task-manager__field-error">
+                  {fieldErrors.completion_requirement}
+                </span>
+              ) : null}
             </label>
 
             <label className="task-manager__field">
               <span className="task-manager__label">Task Start Date</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.planned_start_date ? " is-invalid" : ""}`}
                 type="date"
                 value={formState.planned_start_date}
-                onChange={(event) => updateField("planned_start_date", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("planned_start_date", value);
+                  touchAndValidate(["planned_start_date", "planned_end_date"], () =>
+                    validateWith({ plannedStartDate: value }),
+                  );
+                }}
+                onBlur={() =>
+                  touchAndValidate(["planned_start_date", "planned_end_date"], () =>
+                    validateWith(),
+                  )
+                }
               />
+              {fieldErrors.planned_start_date ? (
+                <span className="task-manager__field-error">{fieldErrors.planned_start_date}</span>
+              ) : null}
             </label>
 
             <label className="task-manager__field">
               <span className="task-manager__label">Task End Date</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.planned_end_date ? " is-invalid" : ""}`}
                 type="date"
                 value={formState.planned_end_date}
-                onChange={(event) => updateField("planned_end_date", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("planned_end_date", value);
+                  touchAndValidate(["planned_start_date", "planned_end_date"], () =>
+                    validateWith({ plannedEndDate: value }),
+                  );
+                }}
+                onBlur={() =>
+                  touchAndValidate(["planned_start_date", "planned_end_date"], () =>
+                    validateWith(),
+                  )
+                }
               />
+              {fieldErrors.planned_end_date ? (
+                <span className="task-manager__field-error">{fieldErrors.planned_end_date}</span>
+              ) : null}
             </label>
 
             <label className="task-manager__field">
               <span className="task-manager__label">Workers Needed</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.required_worker_count ? " is-invalid" : ""}`}
                 inputMode="numeric"
                 value={formState.required_worker_count}
-                onChange={(event) => updateField("required_worker_count", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("required_worker_count", value);
+                  touchAndValidate("required_worker_count", () =>
+                    validateWith({ requiredWorkerCount: value }),
+                  );
+                }}
+                onBlur={() => touchAndValidate("required_worker_count", () => validateWith())}
               />
+              {fieldErrors.required_worker_count ? (
+                <span className="task-manager__field-error">
+                  {fieldErrors.required_worker_count}
+                </span>
+              ) : null}
             </label>
 
             <label className="task-manager__field">
               <span className="task-manager__label">Planned Days</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.planned_duration_days ? " is-invalid" : ""}`}
                 inputMode="numeric"
                 value={formState.planned_duration_days}
-                onChange={(event) => updateField("planned_duration_days", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("planned_duration_days", value);
+                  touchAndValidate("planned_duration_days", () =>
+                    validateWith({ plannedDurationDays: value }),
+                  );
+                }}
+                onBlur={() => touchAndValidate("planned_duration_days", () => validateWith())}
               />
+              {fieldErrors.planned_duration_days ? (
+                <span className="task-manager__field-error">
+                  {fieldErrors.planned_duration_days}
+                </span>
+              ) : null}
             </label>
 
             <label className="task-manager__field">
               <span className="task-manager__label">Hours / Day</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.planned_hours_per_day ? " is-invalid" : ""}`}
                 inputMode="decimal"
                 value={formState.planned_hours_per_day}
-                onChange={(event) => updateField("planned_hours_per_day", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("planned_hours_per_day", value);
+                  touchAndValidate("planned_hours_per_day", () =>
+                    validateWith({ plannedHoursPerDay: value }),
+                  );
+                }}
+                onBlur={() => touchAndValidate("planned_hours_per_day", () => validateWith())}
               />
+              {fieldErrors.planned_hours_per_day ? (
+                <span className="task-manager__field-error">
+                  {fieldErrors.planned_hours_per_day}
+                </span>
+              ) : null}
             </label>
 
             <label className="task-manager__field">
               <span className="task-manager__label">Daily Target %</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.daily_target_percentage ? " is-invalid" : ""}`}
                 inputMode="decimal"
                 value={formState.daily_target_percentage}
-                onChange={(event) => updateField("daily_target_percentage", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("daily_target_percentage", value);
+                  touchAndValidate("daily_target_percentage", () =>
+                    validateWith({ dailyTargetPercentage: value }),
+                  );
+                }}
+                onBlur={() => touchAndValidate("daily_target_percentage", () => validateWith())}
                 placeholder="Auto from dates"
               />
+              {fieldErrors.daily_target_percentage ? (
+                <span className="task-manager__field-error">
+                  {fieldErrors.daily_target_percentage}
+                </span>
+              ) : null}
             </label>
 
             <label className="task-manager__field">
@@ -456,12 +583,20 @@ export const TaskManager = ({
             <label className="task-manager__field">
               <span className="task-manager__label">Sort Order</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.sort_order ? " is-invalid" : ""}`}
                 inputMode="numeric"
                 value={formState.sort_order}
-                onChange={(event) => updateField("sort_order", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("sort_order", value);
+                  touchAndValidate("sort_order", () => validateWith({ sortOrder: value }));
+                }}
+                onBlur={() => touchAndValidate("sort_order", () => validateWith())}
                 placeholder="1"
               />
+              {fieldErrors.sort_order ? (
+                <span className="task-manager__field-error">{fieldErrors.sort_order}</span>
+              ) : null}
             </label>
           </div>
 

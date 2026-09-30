@@ -121,7 +121,7 @@ type ProjectDetailContextValue = {
   handleDeleteDocument: (documentId: number) => Promise<void>;
   handleResolveConcern: (updateId: number) => Promise<void>;
   handleApprovePendingTask: (task: MilestoneTask) => Promise<void>;
-  handleRejectPendingTask: (task: MilestoneTask) => Promise<void>;
+  handleRejectPendingTask: (task: MilestoneTask, note?: string) => Promise<void>;
   basePath: string;
 };
 
@@ -323,8 +323,13 @@ export const ProjectDetailLayout = () => {
     setNoticeMessage("Task approved successfully.");
   };
 
-  const handleRejectPendingTask = async (task: MilestoneTask) => {
-    await rejectMilestoneTask(projectId, task.milestone.milestone_id, task.task_id);
+  const handleRejectPendingTask = async (task: MilestoneTask, note = "") => {
+    await rejectMilestoneTask(
+      projectId,
+      task.milestone.milestone_id,
+      task.task_id,
+      note.trim() || "Rejected",
+    );
     setNoticeMessage("Task rejected successfully.");
   };
 

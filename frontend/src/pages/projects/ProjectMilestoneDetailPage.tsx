@@ -203,8 +203,8 @@ export const ProjectMilestoneDetailPage = () => {
             await handleApprovePendingTask(task);
             await reloadExecution();
           }}
-          onReject={async (task) => {
-            await handleRejectPendingTask(task);
+          onReject={async (task, note) => {
+            await handleRejectPendingTask(task, note);
             await reloadExecution();
           }}
           hideWhenEmpty

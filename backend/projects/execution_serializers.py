@@ -339,11 +339,25 @@ class TaskAssignmentSerializer(serializers.ModelSerializer):
 
     def get_task(self, obj):
         task = obj.task
+        expected = calculate_expected_progress(
+            task.effective_start_date,
+            task.effective_end_date,
+        )
         return {
             "task_id": task.task_id,
             "title": task.title,
             "status": task.status,
             "required_worker_count": task.required_worker_count,
+            "expected_work": task.expected_work or "",
+            "completion_requirement": task.completion_requirement or "",
+            "planned_start_date": task.planned_start_date,
+            "planned_end_date": task.planned_end_date,
+            "daily_target_percentage": (
+                str(task.daily_target_percentage)
+                if task.daily_target_percentage is not None
+                else None
+            ),
+            "expected_progress_percentage": str(expected),
             "milestone_id": task.milestone.milestone_id,
             "milestone_title": task.milestone.title,
             "project_id": task.milestone.project.project_id,

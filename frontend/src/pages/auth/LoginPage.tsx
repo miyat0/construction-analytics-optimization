@@ -111,6 +111,8 @@ export const LoginPage = () => {
     setError,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
+    mode: "all",
+    reValidateMode: "onChange",
     defaultValues: {
       email: "",
       password: "",

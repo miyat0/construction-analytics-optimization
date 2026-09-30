@@ -16,7 +16,7 @@
   margin: 0;
   padding: 0 0 32px;
   display: grid;
-  gap: 22px;
+  gap: 1.25rem;
 }
 
 .worker-card,
@@ -424,6 +424,15 @@
   margin: 0.5rem 0 0;
   color: var(--worker-text-secondary);
   font-size: 0.8125rem;
+}
+
+.worker-page__dialog-field {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+  color: var(--worker-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .worker-page__dialog-actions {

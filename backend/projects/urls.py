@@ -31,6 +31,16 @@ from .views import (
     ProjectMilestoneDetailView,
     ProjectMilestoneListCreateView,
 )
+from .finance_views import (
+    FinanceProjectListView,
+    MaterialExpenseDetailView,
+    MaterialExpenseListCreateView,
+    MilestoneFinanceView,
+    OtherExpenseDetailView,
+    OtherExpenseListCreateView,
+    ProjectProfitLossView,
+    WorkerWageListCreateView,
+)
 from .workplace_need_views import (
     ProjectWorkplaceNeedListView,
     WorkplaceNeedMineListCreateView,
@@ -45,6 +55,42 @@ urlpatterns = [
     path("", ProjectListCreateView.as_view(), name="project-list-create"),
     path("lookups/", ProjectLookupsView.as_view(), name="project-lookups"),
     path("admin-dashboard/", AdminDashboardView.as_view(), name="admin-dashboard"),
+    path("finance/projects/", FinanceProjectListView.as_view(), name="finance-project-list"),
+    path(
+        "<int:project_id>/finance/profit-loss/",
+        ProjectProfitLossView.as_view(),
+        name="project-profit-loss",
+    ),
+    path(
+        "<int:project_id>/finance/milestones/<int:milestone_id>/",
+        MilestoneFinanceView.as_view(),
+        name="project-milestone-finance",
+    ),
+    path(
+        "<int:project_id>/finance/wages/",
+        WorkerWageListCreateView.as_view(),
+        name="project-finance-wages",
+    ),
+    path(
+        "<int:project_id>/finance/materials/",
+        MaterialExpenseListCreateView.as_view(),
+        name="project-finance-materials",
+    ),
+    path(
+        "<int:project_id>/finance/materials/<int:expense_id>/",
+        MaterialExpenseDetailView.as_view(),
+        name="project-finance-material-detail",
+    ),
+    path(
+        "<int:project_id>/finance/other-expenses/",
+        OtherExpenseListCreateView.as_view(),
+        name="project-finance-other-expenses",
+    ),
+    path(
+        "<int:project_id>/finance/other-expenses/<int:expense_id>/",
+        OtherExpenseDetailView.as_view(),
+        name="project-finance-other-expense-detail",
+    ),
     path(
         "workplace-needs/context/",
         WorkplaceNeedWorkerContextView.as_view(),

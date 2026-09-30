@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ProjectCreateFormCard } from "../../components/projects/ProjectCreateContextPanel";
 import { ProjectCreatePageHeader } from "../../components/projects/ProjectCreatePageHeader";
 import { FileDropzone } from "../../components/ui/FileDropzone";
+import { useLiveFieldValidation } from "../../hooks/useLiveFieldValidation";
 import {
   createProjectDocument,
   getProject,
@@ -16,6 +17,7 @@ import {
   type ProjectDetail,
   type ProjectDocumentType,
 } from "../../types/project";
+import { validateDocumentFormFields } from "../../utils/formValidation";
 import {
   getProjectsBasePath,
   getProjectWorkspacePath,
@@ -40,13 +42,22 @@ export const CreateDocumentPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [milestoneId, setMilestoneId] = useState("");
   const [title, setTitle] = useState("");
   const [documentType, setDocumentType] = useState<ProjectDocumentType>("project_cost");
   const [description, setDescription] = useState("");
   const [isClientVisible, setIsClientVisible] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const { fieldErrors, touchAndValidate, validateSubmit } = useLiveFieldValidation();
+
+  const validateWith = (
+    overrides: Partial<{ title: string; hasFile: boolean }> = {},
+  ) =>
+    validateDocumentFormFields({
+      title: overrides.title ?? title,
+      fileRequired: true,
+      hasFile: overrides.hasFile ?? Boolean(selectedFile),
+    });
 
   const projectName = project?.project_name ?? "";
   const statusLabel = project
@@ -108,14 +119,7 @@ export const CreateDocumentPage = () => {
     event.preventDefault();
     setErrorMessage(null);
 
-    const nextErrors: Record<string, string> = {};
-    if (!title.trim()) {
-      nextErrors.title = "Document title is required.";
-    }
-    if (!selectedFile) {
-      nextErrors.file = "Please select a file.";
-    }
-    setFieldErrors(nextErrors);
+    const nextErrors = validateSubmit(() => validateWith());
     if (Object.keys(nextErrors).length > 0) {
       return;
     }
@@ -195,9 +199,14 @@ export const CreateDocumentPage = () => {
           <label className="upload-document-page__field upload-document-page__field--full">
             <span className="upload-document-page__label">Document Title</span>
             <input
-              className="form-control"
+              className={`form-control${fieldErrors.title ? " is-invalid" : ""}`}
               value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              onChange={(event) => {
+                const value = event.target.value;
+                setTitle(value);
+                touchAndValidate("title", () => validateWith({ title: value }));
+              }}
+              onBlur={() => touchAndValidate("title", () => validateWith())}
               placeholder="Enter document title"
             />
             {fieldErrors.title ? (
@@ -263,13 +272,7 @@ export const CreateDocumentPage = () => {
               file={selectedFile}
               onChange={(file) => {
                 setSelectedFile(file);
-                if (file) {
-                  setFieldErrors((prev) => {
-                    const next = { ...prev };
-                    delete next.file;
-                    return next;
-                  });
-                }
+                touchAndValidate("file", () => validateWith({ hasFile: Boolean(file) }));
               }}
               disabled={isSubmitting}
               compact

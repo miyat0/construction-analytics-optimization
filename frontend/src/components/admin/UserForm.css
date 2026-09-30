@@ -38,6 +38,19 @@
   color: #8f8f8f;
 }
 
+.user-form__control--locked,
+.user-form__control--locked:disabled,
+.user-form__control--locked[readonly],
+.user-form__control:disabled,
+.user-form__select:disabled {
+  color: #f3f4f6 !important;
+  background: #1b1f24 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #f3f4f6 !important;
+  cursor: default;
+}
+
 .user-form__control:focus,
 .user-form__select:focus {
   border-color: rgba(255, 90, 31, 0.55);

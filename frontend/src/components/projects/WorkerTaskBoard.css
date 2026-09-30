@@ -152,6 +152,16 @@
   font-size: 0.875rem;
 }
 
+.worker-task-board__plan-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 10px;
+  color: #b0b8c2;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
 .worker-task-board__feedback {
   display: grid;
   gap: 4px;
@@ -194,6 +204,20 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.worker-task-board__field-error {
+  color: #f87171;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.worker-task-board__field-error {
+  color: #f87171;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .worker-task-board__checkbox {

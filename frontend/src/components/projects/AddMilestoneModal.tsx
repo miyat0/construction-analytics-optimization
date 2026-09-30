@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 import { DetailModal } from "../ui/DetailModal";
+import { useLiveFieldValidation } from "../../hooks/useLiveFieldValidation";
 import {
   MILESTONE_STATUS_OPTIONS,
   type Milestone,
   type MilestonePayload,
   type MilestoneStatus,
 } from "../../types/project";
+import { validateMilestoneFormFields } from "../../utils/formValidation";
 
 import "./ProjectEntityModal.css";
 
@@ -31,13 +33,27 @@ export const AddMilestoneModal = ({
   const [plannedEndDate, setPlannedEndDate] = useState("");
   const [status, setStatus] = useState<MilestoneStatus>("planned");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { fieldErrors, touchAndValidate, validateSubmit, resetFieldValidation } =
+    useLiveFieldValidation();
 
   const nextSortOrder = useMemo(() => {
     const maxOrder = milestones.reduce((max, item) => Math.max(max, item.sort_order ?? 0), 0);
     return maxOrder + 1;
   }, [milestones]);
+
+  const validateWith = (
+    overrides: Partial<{
+      title: string;
+      plannedStartDate: string;
+      plannedEndDate: string;
+    }> = {},
+  ) =>
+    validateMilestoneFormFields({
+      title: overrides.title ?? title,
+      plannedStartDate: overrides.plannedStartDate ?? plannedStartDate,
+      plannedEndDate: overrides.plannedEndDate ?? plannedEndDate,
+    });
 
   useEffect(() => {
     if (!isOpen) {
@@ -49,23 +65,12 @@ export const AddMilestoneModal = ({
     setPlannedEndDate("");
     setStatus("planned");
     setErrorMessage(null);
-    setFieldErrors({});
-  }, [isOpen]);
+    resetFieldValidation();
+  }, [isOpen, resetFieldValidation]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const nextErrors: Record<string, string> = {};
-    if (!title.trim()) {
-      nextErrors.title = "Milestone title is required.";
-    }
-    if (
-      plannedStartDate &&
-      plannedEndDate &&
-      new Date(plannedEndDate).getTime() < new Date(plannedStartDate).getTime()
-    ) {
-      nextErrors.planned_end_date = "End date must be on or after the start date.";
-    }
-    setFieldErrors(nextErrors);
+    const nextErrors = validateSubmit(() => validateWith());
     if (Object.keys(nextErrors).length > 0) {
       return;
     }
@@ -104,9 +109,14 @@ export const AddMilestoneModal = ({
         <label className="project-entity-modal__field">
           <span className="project-entity-modal__label">Milestone Title</span>
           <input
-            className="form-control"
+            className={`form-control${fieldErrors.title ? " is-invalid" : ""}`}
             value={title}
-            onChange={(event) => setTitle(event.target.value)}
+            onChange={(event) => {
+              const value = event.target.value;
+              setTitle(value);
+              touchAndValidate("title", () => validateWith({ title: value }));
+            }}
+            onBlur={() => touchAndValidate("title", () => validateWith())}
             placeholder="Enter milestone title"
           />
           {fieldErrors.title ? (
@@ -134,16 +144,30 @@ export const AddMilestoneModal = ({
               className="form-control"
               type="date"
               value={plannedStartDate}
-              onChange={(event) => setPlannedStartDate(event.target.value)}
+              onChange={(event) => {
+                const value = event.target.value;
+                setPlannedStartDate(value);
+                touchAndValidate("planned_end_date", () =>
+                  validateWith({ plannedStartDate: value }),
+                );
+              }}
+              onBlur={() => touchAndValidate("planned_end_date", () => validateWith())}
             />
           </label>
           <label className="project-entity-modal__field">
             <span className="project-entity-modal__label">End Date</span>
             <input
-              className="form-control"
+              className={`form-control${fieldErrors.planned_end_date ? " is-invalid" : ""}`}
               type="date"
               value={plannedEndDate}
-              onChange={(event) => setPlannedEndDate(event.target.value)}
+              onChange={(event) => {
+                const value = event.target.value;
+                setPlannedEndDate(value);
+                touchAndValidate("planned_end_date", () =>
+                  validateWith({ plannedEndDate: value }),
+                );
+              }}
+              onBlur={() => touchAndValidate("planned_end_date", () => validateWith())}
             />
             {fieldErrors.planned_end_date ? (
               <span className="project-entity-modal__error">{fieldErrors.planned_end_date}</span>

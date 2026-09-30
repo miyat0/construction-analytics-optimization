@@ -11,6 +11,7 @@ import AdminLayout from "./layouts/admin/AdminLayout";
 import UserWorkspaceLayout from "./layouts/user/UserWorkspaceLayout";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminProjectsPage from "./pages/admin/AdminProjectsPage";
+import ProfitLossDashboardPage from "./pages/finance/ProfitLossDashboardPage";
 import AdminUserCreatePage from "./pages/admin/AdminUserCreatePage";
 import AdminUserEditPage from "./pages/admin/AdminUserEditPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
@@ -119,6 +120,7 @@ export const App = () => {
             <Route element={<AdminLayout />} path="/admin">
               <Route element={<Navigate replace to="projects" />} index />
               <Route element={<AdminDashboardPage />} path="dashboard" />
+              <Route element={<ProfitLossDashboardPage />} path="profit-loss" />
               <Route element={<AdminProjectsPage />} path="projects" />
               <Route
                 element={<CreateMilestonePage />}
@@ -162,7 +164,15 @@ export const App = () => {
                 />
                 <Route element={<ProjectDocumentsPage />} path="documents" />
               </Route>
-              <Route element={<AdminUsersPage />} path="users" />
+              <Route
+                element={<Navigate replace to="/admin/dashboard" />}
+                path="people/administrators"
+              />
+              <Route element={<AdminUsersPage />} path="people/:roleSlug" />
+              <Route
+                element={<Navigate replace to="/admin/people/project-managers" />}
+                path="users"
+              />
               <Route element={<AdminUserCreatePage />} path="users/create" />
               <Route element={<AdminUserEditPage />} path="users/:userId/edit" />
             </Route>
@@ -180,6 +190,7 @@ export const App = () => {
               <Route element={<Navigate replace to="dashboard" />} index />
               <Route element={<ProjectManagerProjectsPage />} path="dashboard" />
               <Route element={<ProjectManagerProjectsPage />} path="projects" />
+              <Route element={<ProfitLossDashboardPage />} path="profit-loss" />
               <Route
                 element={<CreateMilestonePage />}
                 path="projects/view/milestones/new"

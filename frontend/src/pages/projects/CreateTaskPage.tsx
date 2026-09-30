@@ -7,6 +7,7 @@ import {
 } from "../../components/projects/ProjectCreateContextPanel";
 import { ProjectCreatePageHeader } from "../../components/projects/ProjectCreatePageHeader";
 import { useProjectCreateChrome } from "../../contexts/AdminChromeContext";
+import { useLiveFieldValidation } from "../../hooks/useLiveFieldValidation";
 import {
   createMilestoneTask,
   getProject,
@@ -23,6 +24,7 @@ import {
   resolveProjectScopeFromPath,
   type WorkspaceNoticeState,
 } from "../../utils/projectCreateRoutes";
+import { validateTaskFormFields } from "../../utils/formValidation";
 import { useSelectedProjectId } from "../../utils/useSelectedProjectId";
 
 import "./ProjectCreatePage.css";
@@ -64,12 +66,47 @@ export const CreateTaskPage = () => {
   const [dailyTargetPercentage, setDailyTargetPercentage] = useState("");
   const [status, setStatus] = useState<MilestoneTaskStatus>("planned");
   const [sortOrder, setSortOrder] = useState("1");
+  const { fieldErrors, touchAndValidate, validateSubmit, resetFieldValidation } =
+    useLiveFieldValidation();
 
   const projectName = project?.project_name ?? "";
   const selectedMilestone = useMemo(
     () => milestones.find((item) => item.milestone_id === parsedMilestoneId) ?? null,
     [milestones, parsedMilestoneId],
   );
+
+  const milestoneStartDate = selectedMilestone?.planned_start_date ?? null;
+  const milestoneEndDate =
+    selectedMilestone?.effective_end_date ?? selectedMilestone?.planned_end_date ?? null;
+
+  const validateWith = (
+    overrides: Partial<{
+      title: string;
+      expectedWork: string;
+      completionRequirement: string;
+      plannedStartDate: string;
+      plannedEndDate: string;
+      requiredWorkerCount: string;
+      plannedDurationDays: string;
+      plannedHoursPerDay: string;
+      dailyTargetPercentage: string;
+      sortOrder: string;
+    }> = {},
+  ) =>
+    validateTaskFormFields({
+      title: overrides.title ?? title,
+      expectedWork: overrides.expectedWork ?? expectedWork,
+      completionRequirement: overrides.completionRequirement ?? completionRequirement,
+      plannedStartDate: overrides.plannedStartDate ?? plannedStartDate,
+      plannedEndDate: overrides.plannedEndDate ?? plannedEndDate,
+      requiredWorkerCount: overrides.requiredWorkerCount ?? requiredWorkerCount,
+      plannedDurationDays: overrides.plannedDurationDays ?? plannedDurationDays,
+      plannedHoursPerDay: overrides.plannedHoursPerDay ?? plannedHoursPerDay,
+      dailyTargetPercentage: overrides.dailyTargetPercentage ?? dailyTargetPercentage,
+      sortOrder: overrides.sortOrder ?? sortOrder,
+      milestoneStartDate,
+      milestoneEndDate,
+    });
 
   const contextLine = [projectName, selectedMilestone?.title].filter(Boolean).join(" · ");
   const breadcrumb = selectedMilestone?.title
@@ -89,6 +126,10 @@ export const CreateTaskPage = () => {
       },
     });
   };
+
+  useEffect(() => {
+    resetFieldValidation();
+  }, [parsedMilestoneId, resetFieldValidation]);
 
   useEffect(() => {
     let isMounted = true;
@@ -148,27 +189,8 @@ export const CreateTaskPage = () => {
     event.preventDefault();
     setErrorMessage(null);
 
-    if (!title.trim()) {
-      setErrorMessage("Task title is required.");
-      return;
-    }
-
-    if (!expectedWork.trim()) {
-      setErrorMessage("Expected work is required.");
-      return;
-    }
-
-    if (!completionRequirement.trim()) {
-      setErrorMessage("Completion requirement is required.");
-      return;
-    }
-
-    if (
-      plannedStartDate &&
-      plannedEndDate &&
-      new Date(plannedEndDate).getTime() < new Date(plannedStartDate).getTime()
-    ) {
-      setErrorMessage("Task end date cannot be earlier than the task start date.");
+    const nextErrors = validateSubmit(() => validateWith());
+    if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
@@ -217,11 +239,19 @@ export const CreateTaskPage = () => {
             <label className="project-create-page__field project-create-page__field--full">
               <span className="project-create-page__label">Task Title</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.title ? " is-invalid" : ""}`}
                 value={title}
-                onChange={(event) => setTitle(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setTitle(value);
+                  touchAndValidate("title", () => validateWith({ title: value }));
+                }}
+                onBlur={() => touchAndValidate("title", () => validateWith())}
                 placeholder="Task title"
               />
+              {fieldErrors.title ? (
+                <span className="project-create-page__field-error">{fieldErrors.title}</span>
+              ) : null}
             </label>
 
             <label className="project-create-page__field project-create-page__field--full">
@@ -240,88 +270,188 @@ export const CreateTaskPage = () => {
             <label className="project-create-page__field project-create-page__field--full">
               <span className="project-create-page__label">Expected Work</span>
               <textarea
-                className="form-control"
+                className={`form-control${fieldErrors.expected_work ? " is-invalid" : ""}`}
                 rows={3}
                 value={expectedWork}
-                onChange={(event) => setExpectedWork(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setExpectedWork(value);
+                  touchAndValidate("expected_work", () => validateWith({ expectedWork: value }));
+                }}
+                onBlur={() => touchAndValidate("expected_work", () => validateWith())}
                 placeholder="Describe the work expected from assigned workers"
                 required
               />
+              {fieldErrors.expected_work ? (
+                <span className="project-create-page__field-error">{fieldErrors.expected_work}</span>
+              ) : null}
             </label>
 
             <label className="project-create-page__field project-create-page__field--full">
               <span className="project-create-page__label">Completion Requirement</span>
               <textarea
-                className="form-control"
+                className={`form-control${fieldErrors.completion_requirement ? " is-invalid" : ""}`}
                 rows={2}
                 value={completionRequirement}
-                onChange={(event) => setCompletionRequirement(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setCompletionRequirement(value);
+                  touchAndValidate("completion_requirement", () =>
+                    validateWith({ completionRequirement: value }),
+                  );
+                }}
+                onBlur={() => touchAndValidate("completion_requirement", () => validateWith())}
                 placeholder="What constitutes completion of this task"
                 required
               />
+              {fieldErrors.completion_requirement ? (
+                <span className="project-create-page__field-error">
+                  {fieldErrors.completion_requirement}
+                </span>
+              ) : null}
             </label>
 
             <label className="project-create-page__field">
               <span className="project-create-page__label">Task Start Date</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.planned_start_date ? " is-invalid" : ""}`}
                 type="date"
                 value={plannedStartDate}
-                onChange={(event) => setPlannedStartDate(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setPlannedStartDate(value);
+                  touchAndValidate(["planned_start_date", "planned_end_date"], () =>
+                    validateWith({ plannedStartDate: value }),
+                  );
+                }}
+                onBlur={() =>
+                  touchAndValidate(["planned_start_date", "planned_end_date"], () =>
+                    validateWith(),
+                  )
+                }
               />
+              {fieldErrors.planned_start_date ? (
+                <span className="project-create-page__field-error">
+                  {fieldErrors.planned_start_date}
+                </span>
+              ) : null}
             </label>
 
             <label className="project-create-page__field">
               <span className="project-create-page__label">Task End Date</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.planned_end_date ? " is-invalid" : ""}`}
                 type="date"
                 value={plannedEndDate}
-                onChange={(event) => setPlannedEndDate(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setPlannedEndDate(value);
+                  touchAndValidate(["planned_start_date", "planned_end_date"], () =>
+                    validateWith({ plannedEndDate: value }),
+                  );
+                }}
+                onBlur={() =>
+                  touchAndValidate(["planned_start_date", "planned_end_date"], () =>
+                    validateWith(),
+                  )
+                }
               />
+              {fieldErrors.planned_end_date ? (
+                <span className="project-create-page__field-error">
+                  {fieldErrors.planned_end_date}
+                </span>
+              ) : null}
             </label>
 
             <label className="project-create-page__field">
               <span className="project-create-page__label">Workers Needed</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.required_worker_count ? " is-invalid" : ""}`}
                 inputMode="numeric"
                 value={requiredWorkerCount}
-                onChange={(event) => setRequiredWorkerCount(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setRequiredWorkerCount(value);
+                  touchAndValidate("required_worker_count", () =>
+                    validateWith({ requiredWorkerCount: value }),
+                  );
+                }}
+                onBlur={() => touchAndValidate("required_worker_count", () => validateWith())}
               />
+              {fieldErrors.required_worker_count ? (
+                <span className="project-create-page__field-error">
+                  {fieldErrors.required_worker_count}
+                </span>
+              ) : null}
             </label>
 
             <label className="project-create-page__field">
               <span className="project-create-page__label">Planned Duration (Days)</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.planned_duration_days ? " is-invalid" : ""}`}
                 inputMode="numeric"
                 value={plannedDurationDays}
-                onChange={(event) => setPlannedDurationDays(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setPlannedDurationDays(value);
+                  touchAndValidate("planned_duration_days", () =>
+                    validateWith({ plannedDurationDays: value }),
+                  );
+                }}
+                onBlur={() => touchAndValidate("planned_duration_days", () => validateWith())}
                 placeholder="e.g. 5"
               />
+              {fieldErrors.planned_duration_days ? (
+                <span className="project-create-page__field-error">
+                  {fieldErrors.planned_duration_days}
+                </span>
+              ) : null}
             </label>
 
             <label className="project-create-page__field">
               <span className="project-create-page__label">Hours / Day</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.planned_hours_per_day ? " is-invalid" : ""}`}
                 inputMode="decimal"
                 value={plannedHoursPerDay}
-                onChange={(event) => setPlannedHoursPerDay(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setPlannedHoursPerDay(value);
+                  touchAndValidate("planned_hours_per_day", () =>
+                    validateWith({ plannedHoursPerDay: value }),
+                  );
+                }}
+                onBlur={() => touchAndValidate("planned_hours_per_day", () => validateWith())}
                 placeholder="8"
               />
+              {fieldErrors.planned_hours_per_day ? (
+                <span className="project-create-page__field-error">
+                  {fieldErrors.planned_hours_per_day}
+                </span>
+              ) : null}
             </label>
 
             <label className="project-create-page__field">
               <span className="project-create-page__label">Daily Target %</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.daily_target_percentage ? " is-invalid" : ""}`}
                 inputMode="decimal"
                 value={dailyTargetPercentage}
-                onChange={(event) => setDailyTargetPercentage(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setDailyTargetPercentage(value);
+                  touchAndValidate("daily_target_percentage", () =>
+                    validateWith({ dailyTargetPercentage: value }),
+                  );
+                }}
+                onBlur={() => touchAndValidate("daily_target_percentage", () => validateWith())}
                 placeholder="Auto from dates"
               />
+              {fieldErrors.daily_target_percentage ? (
+                <span className="project-create-page__field-error">
+                  {fieldErrors.daily_target_percentage}
+                </span>
+              ) : null}
             </label>
 
             <label className="project-create-page__field">
@@ -342,12 +472,20 @@ export const CreateTaskPage = () => {
             <label className="project-create-page__field">
               <span className="project-create-page__label">Sort Order</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.sort_order ? " is-invalid" : ""}`}
                 inputMode="numeric"
                 value={sortOrder}
-                onChange={(event) => setSortOrder(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setSortOrder(value);
+                  touchAndValidate("sort_order", () => validateWith({ sortOrder: value }));
+                }}
+                onBlur={() => touchAndValidate("sort_order", () => validateWith())}
                 placeholder="1"
               />
+              {fieldErrors.sort_order ? (
+                <span className="project-create-page__field-error">{fieldErrors.sort_order}</span>
+              ) : null}
             </label>
           </div>
 

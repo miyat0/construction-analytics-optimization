@@ -413,6 +413,7 @@ export const ProjectWorkspace = ({
           supervisors={lookups.supervisors}
           canSelectProjectManager={canSelectProjectManager}
           isSubmitting={isFormSubmitting}
+          errorMessage={errorMessage}
           onSubmit={handleSubmitProject}
           onCancel={handleCloseFormModal}
         />

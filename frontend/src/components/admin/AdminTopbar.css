@@ -12,20 +12,46 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  min-height: 4.25rem; /* 68px */
-  padding: 0.75rem var(--page-padding);
+  min-height: 4.25rem;
+  height: 4.25rem;
+  padding: 0 2rem;
 }
 
 .admin-topbar__content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.admin-topbar__menu-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  padding: 0.4rem;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  background: #1a1f23;
+  cursor: pointer;
+}
+
+.admin-topbar__menu-btn span {
+  display: block;
+  width: 100%;
+  height: 1.5px;
+  background: #d7dde4;
 }
 
 .admin-topbar__title {
   margin: 0;
   color: var(--brand-ink);
-  font-size: var(--admin-title, 1.4rem);
-  font-weight: 700;
+  font-size: 1.125rem;
+  font-weight: 650;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -149,16 +175,16 @@
 
 @media (max-width: 991.98px) {
   .admin-topbar__inner {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: var(--space-3);
-    padding-left: var(--space-4);
-    padding-right: var(--space-4);
+    height: auto;
+    min-height: 4.25rem;
+    padding: 0.75rem 1rem;
   }
 
-  .admin-topbar__controls,
-  .admin-topbar__actions {
-    width: 100%;
-    justify-content: flex-start;
+  .admin-topbar__menu-btn {
+    display: inline-flex;
+  }
+
+  .admin-topbar__profile-name {
+    max-width: 8rem;
   }
 }

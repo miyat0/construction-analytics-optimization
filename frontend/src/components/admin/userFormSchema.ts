@@ -1,6 +1,11 @@
 import * as yup from "yup";
 
 import type { UserFormValues } from "../../types/userManagement";
+import {
+  validateEmailField,
+  validatePersonNameField,
+  validatePhoneNumberField,
+} from "../../utils/formValidation";
 
 const passwordSchema = yup
   .string()
@@ -24,17 +29,47 @@ export const getUserFormSchema = (mode: "create" | "edit") => {
       .string()
       .trim()
       .required("Full name is required.")
-      .max(150, "Full name cannot exceed 150 characters."),
+      .test("name-valid", "Enter a valid full name (first and last name).", function (value) {
+        if (!value) {
+          return true;
+        }
+        const message = validatePersonNameField(value, {
+          fieldLabel: "Full name",
+          requireFullName: true,
+        });
+        if (!message) {
+          return true;
+        }
+        return this.createError({ message });
+      }),
     email: yup
       .string()
       .trim()
       .required("Email address is required.")
-      .email("Enter a valid email address."),
+      .test("email-format", "Enter a valid email address (name@company.com).", function (value) {
+        if (!value) {
+          return true;
+        }
+        const message = validateEmailField(value);
+        if (!message) {
+          return true;
+        }
+        return this.createError({ message });
+      }),
     phone_number: yup
       .string()
       .trim()
       .required("Phone number is required.")
-      .matches(/^\d{10}$/, "Phone number must contain exactly 10 digits."),
+      .test("phone-valid", "Phone number must contain exactly 10 digits.", function (value) {
+        if (!value) {
+          return true;
+        }
+        const message = validatePhoneNumberField(value);
+        if (!message) {
+          return true;
+        }
+        return this.createError({ message });
+      }),
     role_id: yup
       .number()
       .typeError("Role is required.")

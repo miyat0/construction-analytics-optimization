@@ -1,10 +1,15 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 
 import AddUserModal from "../../components/admin/AddUserModal";
 import UserForm from "../../components/admin/UserForm";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { FilterBar, PageToolbar } from "../../components/ui/PageToolbar";
+import {
+  getAdminPeoplePath,
+  getAdminPeopleRoleBySlug,
+} from "../../config/adminPeople";
+import { ROLE_NAMES } from "../../types/auth";
 import { fetchRoles } from "../../services/roleApi";
 import {
   activateUser,
@@ -110,6 +115,8 @@ const getUserStatusLabel = (user: ManagedUser): string => {
 export const AdminUsersPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { roleSlug } = useParams<{ roleSlug?: string }>();
+  const peopleRole = useMemo(() => getAdminPeopleRoleBySlug(roleSlug), [roleSlug]);
 
   const [usersData, setUsersData] = useState<ManagedUserListData | null>(null);
   const [rolesData, setRolesData] = useState<RoleListData | null>(null);
@@ -129,6 +136,46 @@ export const AdminUsersPage = () => {
   );
   const [isEditLoading, setIsEditLoading] = useState(false);
   const [editFormKey, setEditFormKey] = useState(0);
+
+  useEffect(() => {
+    if (!successNotice) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setSuccessNotice(null);
+    }, 3000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [successNotice]);
+
+  const users = usersData?.results ?? [];
+  const roles = rolesData?.results ?? [];
+  const lockedRole = peopleRole
+    ? (roles.find((role) => role.role_name === peopleRole.roleName) ?? null)
+    : null;
+  const lockedRoleId = lockedRole ? String(lockedRole.role_id) : "";
+  /** Prefer route-locked role so switching People links never keeps the previous list filter. */
+  const listRoleId = peopleRole ? lockedRoleId : selectedRoleId;
+  const addButtonLabel = peopleRole?.addButtonLabel ?? "Add User";
+  const formRoles = lockedRole ? [lockedRole] : roles;
+  const canCreatePeopleUser = peopleRole?.roleName !== ROLE_NAMES.COMPANY_ADMINISTRATOR;
+
+  useEffect(() => {
+    if (roleSlug && !peopleRole) {
+      navigate(getAdminPeoplePath("project-managers"), { replace: true });
+    }
+  }, [navigate, peopleRole, roleSlug]);
+
+  useEffect(() => {
+    if (!peopleRole || !lockedRoleId) {
+      return;
+    }
+
+    setSelectedRoleId(lockedRoleId);
+  }, [lockedRoleId, peopleRole]);
 
   const openAddUser = useCallback(() => {
     setFormKey((current) => current + 1);
@@ -190,7 +237,7 @@ export const AdminUsersPage = () => {
       setSuccessNotice(String(routeState.notice));
     }
 
-    if (routeState.openAddUser) {
+    if (routeState.openAddUser && canCreatePeopleUser) {
       openAddUser();
     }
 
@@ -199,9 +246,9 @@ export const AdminUsersPage = () => {
     }
 
     navigate(location.pathname, { replace: true, state: null });
-  }, [location.pathname, location.state, navigate, openAddUser, openEditUser]);
+  }, [canCreatePeopleUser, location.pathname, location.state, navigate, openAddUser, openEditUser]);
 
-  const loadUsers = async (search = submittedSearch, roleId = selectedRoleId) => {
+  const loadUsers = async (search = submittedSearch, roleId = listRoleId) => {
     setIsLoading(true);
     setErrorMessage(null);
 
@@ -244,8 +291,14 @@ export const AdminUsersPage = () => {
   }, []);
 
   useEffect(() => {
-    void loadUsers(submittedSearch, selectedRoleId);
-  }, [selectedRoleId, submittedSearch]);
+    if (peopleRole && !lockedRoleId) {
+      setUsersData(null);
+      setIsLoading(true);
+      return;
+    }
+
+    void loadUsers(submittedSearch, listRoleId);
+  }, [listRoleId, lockedRoleId, peopleRole, submittedSearch]);
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -255,7 +308,9 @@ export const AdminUsersPage = () => {
   const handleResetFilters = () => {
     setSearchInput("");
     setSubmittedSearch("");
-    setSelectedRoleId("");
+    if (!peopleRole) {
+      setSelectedRoleId("");
+    }
   };
 
   const handleCreateUser = async (values: UserFormValues) => {
@@ -263,7 +318,7 @@ export const AdminUsersPage = () => {
       name: values.name,
       email: values.email,
       phone_number: values.phone_number,
-      role_id: values.role_id as number,
+      role_id: lockedRole ? lockedRole.role_id : (values.role_id as number),
       password: values.password,
     });
 
@@ -281,7 +336,7 @@ export const AdminUsersPage = () => {
       name: values.name,
       email: values.email,
       phone_number: values.phone_number,
-      role_id: values.role_id,
+      role_id: lockedRole ? lockedRole.role_id : values.role_id,
       ...(values.password ? { password: values.password } : {}),
     });
 
@@ -331,9 +386,6 @@ export const AdminUsersPage = () => {
     }
   };
 
-  const users = usersData?.results ?? [];
-  const roles = rolesData?.results ?? [];
-
   return (
     <div className="admin-page admin-page--users">
       {successNotice ? <div className="alert alert-success mb-0">{successNotice}</div> : null}
@@ -342,12 +394,14 @@ export const AdminUsersPage = () => {
       <section className="page-list admin-users__list">
         <PageToolbar
           action={
-            <button type="button" className="admin-btn admin-btn--primary" onClick={openAddUser}>
-              Add User
-              <span className="admin-btn__plus" aria-hidden="true">
-                +
-              </span>
-            </button>
+            canCreatePeopleUser ? (
+              <button type="button" className="admin-btn admin-btn--primary" onClick={openAddUser}>
+                {addButtonLabel}
+                <span className="admin-btn__plus" aria-hidden="true">
+                  +
+                </span>
+              </button>
+            ) : undefined
           }
           filter={
             <FilterBar
@@ -366,6 +420,7 @@ export const AdminUsersPage = () => {
               onSelectChange={setSelectedRoleId}
               onSubmit={handleSearchSubmit}
               onReset={handleResetFilters}
+              hideSelect={Boolean(peopleRole)}
             />
           }
         />
@@ -374,15 +429,19 @@ export const AdminUsersPage = () => {
           <div className="admin-users__empty">Loading users...</div>
         ) : users.length === 0 ? (
           <EmptyState
-            title="No users match the current filters."
-            description="Try adjusting search or create a new user."
+            title={peopleRole?.emptyTitle ?? "No users match the current filters."}
+            description={
+              peopleRole?.emptyDescription ?? "Try adjusting search or create a new user."
+            }
             action={
-              <button type="button" className="admin-btn admin-btn--primary" onClick={openAddUser}>
-                Add User
-                <span className="admin-btn__plus" aria-hidden="true">
-                  +
-                </span>
-              </button>
+              canCreatePeopleUser ? (
+                <button type="button" className="admin-btn admin-btn--primary" onClick={openAddUser}>
+                  {addButtonLabel}
+                  <span className="admin-btn__plus" aria-hidden="true">
+                    +
+                  </span>
+                </button>
+              ) : undefined
             }
           />
         ) : (
@@ -455,18 +514,27 @@ export const AdminUsersPage = () => {
         )}
       </section>
 
-      <AddUserModal isOpen={isAddUserOpen} onClose={closeAddUser}>
-        {roles.length === 0 ? (
+      <AddUserModal
+        isOpen={isAddUserOpen && canCreatePeopleUser}
+        onClose={closeAddUser}
+        title={peopleRole?.modalTitle ?? "Add User"}
+        description={
+          peopleRole?.modalDescription ?? "Assign a role and set login details."
+        }
+      >
+        {formRoles.length === 0 ? (
           <div className="admin-users__empty">Loading role options...</div>
         ) : (
           <UserForm
             key={formKey}
             formKey={formKey}
             mode="create"
-            roles={roles}
+            roles={formRoles}
+            initialValues={lockedRole ? { role_id: lockedRole.role_id } : undefined}
+            lockRole={Boolean(lockedRole)}
             onSubmit={handleCreateUser}
             onCancel={closeAddUser}
-            submitLabel="Create User"
+            submitLabel={peopleRole?.createSubmitLabel ?? "Create User"}
             busyLabel="Creating..."
           />
         )}
@@ -481,13 +549,14 @@ export const AdminUsersPage = () => {
       >
         {isEditLoading ? (
           <div className="admin-users__empty">Loading user details...</div>
-        ) : editInitialValues && roles.length > 0 ? (
+        ) : editInitialValues && formRoles.length > 0 ? (
           <UserForm
             key={editFormKey}
             formKey={editFormKey}
             mode="edit"
-            roles={roles}
+            roles={formRoles}
             initialValues={editInitialValues}
+            lockRole={Boolean(lockedRole)}
             onSubmit={handleUpdateUser}
             onCancel={closeEditUser}
             submitLabel="Save Changes"

@@ -5,11 +5,11 @@
 }
 
 .client-dashboard__shell {
-  width: min(100%, 80rem);
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 1.25rem;
 }
 
 .client-dashboard__hero {

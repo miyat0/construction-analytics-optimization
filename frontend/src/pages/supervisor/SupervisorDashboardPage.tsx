@@ -5,10 +5,11 @@ import axios from "axios";
 import { useWorkspacePageTitle } from "../../contexts/AdminChromeContext";
 import { useAuth } from "../../hooks/useAuth";
 import {
+  listProjectDailyUpdates,
   listProjects,
   listSupervisorWorkplaceNeeds,
 } from "../../services/projectApi";
-import type { ProjectSummary, WorkplaceNeed } from "../../types/project";
+import type { DailyTaskUpdate, ProjectSummary, WorkplaceNeed } from "../../types/project";
 import {
   formatHeaderDate,
   getGreeting,
@@ -40,6 +41,7 @@ export const SupervisorDashboardPage = () => {
   const { user } = useAuth();
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [pendingNeeds, setPendingNeeds] = useState<WorkplaceNeed[]>([]);
+  const [pendingDailyUpdates, setPendingDailyUpdates] = useState<DailyTaskUpdate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -54,6 +56,19 @@ export const SupervisorDashboardPage = () => {
         ]);
         setProjects(projectData.results);
         setPendingNeeds(needData.results);
+
+        const updateLists = await Promise.all(
+          projectData.results.map((project) =>
+            listProjectDailyUpdates(project.project_id).catch(() => ({
+              count: 0,
+              results: [] as DailyTaskUpdate[],
+            })),
+          ),
+        );
+        const pending = updateLists
+          .flatMap((list) => list.results)
+          .filter((update) => update.supervisor_review_status === "pending");
+        setPendingDailyUpdates(pending);
       } catch (error) {
         setErrorMessage(
           getErrorMessage(error, "Unable to load the Supervisor dashboard right now."),
@@ -94,7 +109,13 @@ export const SupervisorDashboardPage = () => {
 
         <section className="supervisor-page__stats" aria-label="Supervisor summary">
           <article className="supervisor-card supervisor-page__stat">
-            <span className="supervisor-page__label">Pending Verifications</span>
+            <span className="supervisor-page__label">Pending Daily Updates</span>
+            <strong className="supervisor-page__stat-value">
+              {isLoading ? "—" : pendingDailyUpdates.length}
+            </strong>
+          </article>
+          <article className="supervisor-card supervisor-page__stat">
+            <span className="supervisor-page__label">Workplace Needs</span>
             <strong className="supervisor-page__stat-value">
               {isLoading ? "—" : pendingNeeds.length}
             </strong>
@@ -109,7 +130,47 @@ export const SupervisorDashboardPage = () => {
 
         <section className="supervisor-page__section">
           <div className="supervisor-page__section-header">
-            <h3 className="supervisor-page__section-title">Pending Verification</h3>
+            <h3 className="supervisor-page__section-title">Daily Work to Review</h3>
+            <Link className="supervisor-page__section-link" to="/supervisor/projects">
+              Open Projects →
+            </Link>
+          </div>
+          {isLoading ? (
+            <div className="supervisor-card supervisor-page__loading">Loading updates...</div>
+          ) : pendingDailyUpdates.length === 0 ? (
+            <div className="supervisor-empty supervisor-empty--compact">
+              <strong className="supervisor-empty__title">No daily updates waiting</strong>
+              <p className="supervisor-empty__description">
+                Worker progress updates appear under each project&apos;s Reports tab.
+              </p>
+            </div>
+          ) : (
+            <div className="supervisor-card supervisor-page__preview-list">
+              {pendingDailyUpdates.slice(0, 4).map((update) => (
+                <div key={update.update_id} className="supervisor-page__preview-row">
+                  <div>
+                    <strong>{update.task_title ?? "Task update"}</strong>
+                    <span>
+                      {update.worker?.name ?? "Worker"} · {update.project_name}
+                      {" · "}
+                      {Number(update.completion_percentage).toFixed(0)}%
+                    </span>
+                  </div>
+                  <Link
+                    className="supervisor-page__section-link"
+                    to="/supervisor/projects"
+                  >
+                    Review
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="supervisor-page__section">
+          <div className="supervisor-page__section-header">
+            <h3 className="supervisor-page__section-title">Workplace Needs</h3>
             <Link className="supervisor-page__section-link" to="/supervisor/verifications">
               Verifications →
             </Link>

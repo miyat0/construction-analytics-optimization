@@ -2,13 +2,16 @@ from django.contrib import admin
 
 from .models import (
     DailyTaskUpdate,
+    ManualMaterialExpense,
     Milestone,
     MilestoneExtension,
     MilestoneTask,
+    OtherProjectExpense,
     Project,
     ProjectAssignment,
     ProjectDocument,
     TaskWorkerAssignment,
+    WorkerWageRate,
     WorkplaceNeed,
     WorkplaceNeedAttachment,
 )
@@ -167,3 +170,23 @@ class WorkplaceNeedAdmin(admin.ModelAdmin):
 class WorkplaceNeedAttachmentAdmin(admin.ModelAdmin):
     list_display = ("attachment_id", "need", "original_name", "created_at")
     search_fields = ("original_name", "need__description")
+
+
+@admin.register(WorkerWageRate)
+class WorkerWageRateAdmin(admin.ModelAdmin):
+    list_display = ("worker", "daily_wage", "hourly_rate")
+    search_fields = ("worker__name", "worker__email")
+
+
+@admin.register(ManualMaterialExpense)
+class ManualMaterialExpenseAdmin(admin.ModelAdmin):
+    list_display = ("material_name", "project", "milestone", "total_cost", "expense_date", "status")
+    list_filter = ("status",)
+    search_fields = ("material_name", "project__project_name", "milestone__title")
+
+
+@admin.register(OtherProjectExpense)
+class OtherProjectExpenseAdmin(admin.ModelAdmin):
+    list_display = ("title", "project", "milestone", "category", "amount", "expense_date")
+    list_filter = ("category",)
+    search_fields = ("title", "project__project_name")

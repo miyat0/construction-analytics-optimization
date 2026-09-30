@@ -304,6 +304,8 @@ class MilestoneSerializer(serializers.ModelSerializer):
             "planned_end_date",
             "revised_end_date",
             "effective_end_date",
+            "contract_value",
+            "planned_cost",
             "status",
             "sort_order",
             "task_count",
@@ -528,6 +530,18 @@ class MilestoneWriteSerializer(serializers.Serializer):
     planned_start_date = serializers.DateField(required=False, allow_null=True)
     planned_end_date = serializers.DateField(required=False, allow_null=True)
     revised_end_date = serializers.DateField(required=False, allow_null=True)
+    contract_value = serializers.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        required=False,
+        min_value=Decimal("0.00"),
+    )
+    planned_cost = serializers.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        required=False,
+        min_value=Decimal("0.00"),
+    )
     status = serializers.ChoiceField(choices=Milestone.STATUS_CHOICES, required=False)
     sort_order = serializers.IntegerField(required=False, min_value=1)
 

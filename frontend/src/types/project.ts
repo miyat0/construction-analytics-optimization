@@ -259,6 +259,12 @@ export interface TaskAssignmentTaskSummary {
   title: string;
   status: MilestoneTaskStatus;
   required_worker_count: number;
+  expected_work?: string;
+  completion_requirement?: string;
+  planned_start_date?: string | null;
+  planned_end_date?: string | null;
+  daily_target_percentage?: string | null;
+  expected_progress_percentage?: string;
   milestone_id: number;
   milestone_title: string;
   project_id: number;

@@ -3,12 +3,14 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { EmptyState } from "../ui/EmptyState";
 import { SectionHeader } from "../ui/SectionHeader";
 import { StatusBadge } from "../ui/StatusBadge";
+import { useLiveFieldValidation } from "../../hooks/useLiveFieldValidation";
 import {
   MILESTONE_STATUS_OPTIONS,
   type Milestone,
   type MilestonePayload,
   type MilestoneStatus,
 } from "../../types/project";
+import { validateMilestoneFormFields } from "../../utils/formValidation";
 
 import "./MilestoneManager.css";
 
@@ -143,6 +145,23 @@ export const MilestoneManager = ({
   const [viewingMilestoneId, setViewingMilestoneId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [processingMilestoneId, setProcessingMilestoneId] = useState<number | null>(null);
+  const { fieldErrors, touchAndValidate, validateSubmit, resetFieldValidation } =
+    useLiveFieldValidation();
+
+  const validateWith = (
+    overrides: Partial<{
+      title: string;
+      plannedStartDate: string;
+      plannedEndDate: string;
+      sortOrder: string;
+    }> = {},
+  ) =>
+    validateMilestoneFormFields({
+      title: overrides.title ?? formState.title,
+      plannedStartDate: overrides.plannedStartDate ?? formState.planned_start_date,
+      plannedEndDate: overrides.plannedEndDate ?? formState.planned_end_date,
+      sortOrder: overrides.sortOrder ?? formState.sort_order,
+    });
 
   useEffect(() => {
     if (!canManage || formRequestKey <= 0 || onRequestCreate) {
@@ -152,8 +171,9 @@ export const MilestoneManager = ({
     setEditingMilestoneId(null);
     setFormState(defaultMilestoneFormState);
     setErrorMessage(null);
+    resetFieldValidation();
     setPanelMode("form");
-  }, [canManage, formRequestKey, onRequestCreate]);
+  }, [canManage, formRequestKey, onRequestCreate, resetFieldValidation]);
 
   useEffect(() => {
     if (listOnly || !activeMilestoneId) {
@@ -176,6 +196,7 @@ export const MilestoneManager = ({
 
     if (!editingMilestoneId) {
       setFormState(defaultMilestoneFormState);
+      resetFieldValidation();
       return;
     }
 
@@ -183,6 +204,7 @@ export const MilestoneManager = ({
     if (!milestone) {
       setEditingMilestoneId(null);
       setFormState(defaultMilestoneFormState);
+      resetFieldValidation();
       return;
     }
 
@@ -194,7 +216,8 @@ export const MilestoneManager = ({
       status: milestone.status,
       sort_order: String(milestone.sort_order),
     });
-  }, [editingMilestoneId, milestones, panelMode]);
+    resetFieldValidation();
+  }, [editingMilestoneId, milestones, panelMode, resetFieldValidation]);
 
   const updateField = <K extends keyof MilestoneFormState>(
     field: K,
@@ -212,6 +235,7 @@ export const MilestoneManager = ({
     setViewingMilestoneId(null);
     setFormState(defaultMilestoneFormState);
     setErrorMessage(null);
+    resetFieldValidation();
     onClearSelection?.();
   };
 
@@ -224,12 +248,14 @@ export const MilestoneManager = ({
     setEditingMilestoneId(null);
     setFormState(defaultMilestoneFormState);
     setErrorMessage(null);
+    resetFieldValidation();
     setPanelMode("form");
   };
 
   const openEditForm = (milestoneId: number) => {
     setEditingMilestoneId(milestoneId);
     setErrorMessage(null);
+    resetFieldValidation();
     setPanelMode("form");
   };
 
@@ -248,18 +274,8 @@ export const MilestoneManager = ({
     event.preventDefault();
     setErrorMessage(null);
 
-    if (!formState.title.trim()) {
-      setErrorMessage("Milestone title is required.");
-      return;
-    }
-
-    if (
-      formState.planned_start_date &&
-      formState.planned_end_date &&
-      new Date(formState.planned_end_date).getTime() <
-        new Date(formState.planned_start_date).getTime()
-    ) {
-      setErrorMessage("Milestone end date cannot be earlier than the start date.");
+    const nextErrors = validateSubmit(() => validateWith());
+    if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
@@ -342,11 +358,19 @@ export const MilestoneManager = ({
               </label>
               <input
                 id="milestone_title"
-                className="form-control"
+                className={`form-control${fieldErrors.title ? " is-invalid" : ""}`}
                 value={formState.title}
-                onChange={(event) => updateField("title", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("title", value);
+                  touchAndValidate("title", () => validateWith({ title: value }));
+                }}
+                onBlur={() => touchAndValidate("title", () => validateWith())}
                 placeholder="Milestone title"
               />
+              {fieldErrors.title ? (
+                <span className="invalid-feedback d-block">{fieldErrors.title}</span>
+              ) : null}
             </div>
 
             <div className="milestone-manager__field milestone-manager__field--full">
@@ -372,7 +396,14 @@ export const MilestoneManager = ({
                 className="form-control"
                 type="date"
                 value={formState.planned_start_date}
-                onChange={(event) => updateField("planned_start_date", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("planned_start_date", value);
+                  touchAndValidate("planned_end_date", () =>
+                    validateWith({ plannedStartDate: value }),
+                  );
+                }}
+                onBlur={() => touchAndValidate("planned_end_date", () => validateWith())}
               />
             </div>
 
@@ -382,11 +413,21 @@ export const MilestoneManager = ({
               </label>
               <input
                 id="milestone_end_date"
-                className="form-control"
+                className={`form-control${fieldErrors.planned_end_date ? " is-invalid" : ""}`}
                 type="date"
                 value={formState.planned_end_date}
-                onChange={(event) => updateField("planned_end_date", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("planned_end_date", value);
+                  touchAndValidate("planned_end_date", () =>
+                    validateWith({ plannedEndDate: value }),
+                  );
+                }}
+                onBlur={() => touchAndValidate("planned_end_date", () => validateWith())}
               />
+              {fieldErrors.planned_end_date ? (
+                <span className="invalid-feedback d-block">{fieldErrors.planned_end_date}</span>
+              ) : null}
             </div>
 
             <div className="milestone-manager__field">
@@ -413,12 +454,20 @@ export const MilestoneManager = ({
               </label>
               <input
                 id="milestone_order"
-                className="form-control"
+                className={`form-control${fieldErrors.sort_order ? " is-invalid" : ""}`}
                 inputMode="numeric"
                 value={formState.sort_order}
-                onChange={(event) => updateField("sort_order", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("sort_order", value);
+                  touchAndValidate("sort_order", () => validateWith({ sortOrder: value }));
+                }}
+                onBlur={() => touchAndValidate("sort_order", () => validateWith())}
                 placeholder="1"
               />
+              {fieldErrors.sort_order ? (
+                <span className="invalid-feedback d-block">{fieldErrors.sort_order}</span>
+              ) : null}
             </div>
           </div>
 

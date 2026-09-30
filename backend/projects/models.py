@@ -131,6 +131,18 @@ class Milestone(TimeStampedModel):
     planned_start_date = models.DateField(blank=True, null=True)
     planned_end_date = models.DateField(blank=True, null=True)
     revised_end_date = models.DateField(blank=True, null=True)
+    contract_value = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        help_text="Allocated / contract value used for profit and loss comparison.",
+    )
+    planned_cost = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        help_text="Expected cost for this milestone, if planned.",
+    )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PLANNED)
     sort_order = models.PositiveIntegerField(default=1)
 
@@ -630,3 +642,139 @@ class WorkplaceNeedAttachment(TimeStampedModel):
 
     def __str__(self):
         return self.original_name or f"Attachment {self.attachment_id}"
+
+
+class WorkerWageRate(TimeStampedModel):
+    rate_id = models.BigAutoField(primary_key=True)
+    worker = models.OneToOneField(
+        UserProfile,
+        on_delete=models.CASCADE,
+        related_name="wage_rate",
+        db_column="worker_user_id",
+    )
+    daily_wage = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("800.00"))
+    hourly_rate = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        help_text="Optional. Defaults to daily wage divided by 8 hours.",
+    )
+
+    class Meta:
+        db_table = "tbl_worker_wage_rate"
+        ordering = ("worker__name",)
+
+    def effective_hourly_rate(self):
+        if self.hourly_rate is not None:
+            return self.hourly_rate
+        return (self.daily_wage / Decimal("8.00")).quantize(Decimal("0.01"))
+
+    def __str__(self):
+        return f"{self.worker.name} - {self.daily_wage}/day"
+
+
+class ManualMaterialExpense(TimeStampedModel):
+    STATUS_RECORDED = "recorded"
+    STATUS_APPROVED = "approved"
+    STATUS_CHOICES = (
+        (STATUS_RECORDED, "Recorded"),
+        (STATUS_APPROVED, "Approved"),
+    )
+
+    expense_id = models.BigAutoField(primary_key=True)
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="material_expenses",
+        db_column="project_id",
+    )
+    milestone = models.ForeignKey(
+        Milestone,
+        on_delete=models.CASCADE,
+        related_name="material_expenses",
+        db_column="milestone_id",
+    )
+    task = models.ForeignKey(
+        MilestoneTask,
+        on_delete=models.SET_NULL,
+        related_name="material_expenses",
+        db_column="task_id",
+        blank=True,
+        null=True,
+    )
+    material_name = models.CharField(max_length=200)
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    unit = models.CharField(max_length=40, default="unit")
+    unit_cost = models.DecimalField(max_digits=14, decimal_places=2)
+    total_cost = models.DecimalField(max_digits=14, decimal_places=2)
+    expense_date = models.DateField()
+    invoice_reference = models.CharField(max_length=120, blank=True)
+    remarks = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_APPROVED)
+    added_by = models.ForeignKey(
+        UserProfile,
+        on_delete=models.SET_NULL,
+        related_name="added_material_expenses",
+        db_column="added_by_user_id",
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "tbl_manual_material_expense"
+        ordering = ("-expense_date", "-expense_id")
+
+    def __str__(self):
+        return f"{self.material_name} - {self.total_cost}"
+
+
+class OtherProjectExpense(TimeStampedModel):
+    CATEGORY_EQUIPMENT = "equipment_rental"
+    CATEGORY_TRANSPORT = "transportation"
+    CATEGORY_MACHINERY = "machinery"
+    CATEGORY_SUBCONTRACTOR = "subcontractor"
+    CATEGORY_MISC = "miscellaneous"
+    CATEGORY_CHOICES = (
+        (CATEGORY_EQUIPMENT, "Equipment rental"),
+        (CATEGORY_TRANSPORT, "Transportation"),
+        (CATEGORY_MACHINERY, "Machinery charges"),
+        (CATEGORY_SUBCONTRACTOR, "Subcontractor"),
+        (CATEGORY_MISC, "Miscellaneous"),
+    )
+
+    expense_id = models.BigAutoField(primary_key=True)
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name="other_expenses",
+        db_column="project_id",
+    )
+    milestone = models.ForeignKey(
+        Milestone,
+        on_delete=models.SET_NULL,
+        related_name="other_expenses",
+        db_column="milestone_id",
+        blank=True,
+        null=True,
+    )
+    category = models.CharField(max_length=40, choices=CATEGORY_CHOICES, default=CATEGORY_MISC)
+    title = models.CharField(max_length=200)
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
+    expense_date = models.DateField()
+    remarks = models.TextField(blank=True)
+    added_by = models.ForeignKey(
+        UserProfile,
+        on_delete=models.SET_NULL,
+        related_name="added_other_expenses",
+        db_column="added_by_user_id",
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        db_table = "tbl_other_project_expense"
+        ordering = ("-expense_date", "-expense_id")
+
+    def __str__(self):
+        return f"{self.title} - {self.amount}"

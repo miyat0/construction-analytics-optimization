@@ -2,12 +2,14 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 
 import { EmptyState } from "../ui/EmptyState";
 import { SectionHeader } from "../ui/SectionHeader";
+import { useLiveFieldValidation } from "../../hooks/useLiveFieldValidation";
 import {
   PROJECT_DOCUMENT_TYPE_OPTIONS,
   type Milestone,
   type ProjectDocument,
   type ProjectDocumentType,
 } from "../../types/project";
+import { validateDocumentFormFields } from "../../utils/formValidation";
 
 import "./ProjectDocumentManager.css";
 
@@ -75,6 +77,17 @@ export const ProjectDocumentManager = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [processingDocumentId, setProcessingDocumentId] = useState<number | null>(null);
+  const { fieldErrors, touchAndValidate, validateSubmit, resetFieldValidation } =
+    useLiveFieldValidation();
+
+  const validateWith = (
+    overrides: Partial<{ title: string; hasFile: boolean }> = {},
+  ) =>
+    validateDocumentFormFields({
+      title: overrides.title ?? formState.title,
+      fileRequired: !editingDocument,
+      hasFile: overrides.hasFile ?? Boolean(selectedFile),
+    });
 
   useEffect(() => {
     if (!canManage || formRequestKey <= 0 || onRequestCreate) {
@@ -85,8 +98,9 @@ export const ProjectDocumentManager = ({
     setFormState(defaultDocumentFormState);
     setSelectedFile(null);
     setErrorMessage(null);
+    resetFieldValidation();
     setPanelMode("form");
-  }, [canManage, formRequestKey, onRequestCreate]);
+  }, [canManage, formRequestKey, onRequestCreate, resetFieldValidation]);
 
   useEffect(() => {
     if (panelMode !== "form") {
@@ -96,6 +110,7 @@ export const ProjectDocumentManager = ({
     if (!editingDocument) {
       setFormState(defaultDocumentFormState);
       setSelectedFile(null);
+      resetFieldValidation();
       return;
     }
 
@@ -107,7 +122,8 @@ export const ProjectDocumentManager = ({
       is_client_visible: editingDocument.is_client_visible,
     });
     setSelectedFile(null);
-  }, [editingDocument, panelMode]);
+    resetFieldValidation();
+  }, [editingDocument, panelMode, resetFieldValidation]);
 
   const updateField = <K extends keyof DocumentFormState>(
     field: K,
@@ -125,6 +141,7 @@ export const ProjectDocumentManager = ({
     setFormState(defaultDocumentFormState);
     setSelectedFile(null);
     setErrorMessage(null);
+    resetFieldValidation();
   };
 
   const openCreateForm = () => {
@@ -137,30 +154,29 @@ export const ProjectDocumentManager = ({
     setFormState(defaultDocumentFormState);
     setSelectedFile(null);
     setErrorMessage(null);
+    resetFieldValidation();
     setPanelMode("form");
   };
 
   const openEditForm = (document: ProjectDocument) => {
     setEditingDocument(document);
     setErrorMessage(null);
+    resetFieldValidation();
     setPanelMode("form");
   };
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSelectedFile(event.target.files?.[0] ?? null);
+    const file = event.target.files?.[0] ?? null;
+    setSelectedFile(file);
+    touchAndValidate("file", () => validateWith({ hasFile: Boolean(file) }));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMessage(null);
 
-    if (!formState.title.trim()) {
-      setErrorMessage("Document title is required.");
-      return;
-    }
-
-    if (!editingDocument && !selectedFile) {
-      setErrorMessage("Please choose a file to upload.");
+    const nextErrors = validateSubmit(() => validateWith());
+    if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
@@ -252,11 +268,19 @@ export const ProjectDocumentManager = ({
               </label>
               <input
                 id="document_title"
-                className="form-control"
+                className={`form-control${fieldErrors.title ? " is-invalid" : ""}`}
                 value={formState.title}
-                onChange={(event) => updateField("title", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("title", value);
+                  touchAndValidate("title", () => validateWith({ title: value }));
+                }}
+                onBlur={() => touchAndValidate("title", () => validateWith())}
                 placeholder="Document title"
               />
+              {fieldErrors.title ? (
+                <span className="invalid-feedback d-block">{fieldErrors.title}</span>
+              ) : null}
             </div>
 
             <div className="project-document-manager__field">
@@ -299,10 +323,13 @@ export const ProjectDocumentManager = ({
               </label>
               <input
                 id="document_file"
-                className="form-control"
+                className={`form-control${fieldErrors.file ? " is-invalid" : ""}`}
                 type="file"
                 onChange={handleFileChange}
               />
+              {fieldErrors.file ? (
+                <span className="invalid-feedback d-block">{fieldErrors.file}</span>
+              ) : null}
             </div>
           </div>
 

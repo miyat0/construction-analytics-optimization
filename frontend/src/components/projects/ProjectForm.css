@@ -3,6 +3,11 @@
   gap: 1.05rem;
 }
 
+.project-form__shell {
+  display: grid;
+  gap: 0;
+}
+
 .project-form__header h2 {
   margin: 0;
   color: var(--brand-ink);
@@ -39,13 +44,18 @@
   font-weight: 600;
 }
 
+.project-form__field-error {
+  color: #f87171;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
 .project-form__actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
   gap: 0.75rem;
-  grid-column: 1 / -1;
   margin-top: 1.15rem;
   padding-top: 0;
   border-top: 0;

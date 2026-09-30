@@ -82,6 +82,20 @@
   text-transform: uppercase;
 }
 
+.task-assignment-manager__field-error {
+  color: #f87171;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.task-assignment-manager__field-error {
+  color: #f87171;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .task-assignment-manager__field .form-select,
 .task-assignment-manager__field .form-control,
 .task-assignment-manager select.form-select {

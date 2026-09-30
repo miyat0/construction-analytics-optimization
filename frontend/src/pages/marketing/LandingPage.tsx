@@ -38,27 +38,30 @@ const FeatureIcon = ({ name }: { name: "control" | "budget" | "access" }) => {
           strokeLinejoin="round"
           strokeWidth="1.5"
         />
-        <path d="M9.5 12.1 11.2 13.8 14.8 10" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+        <path
+          d="M9.5 12.1 11.2 13.8 14.8 10"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+        />
       </svg>
     );
   }
 
   return (
     <svg aria-hidden="true" fill="none" height="22" viewBox="0 0 24 24" width="22">
-      <path d="M4 19V5h7.2L10 8.2 11.2 11.4H4" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
+      <path
+        d="M4 19V5h7.2L10 8.2 11.2 11.4H4"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+      />
       <path d="M14 8h6M14 12h6M14 16h4" stroke="currentColor" strokeLinecap="round" strokeWidth="1.5" />
     </svg>
   );
 };
-
-const Crosshair = () => (
-  <>
-    <span className="landing-page__crosshair landing-page__crosshair--tl" aria-hidden="true" />
-    <span className="landing-page__crosshair landing-page__crosshair--tr" aria-hidden="true" />
-    <span className="landing-page__crosshair landing-page__crosshair--bl" aria-hidden="true" />
-    <span className="landing-page__crosshair landing-page__crosshair--br" aria-hidden="true" />
-  </>
-);
 
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
@@ -90,7 +93,7 @@ const PLATFORM_POINTS = [
   "Built to scale with your portfolio",
 ];
 
-const HERO_STATS = [
+const FOCUS_STRIP = [
   { code: "01", label: "Projects", detail: "Milestones & tasks" },
   { code: "02", label: "Budgets", detail: "Live cost tracking" },
   { code: "03", label: "Field", detail: "Daily site updates" },
@@ -135,16 +138,14 @@ export const LandingPage = () => {
           <div className="landing-page__grid-overlay" aria-hidden="true" />
           <div className="container landing-page__hero-content">
             <div className="landing-page__hero-copy">
-              <span className="landing-page__eyebrow landing-page__eyebrow--hero">
-                Construction Management Software
-              </span>
+              <p className="landing-page__brand-mark">FORTESITE</p>
               <h1 className="landing-page__title">
                 Build with clarity.
                 <span className="landing-page__title-accent"> Deliver with control.</span>
               </h1>
               <p className="landing-page__description">
-                FORTESITE helps construction teams manage projects, budgets, and field
-                progress in one secure platform.
+                Construction teams manage projects, budgets, and field progress in one secure
+                platform.
               </p>
               <div className="landing-page__cta-group">
                 <Link
@@ -161,16 +162,6 @@ export const LandingPage = () => {
                   View Features
                 </a>
               </div>
-
-              <div className="landing-page__hero-stats" aria-label="Platform highlights">
-                {HERO_STATS.map((stat) => (
-                  <div key={stat.code} className="landing-page__hero-stat">
-                    <span className="landing-page__hero-stat-code">{stat.code}</span>
-                    <strong>{stat.label}</strong>
-                    <span>{stat.detail}</span>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </section>
@@ -178,6 +169,18 @@ export const LandingPage = () => {
         <section className="landing-page__feature-section" id="features">
           <div className="landing-page__grid-overlay landing-page__grid-overlay--soft" aria-hidden="true" />
           <div className="container">
+            <div className="landing-page__focus-strip" aria-label="Platform focus areas">
+              {FOCUS_STRIP.map((item) => (
+                <div key={item.code} className="landing-page__focus-item">
+                  <span className="landing-page__focus-code">{item.code}</span>
+                  <div>
+                    <strong>{item.label}</strong>
+                    <span>{item.detail}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <div className="landing-page__section-heading landing-page__section-heading--center">
               <span className="landing-page__eyebrow">Features</span>
               <h2>Built for modern construction teams</h2>
@@ -187,9 +190,12 @@ export const LandingPage = () => {
             </div>
 
             <div className="landing-page__feature-grid">
-              {FEATURE_CARDS.map((card) => (
-                <article key={card.title} className="landing-page__feature-card">
-                  <Crosshair />
+              {FEATURE_CARDS.map((card, index) => (
+                <article
+                  key={card.title}
+                  className="landing-page__feature-card"
+                  style={{ animationDelay: `${0.08 + index * 0.08}s` }}
+                >
                   <span className="landing-page__feature-icon" aria-hidden="true">
                     <FeatureIcon name={card.icon} />
                   </span>
@@ -204,7 +210,6 @@ export const LandingPage = () => {
         <section className="landing-page__platform-section" id="platform">
           <div className="container landing-page__platform-grid">
             <div className="landing-page__platform-media">
-              <Crosshair />
               <div className="landing-page__platform-frame">
                 <img
                   className="landing-page__platform-image"
@@ -213,14 +218,18 @@ export const LandingPage = () => {
                 />
                 <span className="landing-page__platform-tint" aria-hidden="true" />
               </div>
+              <div className="landing-page__platform-caption">
+                <span>Site execution</span>
+                <strong>Blueprint to delivery</strong>
+              </div>
             </div>
 
             <div className="landing-page__platform-copy">
               <span className="landing-page__eyebrow">Platform</span>
               <h2>From blueprint to site execution</h2>
               <p>
-                Keep planning, budgets, and field activity connected so every role works
-                from the same source of truth.
+                Keep planning, budgets, and field activity connected so every role works from the
+                same source of truth.
               </p>
               <ul className="landing-page__platform-list">
                 {PLATFORM_POINTS.map((point) => (
@@ -239,13 +248,12 @@ export const LandingPage = () => {
           <div className="landing-page__grid-overlay landing-page__grid-overlay--soft" aria-hidden="true" />
           <div className="container">
             <div className="landing-page__contact-panel">
-              <Crosshair />
               <div className="landing-page__contact-copy">
                 <span className="landing-page__eyebrow">Contact</span>
                 <h2>Talk to the FORTESITE team</h2>
                 <p>
-                  Need access for your company, a product walkthrough, or support with
-                  onboarding? Reach out and we will help you get set up.
+                  Need access for your company, a product walkthrough, or support with onboarding?
+                  Reach out and we will help you get set up.
                 </p>
               </div>
 
@@ -270,7 +278,6 @@ export const LandingPage = () => {
         <section className="landing-page__cta-section">
           <div className="container">
             <div className="landing-page__cta-band">
-              <Crosshair />
               <div>
                 <span className="landing-page__eyebrow">Get started</span>
                 <h2>Run your next project with FORTESITE</h2>

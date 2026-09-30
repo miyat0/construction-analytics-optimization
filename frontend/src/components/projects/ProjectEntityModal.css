@@ -121,6 +121,19 @@
   box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.18);
 }
 
+.project-entity-modal__form .form-control.is-invalid,
+.project-entity-modal__form .form-select.is-invalid,
+.project-entity-modal__select.is-invalid {
+  border-color: #f87171;
+}
+
+.project-entity-modal__form .form-control.is-invalid:focus,
+.project-entity-modal__form .form-select.is-invalid:focus,
+.project-entity-modal__select.is-invalid:focus {
+  border-color: #f87171;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.18);
+}
+
 .project-entity-modal__select-wrap {
   position: relative;
   min-width: 0;

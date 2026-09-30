@@ -7,6 +7,7 @@ import {
 } from "../../components/projects/ProjectCreateContextPanel";
 import { ProjectCreatePageHeader } from "../../components/projects/ProjectCreatePageHeader";
 import { useProjectCreateChrome } from "../../contexts/AdminChromeContext";
+import { useLiveFieldValidation } from "../../hooks/useLiveFieldValidation";
 import {
   createProjectMilestone,
   getProject,
@@ -17,6 +18,7 @@ import {
   type MilestoneStatus,
   type ProjectDetail,
 } from "../../types/project";
+import { validateMilestoneFormFields } from "../../utils/formValidation";
 import {
   getProjectsBasePath,
   getProjectWorkspacePath,
@@ -45,6 +47,20 @@ export const CreateMilestonePage = () => {
   const [plannedEndDate, setPlannedEndDate] = useState("");
   const [status, setStatus] = useState<MilestoneStatus>("planned");
   const [nextSortOrder, setNextSortOrder] = useState(1);
+  const { fieldErrors, touchAndValidate, validateSubmit } = useLiveFieldValidation();
+
+  const validateWith = (
+    overrides: Partial<{
+      title: string;
+      plannedStartDate: string;
+      plannedEndDate: string;
+    }> = {},
+  ) =>
+    validateMilestoneFormFields({
+      title: overrides.title ?? title,
+      plannedStartDate: overrides.plannedStartDate ?? plannedStartDate,
+      plannedEndDate: overrides.plannedEndDate ?? plannedEndDate,
+    });
 
   const projectName = project?.project_name ?? "";
 
@@ -108,17 +124,8 @@ export const CreateMilestonePage = () => {
     event.preventDefault();
     setErrorMessage(null);
 
-    if (!title.trim()) {
-      setErrorMessage("Milestone title is required.");
-      return;
-    }
-
-    if (
-      plannedStartDate &&
-      plannedEndDate &&
-      new Date(plannedEndDate).getTime() < new Date(plannedStartDate).getTime()
-    ) {
-      setErrorMessage("Milestone end date cannot be earlier than the start date.");
+    const nextErrors = validateSubmit(() => validateWith());
+    if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
@@ -186,11 +193,19 @@ export const CreateMilestonePage = () => {
             <label className="project-create-page__field project-create-page__field--full">
               <span className="project-create-page__label">Milestone Title</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.title ? " is-invalid" : ""}`}
                 value={title}
-                onChange={(event) => setTitle(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setTitle(value);
+                  touchAndValidate("title", () => validateWith({ title: value }));
+                }}
+                onBlur={() => touchAndValidate("title", () => validateWith())}
                 placeholder="Milestone title"
               />
+              {fieldErrors.title ? (
+                <span className="invalid-feedback d-block">{fieldErrors.title}</span>
+              ) : null}
             </label>
 
             <label className="project-create-page__field project-create-page__field--full">
@@ -212,18 +227,35 @@ export const CreateMilestonePage = () => {
                 className="form-control"
                 type="date"
                 value={plannedStartDate}
-                onChange={(event) => setPlannedStartDate(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setPlannedStartDate(value);
+                  touchAndValidate("planned_end_date", () =>
+                    validateWith({ plannedStartDate: value }),
+                  );
+                }}
+                onBlur={() => touchAndValidate("planned_end_date", () => validateWith())}
               />
             </label>
 
             <label className="project-create-page__field">
               <span className="project-create-page__label">End Date</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.planned_end_date ? " is-invalid" : ""}`}
                 type="date"
                 value={plannedEndDate}
-                onChange={(event) => setPlannedEndDate(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setPlannedEndDate(value);
+                  touchAndValidate("planned_end_date", () =>
+                    validateWith({ plannedEndDate: value }),
+                  );
+                }}
+                onBlur={() => touchAndValidate("planned_end_date", () => validateWith())}
               />
+              {fieldErrors.planned_end_date ? (
+                <span className="invalid-feedback d-block">{fieldErrors.planned_end_date}</span>
+              ) : null}
             </label>
 
             <label className="project-create-page__field project-create-page__field--full">

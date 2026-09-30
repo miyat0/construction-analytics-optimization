@@ -7,6 +7,7 @@ import {
   type FormEvent,
 } from "react";
 
+import { useLiveFieldValidation } from "../../hooks/useLiveFieldValidation";
 import type {
   WorkplaceNeed,
   WorkplaceNeedCategory,
@@ -14,6 +15,7 @@ import type {
   WorkplaceNeedPriority,
   WorkplaceNeedStatus,
 } from "../../types/project";
+import { validateWorkplaceNeedFormFields } from "../../utils/formValidation";
 
 import "./WorkplaceNeedsPanel.css";
 
@@ -139,11 +141,24 @@ export const WorkplaceNeedsPanel = ({
   const [attachment, setAttachment] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [actionErrorById, setActionErrorById] = useState<Record<number, string>>({});
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [remarksById, setRemarksById] = useState<Record<number, string>>({});
   const [commentsById, setCommentsById] = useState<Record<number, string>>({});
+  const { fieldErrors, touchAndValidate, validateSubmit, resetFieldValidation } =
+    useLiveFieldValidation();
 
   const isWorkerMode = mode === "worker" && Boolean(onSubmitNeed);
+
+  const validateWith = (
+    overrides: Partial<{ projectId: string; description: string }> = {},
+  ) =>
+    validateWorkplaceNeedFormFields({
+      hasProjects: contextProjects.length > 0,
+      projectId:
+        overrides.projectId ?? (projectId === "" ? "" : String(projectId)),
+      description: overrides.description ?? needDescription,
+    });
 
   const sectionTitle =
     title ??
@@ -169,6 +184,7 @@ export const WorkplaceNeedsPanel = ({
     setAttachment(null);
     setMilestoneId("");
     setFormError(null);
+    resetFieldValidation();
     if (contextProjects.length === 1) {
       setProjectId(contextProjects[0].project_id);
     } else {
@@ -189,6 +205,7 @@ export const WorkplaceNeedsPanel = ({
         }
       }
       setFormError(null);
+      resetFieldValidation();
       setIsModalOpen(true);
     })();
   };
@@ -253,20 +270,12 @@ export const WorkplaceNeedsPanel = ({
       return;
     }
 
-    if (contextProjects.length === 0) {
-      setFormError(
-        "No assigned projects found. Ask your supervisor to assign you to a task first.",
-      );
+    const nextErrors = validateSubmit(() => validateWith());
+    if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
     if (!projectId) {
-      setFormError("Select a project before submitting.");
-      return;
-    }
-
-    if (!needDescription.trim()) {
-      setFormError("Enter a description of the workplace need.");
       return;
     }
 
@@ -331,9 +340,23 @@ export const WorkplaceNeedsPanel = ({
       return;
     }
 
+    const comments = commentsById[requestId]?.trim() || "";
+    if (action === "comment" && !comments) {
+      setActionErrorById((current) => ({
+        ...current,
+        [requestId]: "Enter a comment before saving.",
+      }));
+      return;
+    }
+
+    setActionErrorById((current) => {
+      const next = { ...current };
+      delete next[requestId];
+      return next;
+    });
     setProcessingId(requestId);
     try {
-      await onPmAction(requestId, action, commentsById[requestId]?.trim() || "");
+      await onPmAction(requestId, action, comments);
       if (action !== "comment") {
         setCommentsById((current) => {
           const next = { ...current };
@@ -551,13 +574,23 @@ export const WorkplaceNeedsPanel = ({
                     className="admin-control"
                     placeholder="Comments or instructions"
                     value={commentsById[need.request_id] ?? ""}
-                    onChange={(event) =>
+                    onChange={(event) => {
                       setCommentsById((current) => ({
                         ...current,
                         [need.request_id]: event.target.value,
-                      }))
-                    }
+                      }));
+                      setActionErrorById((current) => {
+                        const next = { ...current };
+                        delete next[need.request_id];
+                        return next;
+                      });
+                    }}
                   />
+                  {actionErrorById[need.request_id] ? (
+                    <div className="alert alert-danger mb-0" role="alert">
+                      {actionErrorById[need.request_id]}
+                    </div>
+                  ) : null}
                   <div className="workplace-needs-panel__actions">
                     <button
                       type="button"
@@ -683,13 +716,19 @@ export const WorkplaceNeedsPanel = ({
                   <label className="workplace-need-modal__field">
                     <span className="workplace-need-modal__label">Project</span>
                     <select
-                      className="workplace-need-modal__control"
+                      className={`workplace-need-modal__control${fieldErrors.project_id ? " is-invalid" : ""}`}
                       value={projectId}
                       onChange={(event) => {
+                        const value = event.target.value ? Number(event.target.value) : "";
                         setFormError(null);
-                        setProjectId(event.target.value ? Number(event.target.value) : "");
+                        setProjectId(value);
+                        touchAndValidate("project_id", () =>
+                          validateWith({
+                            projectId: value === "" ? "" : String(value),
+                          }),
+                        );
                       }}
-                      required
+                      onBlur={() => touchAndValidate("project_id", () => validateWith())}
                     >
                       <option value="">Select project</option>
                       {contextProjects.map((project) => (
@@ -698,6 +737,11 @@ export const WorkplaceNeedsPanel = ({
                         </option>
                       ))}
                     </select>
+                    {fieldErrors.project_id ? (
+                      <span className="workplace-need-modal__field-error">
+                        {fieldErrors.project_id}
+                      </span>
+                    ) : null}
                   </label>
 
                   <label className="workplace-need-modal__field">
@@ -728,15 +772,24 @@ export const WorkplaceNeedsPanel = ({
                   <label className="workplace-need-modal__field workplace-need-modal__field--full">
                     <span className="workplace-need-modal__label">Description</span>
                     <textarea
-                      className="workplace-need-modal__control workplace-need-modal__textarea"
+                      className={`workplace-need-modal__control workplace-need-modal__textarea${fieldErrors.description ? " is-invalid" : ""}`}
                       value={needDescription}
                       onChange={(event) => {
+                        const value = event.target.value;
                         setFormError(null);
-                        setNeedDescription(event.target.value);
+                        setNeedDescription(value);
+                        touchAndValidate("description", () =>
+                          validateWith({ description: value }),
+                        );
                       }}
+                      onBlur={() => touchAndValidate("description", () => validateWith())}
                       placeholder="Describe the need or issue clearly..."
-                      required
                     />
+                    {fieldErrors.description ? (
+                      <span className="workplace-need-modal__field-error">
+                        {fieldErrors.description}
+                      </span>
+                    ) : null}
                   </label>
 
                   <div className="workplace-need-modal__field workplace-need-modal__field--full">

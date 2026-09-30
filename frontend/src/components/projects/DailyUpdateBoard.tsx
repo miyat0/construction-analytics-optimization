@@ -30,6 +30,7 @@ export const DailyUpdateBoard = ({
   onReview,
 }: DailyUpdateBoardProps) => {
   const [notesByUpdateId, setNotesByUpdateId] = useState<Record<number, string>>({});
+  const [reviewErrorsById, setReviewErrorsById] = useState<Record<number, string>>({});
   const [processingUpdateId, setProcessingUpdateId] = useState<number | null>(null);
 
   const filteredUpdates = useMemo(() => {
@@ -56,12 +57,26 @@ export const DailyUpdateBoard = ({
       return;
     }
 
+    const note = notesByUpdateId[updateId]?.trim() ?? "";
+    if (review_status === "rejected" && !note) {
+      setReviewErrorsById((current) => ({
+        ...current,
+        [updateId]: "Add a rejection note before rejecting this update.",
+      }));
+      return;
+    }
+
+    setReviewErrorsById((current) => {
+      const next = { ...current };
+      delete next[updateId];
+      return next;
+    });
     setProcessingUpdateId(updateId);
 
     try {
       await onReview(updateId, {
         review_status,
-        review_note: notesByUpdateId[updateId]?.trim() ?? "",
+        review_note: note,
       });
     } finally {
       setProcessingUpdateId(null);
@@ -193,18 +208,28 @@ export const DailyUpdateBoard = ({
                     className="form-control"
                     rows={2}
                     value={notesByUpdateId[update.update_id] ?? ""}
-                    onChange={(event) =>
+                    onChange={(event) => {
                       setNotesByUpdateId((currentState) => ({
                         ...currentState,
                         [update.update_id]: event.target.value,
-                      }))
-                    }
+                      }));
+                      setReviewErrorsById((current) => {
+                        const next = { ...current };
+                        delete next[update.update_id];
+                        return next;
+                      });
+                    }}
                     placeholder={
                       mode === "supervisor"
                         ? "Verification notes (required when rejecting)."
                         : "Site engineer notes (required when rejecting)."
                     }
                   />
+                  {reviewErrorsById[update.update_id] ? (
+                    <div className="alert alert-danger mb-0" role="alert">
+                      {reviewErrorsById[update.update_id]}
+                    </div>
+                  ) : null}
                   <div className="daily-update-board__actions">
                     <button
                       type="button"

@@ -103,15 +103,88 @@
 
 .admin-action-row > .stat-card-row {
   align-self: center;
+  justify-content: flex-end;
+  width: auto;
 }
 
 /* ——— Admin list page shell (Projects, Users & Roles, future lists) ——— */
 .page-list {
   display: flex;
   flex-direction: column;
-  gap: 1.375rem; /* ~22px toolbar → list */
+  gap: 1.25rem;
   width: 100%;
   min-width: 0;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem 1.25rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.page-header__copy {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1 1 16rem;
+}
+
+.page-header__title {
+  margin: 0;
+  color: var(--brand-ink);
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.page-header__description {
+  margin: 0;
+  max-width: 40rem;
+  color: var(--admin-muted);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.app-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.app-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.app-table th,
+.app-table td {
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid var(--admin-border);
+  vertical-align: middle;
+  text-align: left;
+}
+
+.app-table thead th {
+  color: var(--admin-muted);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.app-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.app-card {
+  padding: 1.25rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 0.75rem;
+  background: var(--admin-surface);
 }
 
 .page-toolbar {

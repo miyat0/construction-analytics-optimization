@@ -32,6 +32,8 @@ interface FilterBarProps {
   onReset: () => void;
   /** When false, filters apply as the user types (no Search button). Default true. */
   showSubmitButton?: boolean;
+  /** When true, hides the role/status select. */
+  hideSelect?: boolean;
   submitLabel?: string;
   resetLabel?: string;
 }
@@ -48,6 +50,7 @@ export const FilterBar = ({
   onSubmit,
   onReset,
   showSubmitButton = true,
+  hideSelect = false,
   submitLabel = "Search",
   resetLabel = "Clear",
 }: FilterBarProps) => {
@@ -61,18 +64,20 @@ export const FilterBar = ({
         onChange={(event) => onSearchChange(event.target.value)}
         aria-label={searchPlaceholder}
       />
-      <select
-        className="admin-control filter-bar__select"
-        value={selectValue}
-        onChange={(event) => onSelectChange(event.target.value)}
-        aria-label={selectAriaLabel}
-      >
-        {selectOptions.map((option) => (
-          <option key={option.value || "all"} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      {!hideSelect ? (
+        <select
+          className="admin-control filter-bar__select"
+          value={selectValue}
+          onChange={(event) => onSelectChange(event.target.value)}
+          aria-label={selectAriaLabel}
+        >
+          {selectOptions.map((option) => (
+            <option key={option.value || "all"} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      ) : null}
       <div className="filter-bar__actions">
         {showSubmitButton ? (
           <button type="submit" className="admin-btn admin-btn--primary">

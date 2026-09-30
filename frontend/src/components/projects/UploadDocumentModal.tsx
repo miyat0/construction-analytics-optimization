@@ -2,11 +2,13 @@ import { useEffect, useState, type FormEvent } from "react";
 
 import { DetailModal } from "../ui/DetailModal";
 import { FileDropzone } from "../ui/FileDropzone";
+import { useLiveFieldValidation } from "../../hooks/useLiveFieldValidation";
 import {
   PROJECT_DOCUMENT_TYPE_OPTIONS,
   type Milestone,
   type ProjectDocumentType,
 } from "../../types/project";
+import { validateDocumentFormFields } from "../../utils/formValidation";
 
 import "./ProjectEntityModal.css";
 
@@ -32,8 +34,18 @@ export const UploadDocumentModal = ({
   const [isClientVisible, setIsClientVisible] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { fieldErrors, touchAndValidate, validateSubmit, resetFieldValidation } =
+    useLiveFieldValidation();
+
+  const validateWith = (
+    overrides: Partial<{ title: string; hasFile: boolean }> = {},
+  ) =>
+    validateDocumentFormFields({
+      title: overrides.title ?? title,
+      fileRequired: true,
+      hasFile: overrides.hasFile ?? Boolean(selectedFile),
+    });
 
   useEffect(() => {
     if (!isOpen) {
@@ -46,19 +58,12 @@ export const UploadDocumentModal = ({
     setIsClientVisible(false);
     setSelectedFile(null);
     setErrorMessage(null);
-    setFieldErrors({});
-  }, [isOpen]);
+    resetFieldValidation();
+  }, [isOpen, resetFieldValidation]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const nextErrors: Record<string, string> = {};
-    if (!title.trim()) {
-      nextErrors.title = "Document title is required.";
-    }
-    if (!selectedFile) {
-      nextErrors.file = "Please select a file.";
-    }
-    setFieldErrors(nextErrors);
+    const nextErrors = validateSubmit(() => validateWith());
     if (Object.keys(nextErrors).length > 0) {
       return;
     }
@@ -98,9 +103,14 @@ export const UploadDocumentModal = ({
         <label className="project-entity-modal__field">
           <span className="project-entity-modal__label">Document Title</span>
           <input
-            className="form-control"
+            className={`form-control${fieldErrors.title ? " is-invalid" : ""}`}
             value={title}
-            onChange={(event) => setTitle(event.target.value)}
+            onChange={(event) => {
+              const value = event.target.value;
+              setTitle(value);
+              touchAndValidate("title", () => validateWith({ title: value }));
+            }}
+            onBlur={() => touchAndValidate("title", () => validateWith())}
             placeholder="Enter document title"
           />
           {fieldErrors.title ? (
@@ -168,13 +178,7 @@ export const UploadDocumentModal = ({
             file={selectedFile}
             onChange={(file) => {
               setSelectedFile(file);
-              if (file) {
-                setFieldErrors((prev) => {
-                  const next = { ...prev };
-                  delete next.file;
-                  return next;
-                });
-              }
+              touchAndValidate("file", () => validateWith({ hasFile: Boolean(file) }));
             }}
             disabled={isSubmitting}
             compact

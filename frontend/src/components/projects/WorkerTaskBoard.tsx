@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 
+import { useLiveFieldValidation } from "../../hooks/useLiveFieldValidation";
 import {
   INCOMPLETE_WORK_REASON_OPTIONS,
   TASK_UPDATE_STATUS_OPTIONS,
@@ -8,6 +9,7 @@ import {
   type TaskAssignment,
   type TaskUpdateStatus,
 } from "../../types/project";
+import { validateWorkerUpdateFields } from "../../utils/formValidation";
 
 import "./WorkerTaskBoard.css";
 
@@ -28,6 +30,15 @@ type WorkerUpdateFormState = {
   has_safety_issue: boolean;
 };
 
+type WorkerLiveOverrides = Partial<{
+  assignmentSelected: boolean;
+  completionPercentage: string;
+  status: string;
+  incompleteReason: string;
+  incompleteReasonDetail: string;
+  concernText: string;
+}>;
+
 const defaultFormState: WorkerUpdateFormState = {
   completion_percentage: "0",
   status: "not_started",
@@ -37,6 +48,15 @@ const defaultFormState: WorkerUpdateFormState = {
   incomplete_reason_detail: "",
   has_safety_issue: false,
 };
+
+const RELATED_FIELDS = [
+  "assignment_id",
+  "completion_percentage",
+  "status",
+  "incomplete_reason",
+  "incomplete_reason_detail",
+  "concern_text",
+] as const;
 
 export const WorkerTaskBoard = ({
   assignments,
@@ -48,10 +68,23 @@ export const WorkerTaskBoard = ({
   const [formState, setFormState] = useState<WorkerUpdateFormState>(defaultFormState);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { fieldErrors, touchAndValidate, validateSubmit, resetFieldValidation } =
+    useLiveFieldValidation();
 
   const selectedAssignment = useMemo(() => {
     return assignments.find((assignment) => assignment.assignment_id === selectedAssignmentId) ?? null;
   }, [assignments, selectedAssignmentId]);
+
+  const validateWith = (overrides: WorkerLiveOverrides = {}) =>
+    validateWorkerUpdateFields({
+      assignmentSelected: overrides.assignmentSelected ?? Boolean(selectedAssignmentId),
+      completionPercentage: overrides.completionPercentage ?? formState.completion_percentage,
+      status: overrides.status ?? formState.status,
+      incompleteReason: overrides.incompleteReason ?? formState.incomplete_reason,
+      incompleteReasonDetail:
+        overrides.incompleteReasonDetail ?? formState.incomplete_reason_detail,
+      concernText: overrides.concernText ?? formState.concern_text,
+    });
 
   useEffect(() => {
     const nextAssignment = assignments[0] ?? null;
@@ -63,6 +96,9 @@ export const WorkerTaskBoard = ({
   }, [assignments]);
 
   useEffect(() => {
+    resetFieldValidation();
+    setErrorMessage(null);
+
     if (!selectedAssignment?.latest_update) {
       setFormState(defaultFormState);
       return;
@@ -78,7 +114,7 @@ export const WorkerTaskBoard = ({
         selectedAssignment.latest_update.incomplete_reason_detail || "",
       has_safety_issue: selectedAssignment.latest_update.has_safety_issue,
     });
-  }, [selectedAssignment]);
+  }, [resetFieldValidation, selectedAssignment]);
 
   const isIncomplete =
     formState.status !== "completed" || Number(formState.completion_percentage) < 100;
@@ -86,41 +122,32 @@ export const WorkerTaskBoard = ({
   const updateField = <K extends keyof WorkerUpdateFormState>(
     field: K,
     value: WorkerUpdateFormState[K],
+    live?: { fields: string | string[]; overrides?: WorkerLiveOverrides },
   ) => {
     setFormState((currentState) => ({
       ...currentState,
       [field]: value,
     }));
+    if (live) {
+      touchAndValidate(live.fields, () => validateWith(live.overrides ?? {}));
+    }
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMessage(null);
 
+    const nextErrors = validateSubmit(() => validateWith());
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
     if (!selectedAssignmentId) {
-      setErrorMessage("Select an assigned task before submitting a work update.");
       return;
     }
 
     const completion = Number(formState.completion_percentage);
-    if (Number.isNaN(completion) || completion < 0 || completion > 100) {
-      setErrorMessage("Completion percentage must be between 0 and 100.");
-      return;
-    }
-
-    const incomplete =
-      formState.status !== "completed" || completion < 100;
-    if (incomplete && !formState.incomplete_reason) {
-      setErrorMessage("Select a reason when work is incomplete.");
-      return;
-    }
-    if (
-      formState.incomplete_reason === "other" &&
-      !formState.incomplete_reason_detail.trim()
-    ) {
-      setErrorMessage("Please explain the incomplete work reason.");
-      return;
-    }
+    const incomplete = formState.status !== "completed" || completion < 100;
 
     setIsSubmitting(true);
 
@@ -136,6 +163,12 @@ export const WorkerTaskBoard = ({
           : "",
         has_safety_issue: formState.has_safety_issue,
       });
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : "Unable to submit the work update. Please try again.";
+      setErrorMessage(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -221,14 +254,47 @@ export const WorkerTaskBoard = ({
 
           <form className="worker-task-board__form" onSubmit={(event) => void handleSubmit(event)}>
             {errorMessage ? <div className="alert alert-danger mb-0">{errorMessage}</div> : null}
+            {fieldErrors.assignment_id ? (
+              <div className="alert alert-danger mb-0">{fieldErrors.assignment_id}</div>
+            ) : null}
 
             {selectedAssignment ? (
               <>
                 <div className="worker-task-board__details">
                   <h3>{selectedAssignment.task.title}</h3>
                   {selectedAssignment.duty_instructions ? (
-                    <p>{selectedAssignment.duty_instructions}</p>
+                    <p>
+                      <strong>Your duty: </strong>
+                      {selectedAssignment.duty_instructions}
+                    </p>
                   ) : null}
+                  {selectedAssignment.task.expected_work ? (
+                    <p>
+                      <strong>Expected work: </strong>
+                      {selectedAssignment.task.expected_work}
+                    </p>
+                  ) : null}
+                  <div className="worker-task-board__plan-meta">
+                    {selectedAssignment.task.daily_target_percentage ? (
+                      <span>
+                        Daily target: {Number(selectedAssignment.task.daily_target_percentage).toFixed(0)}%
+                      </span>
+                    ) : null}
+                    {selectedAssignment.task.expected_progress_percentage != null ? (
+                      <span>
+                        Planned to date:{" "}
+                        {Number(selectedAssignment.task.expected_progress_percentage).toFixed(0)}%
+                      </span>
+                    ) : null}
+                    {selectedAssignment.latest_update?.completion_percentage != null ? (
+                      <span>
+                        Your last update:{" "}
+                        {Number(selectedAssignment.latest_update.completion_percentage).toFixed(0)}%
+                      </span>
+                    ) : (
+                      <span>No update submitted yet</span>
+                    )}
+                  </div>
                   {selectedAssignment.latest_update?.supervisor_review_status ===
                   "rejected" ? (
                     <div className="worker-task-board__feedback" role="status">
@@ -245,20 +311,41 @@ export const WorkerTaskBoard = ({
                   <label className="worker-task-board__field">
                     <span className="worker-task-board__label">Completion %</span>
                     <input
-                      className="form-control"
+                      className={`form-control${fieldErrors.completion_percentage ? " is-invalid" : ""}`}
                       inputMode="decimal"
                       value={formState.completion_percentage}
-                      onChange={(event) => updateField("completion_percentage", event.target.value)}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        updateField("completion_percentage", value, {
+                          fields: [...RELATED_FIELDS],
+                          overrides: { completionPercentage: value },
+                        });
+                      }}
+                      onBlur={() =>
+                        touchAndValidate([...RELATED_FIELDS], () => validateWith())
+                      }
                     />
+                    {fieldErrors.completion_percentage ? (
+                      <span className="worker-task-board__field-error">
+                        {fieldErrors.completion_percentage}
+                      </span>
+                    ) : null}
                   </label>
 
                   <label className="worker-task-board__field">
                     <span className="worker-task-board__label">Work Status</span>
                     <select
-                      className="form-select"
+                      className={`form-select${fieldErrors.status ? " is-invalid" : ""}`}
                       value={formState.status}
-                      onChange={(event) =>
-                        updateField("status", event.target.value as TaskUpdateStatus)
+                      onChange={(event) => {
+                        const value = event.target.value as TaskUpdateStatus;
+                        updateField("status", value, {
+                          fields: [...RELATED_FIELDS],
+                          overrides: { status: value },
+                        });
+                      }}
+                      onBlur={() =>
+                        touchAndValidate([...RELATED_FIELDS], () => validateWith())
                       }
                     >
                       {TASK_UPDATE_STATUS_OPTIONS.map((option) => (
@@ -267,6 +354,9 @@ export const WorkerTaskBoard = ({
                         </option>
                       ))}
                     </select>
+                    {fieldErrors.status ? (
+                      <span className="worker-task-board__field-error">{fieldErrors.status}</span>
+                    ) : null}
                   </label>
 
                   {isIncomplete ? (
@@ -276,15 +366,18 @@ export const WorkerTaskBoard = ({
                           Incomplete Work Reason
                         </span>
                         <select
-                          className="form-select"
+                          className={`form-select${fieldErrors.incomplete_reason ? " is-invalid" : ""}`}
                           value={formState.incomplete_reason}
-                          onChange={(event) =>
-                            updateField(
-                              "incomplete_reason",
-                              event.target.value as IncompleteWorkReason | "",
-                            )
+                          onChange={(event) => {
+                            const value = event.target.value as IncompleteWorkReason | "";
+                            updateField("incomplete_reason", value, {
+                              fields: [...RELATED_FIELDS],
+                              overrides: { incompleteReason: value },
+                            });
+                          }}
+                          onBlur={() =>
+                            touchAndValidate([...RELATED_FIELDS], () => validateWith())
                           }
-                          required
                         >
                           <option value="">Select reason</option>
                           {INCOMPLETE_WORK_REASON_OPTIONS.map((option) => (
@@ -293,20 +386,37 @@ export const WorkerTaskBoard = ({
                             </option>
                           ))}
                         </select>
+                        {fieldErrors.incomplete_reason ? (
+                          <span className="worker-task-board__field-error">
+                            {fieldErrors.incomplete_reason}
+                          </span>
+                        ) : null}
                       </label>
                       <label className="worker-task-board__field worker-task-board__field--full">
                         <span className="worker-task-board__label">
                           Incomplete Work Details
                         </span>
                         <textarea
-                          className="form-control"
+                          className={`form-control${fieldErrors.incomplete_reason_detail ? " is-invalid" : ""}`}
                           rows={2}
                           value={formState.incomplete_reason_detail}
-                          onChange={(event) =>
-                            updateField("incomplete_reason_detail", event.target.value)
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            updateField("incomplete_reason_detail", value, {
+                              fields: [...RELATED_FIELDS],
+                              overrides: { incompleteReasonDetail: value },
+                            });
+                          }}
+                          onBlur={() =>
+                            touchAndValidate([...RELATED_FIELDS], () => validateWith())
                           }
                           placeholder="Explain why work is incomplete..."
                         />
+                        {fieldErrors.incomplete_reason_detail ? (
+                          <span className="worker-task-board__field-error">
+                            {fieldErrors.incomplete_reason_detail}
+                          </span>
+                        ) : null}
                       </label>
                     </>
                   ) : null}
@@ -324,11 +434,25 @@ export const WorkerTaskBoard = ({
                   <label className="worker-task-board__field worker-task-board__field--full">
                     <span className="worker-task-board__label">Concern</span>
                     <textarea
-                      className="form-control"
+                      className={`form-control${fieldErrors.concern_text ? " is-invalid" : ""}`}
                       rows={2}
                       value={formState.concern_text}
-                      onChange={(event) => updateField("concern_text", event.target.value)}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        updateField("concern_text", value, {
+                          fields: [...RELATED_FIELDS],
+                          overrides: { concernText: value },
+                        });
+                      }}
+                      onBlur={() =>
+                        touchAndValidate([...RELATED_FIELDS], () => validateWith())
+                      }
                     />
+                    {fieldErrors.concern_text ? (
+                      <span className="worker-task-board__field-error">
+                        {fieldErrors.concern_text}
+                      </span>
+                    ) : null}
                   </label>
                 </div>
 

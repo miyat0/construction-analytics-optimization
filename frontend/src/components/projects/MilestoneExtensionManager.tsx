@@ -2,7 +2,9 @@ import { useMemo, useState, type FormEvent } from "react";
 
 import { EmptyState } from "../ui/EmptyState";
 import { SectionHeader } from "../ui/SectionHeader";
+import { useLiveFieldValidation } from "../../hooks/useLiveFieldValidation";
 import type { Milestone, MilestoneExtension, MilestoneExtensionPayload } from "../../types/project";
+import { validateExtensionFormFields } from "../../utils/formValidation";
 
 import "./MilestoneExtensionManager.css";
 
@@ -54,16 +56,28 @@ export const MilestoneExtensionManager = ({
   const [reason, setReason] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { fieldErrors, touchAndValidate, validateSubmit, resetFieldValidation } =
+    useLiveFieldValidation();
 
   const selectedMilestone = useMemo(() => {
     return milestones.find((milestone) => milestone.milestone_id === selectedMilestoneId) ?? null;
   }, [milestones, selectedMilestoneId]);
+
+  const minEndDate =
+    selectedMilestone?.effective_end_date || selectedMilestone?.planned_end_date || null;
+
+  const validateWith = (overrides: Partial<{ newEndDate: string }> = {}) =>
+    validateExtensionFormFields({
+      newEndDate: overrides.newEndDate ?? newEndDate,
+      minEndDate,
+    });
 
   const closeForm = () => {
     setIsFormOpen(false);
     setNewEndDate("");
     setReason("");
     setErrorMessage(null);
+    resetFieldValidation();
   };
 
   const openForm = () => {
@@ -73,6 +87,9 @@ export const MilestoneExtensionManager = ({
     }
 
     setErrorMessage(null);
+    setNewEndDate("");
+    setReason("");
+    resetFieldValidation();
     setIsFormOpen(true);
   };
 
@@ -91,8 +108,8 @@ export const MilestoneExtensionManager = ({
       return;
     }
 
-    if (!newEndDate) {
-      setErrorMessage("Choose the revised completion date.");
+    const nextErrors = validateSubmit(() => validateWith());
+    if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
@@ -163,11 +180,19 @@ export const MilestoneExtensionManager = ({
             <label className="milestone-extension-manager__field">
               <span className="milestone-extension-manager__label">New End Date</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.new_end_date ? " is-invalid" : ""}`}
                 type="date"
                 value={newEndDate}
-                onChange={(event) => setNewEndDate(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setNewEndDate(value);
+                  touchAndValidate("new_end_date", () => validateWith({ newEndDate: value }));
+                }}
+                onBlur={() => touchAndValidate("new_end_date", () => validateWith())}
               />
+              {fieldErrors.new_end_date ? (
+                <span className="invalid-feedback d-block">{fieldErrors.new_end_date}</span>
+              ) : null}
             </label>
 
             <label className="milestone-extension-manager__field milestone-extension-manager__field--full">

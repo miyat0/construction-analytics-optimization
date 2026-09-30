@@ -67,6 +67,12 @@
   text-transform: uppercase;
 }
 
+.task-manager__field-error {
+  color: #f87171;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
 .task-manager__form .form-control,
 .task-manager__form .form-select,
 .task-manager__toolbar .form-select {

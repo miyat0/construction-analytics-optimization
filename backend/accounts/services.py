@@ -210,7 +210,8 @@ class AuthenticationService:
             pass
 
         # Local/dev convenience when SMTP is not configured: return the path so the UI works.
-        if settings.DEBUG:
+        email_backend = getattr(settings, "EMAIL_BACKEND", "")
+        if settings.DEBUG or "console" in email_backend:
             payload["reset_path"] = reset_path
 
         return payload

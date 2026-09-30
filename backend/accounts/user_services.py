@@ -16,9 +16,47 @@ class UserManagementServiceError(Exception):
 
 
 class UserManagementService:
+    SOLE_ADMIN_PROTECTION_MESSAGE = (
+        "The Company Administrator account cannot be removed or deactivated."
+    )
+    SINGLE_ADMIN_CREATE_MESSAGE = "Only one Company Administrator is allowed."
+
     @staticmethod
     def _base_queryset():
         return UserProfile.objects.select_related("role", "login_account").order_by("name", "user_id")
+
+    @staticmethod
+    def _is_company_administrator(profile):
+        return profile.role.role_name == COMPANY_ADMIN_ROLE_NAME
+
+    @classmethod
+    def _company_administrator_count(cls, *, exclude_user_id=None):
+        queryset = UserProfile.objects.filter(role__role_name=COMPANY_ADMIN_ROLE_NAME)
+        if exclude_user_id is not None:
+            queryset = queryset.exclude(pk=exclude_user_id)
+        return queryset.count()
+
+    @classmethod
+    def _ensure_company_administrator_slot_available(cls, *, exclude_user_id=None):
+        if cls._company_administrator_count(exclude_user_id=exclude_user_id) > 0:
+            raise UserManagementServiceError(
+                message=cls.SINGLE_ADMIN_CREATE_MESSAGE,
+                error_code="single_company_administrator",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                errors={"role_id": [cls.SINGLE_ADMIN_CREATE_MESSAGE]},
+            )
+
+    @classmethod
+    def _protect_sole_company_administrator(cls, profile):
+        if not cls._is_company_administrator(profile):
+            return
+        if cls._company_administrator_count() <= 1:
+            raise UserManagementServiceError(
+                message=cls.SOLE_ADMIN_PROTECTION_MESSAGE,
+                error_code="sole_company_administrator_protected",
+                status_code=status.HTTP_400_BAD_REQUEST,
+                errors={"account": [cls.SOLE_ADMIN_PROTECTION_MESSAGE]},
+            )
 
     @classmethod
     def _get_profile(cls, user_id):
@@ -116,6 +154,9 @@ class UserManagementService:
     @classmethod
     @transaction.atomic
     def create_user(cls, *, name, email, phone_number, role_id, password):
+        if role_id.role_name == COMPANY_ADMIN_ROLE_NAME:
+            cls._ensure_company_administrator_slot_available()
+
         profile = UserProfile.objects.create(
             name=name,
             email=email,
@@ -140,6 +181,17 @@ class UserManagementService:
     def update_user(cls, *, user_id, **validated_data):
         profile = cls._get_profile(user_id)
         login_account = cls._get_login_account(profile)
+
+        if "role_id" in validated_data:
+            next_role = validated_data["role_id"]
+            was_admin = cls._is_company_administrator(profile)
+            will_be_admin = next_role.role_name == COMPANY_ADMIN_ROLE_NAME
+
+            if was_admin and not will_be_admin:
+                cls._protect_sole_company_administrator(profile)
+
+            if will_be_admin and not was_admin:
+                cls._ensure_company_administrator_slot_available(exclude_user_id=profile.user_id)
 
         if "name" in validated_data:
             profile.name = validated_data["name"]
@@ -185,6 +237,7 @@ class UserManagementService:
     @transaction.atomic
     def delete_user(cls, *, user_id):
         profile = cls._get_profile(user_id)
+        cls._protect_sole_company_administrator(profile)
         deleted_user_id = profile.user_id
         profile.delete()
 
@@ -213,6 +266,7 @@ class UserManagementService:
     @transaction.atomic
     def deactivate_user(cls, *, user_id):
         profile = cls._get_profile(user_id)
+        cls._protect_sole_company_administrator(profile)
         login_account = cls._require_login_account(profile, "deactivate")
 
         profile.status = UserProfile.STATUS_INACTIVE

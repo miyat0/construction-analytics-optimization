@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 
+import { getAdminPeopleRoleBySlug } from "../../config/adminPeople";
 import { useAuth } from "../../hooks/useAuth";
 import { useOptionalAdminChrome } from "../../contexts/AdminChromeContext";
 
@@ -63,6 +64,17 @@ const getPageMeta = (pathname: string): PageMeta => {
     };
   }
 
+  const peopleMatch = pathname.match(/^\/admin\/people\/([^/]+)\/?$/);
+  if (peopleMatch) {
+    const peopleRole = getAdminPeopleRoleBySlug(peopleMatch[1]);
+    if (peopleRole) {
+      return {
+        title: peopleRole.pageTitle,
+        actions: [],
+      };
+    }
+  }
+
   if (pathname === "/admin/users/create") {
     return {
       title: "Register User",
@@ -74,6 +86,13 @@ const getPageMeta = (pathname: string): PageMeta => {
     return {
       title: "Edit User",
       actions: [{ label: "Back to Users", to: "/admin/users", variant: "secondary" }],
+    };
+  }
+
+  if (pathname === "/admin/profit-loss") {
+    return {
+      title: "Profit & Loss",
+      actions: [],
     };
   }
 
@@ -90,7 +109,7 @@ const getPageMeta = (pathname: string): PageMeta => {
   };
 };
 
-export const AdminTopbar = () => {
+export const AdminTopbar = ({ onOpenNav }: { onOpenNav?: () => void }) => {
   const location = useLocation();
   const pageMeta = getPageMeta(location.pathname);
   const chrome = useOptionalAdminChrome();
@@ -122,6 +141,18 @@ export const AdminTopbar = () => {
     <header className="admin-topbar">
       <div className="admin-topbar__inner">
         <div className="admin-topbar__content">
+          {onOpenNav ? (
+            <button
+              type="button"
+              className="admin-topbar__menu-btn"
+              aria-label="Open navigation"
+              onClick={onOpenNav}
+            >
+              <span aria-hidden="true" />
+              <span aria-hidden="true" />
+              <span aria-hidden="true" />
+            </button>
+          ) : null}
           {showBreadcrumb ? (
             <p className="admin-topbar__breadcrumb">
               {renderBreadcrumb(breadcrumb || pageMeta.title)}

@@ -24,6 +24,48 @@
   color: #ffffff !important;
 }
 
+/* Quick view / details popup — even field grid */
+.project-details-modal .detail-overview__grid,
+.project-details-modal .project-details-overview__grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1.5rem;
+  row-gap: 1.15rem;
+  align-items: start;
+}
+
+.project-details-modal .detail-overview__item,
+.project-details-modal .project-details-overview__item {
+  min-height: 3.25rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid #30363d;
+  border-radius: 0.65rem;
+  background: #14181c;
+}
+
+.project-details-modal .detail-overview__label,
+.project-details-modal .project-details-overview__label {
+  color: #8f969e;
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+}
+
+.project-details-modal .detail-overview__value,
+.project-details-modal .project-details-overview__value {
+  color: #f5f7fa;
+  font-size: 0.875rem;
+  word-break: break-word;
+}
+
+.project-details-modal .detail-modal__header-actions {
+  align-items: center;
+}
+
+.project-details-modal .detail-modal__header-actions .admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .milestone-detail-sections {
   display: grid;
   gap: 1.5rem; /* 24px */
@@ -41,4 +83,12 @@
 .milestone-detail-sections .milestone-extension-manager__primary-action {
   min-height: 2.5rem;
   height: 2.5rem;
+}
+
+@media (max-width: 575.98px) {
+  .project-details-modal .detail-overview__grid,
+  .project-details-modal .project-details-overview__grid {
+    grid-template-columns: 1fr;
+    column-gap: 0;
+  }
 }

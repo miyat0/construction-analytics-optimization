@@ -90,6 +90,11 @@
   margin-bottom: 1rem;
 }
 
+.login-page__dev-reset .login-page__submit {
+  text-decoration: none;
+  justify-content: center;
+}
+
 .login-page__dev-reset p {
   margin: 0;
   color: #8ea0b4;

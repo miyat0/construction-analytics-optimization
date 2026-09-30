@@ -21,6 +21,8 @@ interface UserFormProps {
   cancelTo?: string;
   onCancel?: () => void;
   formKey?: string | number;
+  /** When true, role is fixed from initialValues and the role select is hidden. */
+  lockRole?: boolean;
 }
 
 const getFirstErrorMessage = (
@@ -51,6 +53,7 @@ export const UserForm = ({
   cancelTo = "/admin/users",
   onCancel,
   formKey,
+  lockRole = false,
 }: UserFormProps) => {
   const [serverMessage, setServerMessage] = useState<string | null>(null);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -72,8 +75,12 @@ export const UserForm = ({
     handleSubmit,
     reset,
     setError,
+    clearErrors,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<UserFormValues>({
+    mode: "all",
+    reValidateMode: "onChange",
     defaultValues,
     resolver,
   });
@@ -83,6 +90,10 @@ export const UserForm = ({
     setIsPasswordVisible(false);
     setServerMessage(null);
   }, [defaultValues, formKey, reset]);
+
+  const clearServerFeedback = () => {
+    setServerMessage(null);
+  };
 
   const handleApiErrors = (apiError?: ApiErrorResponse) => {
     let mappedFieldError = false;
@@ -140,8 +151,14 @@ export const UserForm = ({
                 id="name"
                 type="text"
                 className={`form-control user-form__control ${errors.name ? "is-invalid" : ""}`}
-                placeholder="Enter full name"
-                {...register("name")}
+                placeholder="Enter full name (e.g. Jane Doe)"
+                autoComplete="name"
+                {...register("name", {
+                  onChange: () => {
+                    clearServerFeedback();
+                    clearErrors("name");
+                  },
+                })}
               />
               {errors.name?.message ? (
                 <div className="user-form__error">{errors.name.message}</div>
@@ -157,7 +174,13 @@ export const UserForm = ({
                 type="email"
                 className={`form-control user-form__control ${errors.email ? "is-invalid" : ""}`}
                 placeholder="name@company.com"
-                {...register("email")}
+                autoComplete="email"
+                {...register("email", {
+                  onChange: () => {
+                    clearServerFeedback();
+                    clearErrors("email");
+                  },
+                })}
               />
               {errors.email?.message ? (
                 <div className="user-form__error">{errors.email.message}</div>
@@ -176,7 +199,16 @@ export const UserForm = ({
                 maxLength={10}
                 className={`form-control user-form__control ${errors.phone_number ? "is-invalid" : ""}`}
                 placeholder="Enter 10-digit phone number"
-                {...register("phone_number")}
+                {...register("phone_number", {
+                  onChange: (event) => {
+                    const digitsOnly = event.target.value.replace(/\D/g, "").slice(0, 10);
+                    clearServerFeedback();
+                    setValue("phone_number", digitsOnly, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
+                  },
+                })}
               />
               {errors.phone_number?.message ? (
                 <div className="user-form__error">{errors.phone_number.message}</div>
@@ -187,22 +219,47 @@ export const UserForm = ({
               <label className="user-form__label" htmlFor="role_id">
                 Role
               </label>
-              <select
-                id="role_id"
-                className={`form-select user-form__select ${errors.role_id ? "is-invalid" : ""}`}
-                {...register("role_id", {
-                  setValueAs: (value) => {
-                    return value === "" ? undefined : Number(value);
-                  },
-                })}
-              >
-                <option value="">Select a role</option>
-                {roles.map((role) => (
-                  <option key={role.role_id} value={role.role_id}>
-                    {role.role_name}
-                  </option>
-                ))}
-              </select>
+              {lockRole ? (
+                <>
+                  <input
+                    type="hidden"
+                    {...register("role_id", {
+                      setValueAs: (value) => {
+                        return value === "" ? undefined : Number(value);
+                      },
+                    })}
+                  />
+                  <input
+                    id="role_id_display"
+                    type="text"
+                    className="form-control user-form__control user-form__control--locked"
+                    value={
+                      roles.find((role) => role.role_id === defaultValues.role_id)?.role_name ??
+                      "Selected role"
+                    }
+                    readOnly
+                    tabIndex={-1}
+                    aria-readonly="true"
+                  />
+                </>
+              ) : (
+                <select
+                  id="role_id"
+                  className={`form-select user-form__select ${errors.role_id ? "is-invalid" : ""}`}
+                  {...register("role_id", {
+                    setValueAs: (value) => {
+                      return value === "" ? undefined : Number(value);
+                    },
+                  })}
+                >
+                  <option value="">Select a role</option>
+                  {roles.map((role) => (
+                    <option key={role.role_id} value={role.role_id}>
+                      {role.role_name}
+                    </option>
+                  ))}
+                </select>
+              )}
               {errors.role_id?.message ? (
                 <div className="user-form__error">{errors.role_id.message}</div>
               ) : null}
@@ -222,7 +279,12 @@ export const UserForm = ({
                       ? "Create a strong password"
                       : "Leave blank to keep the current password"
                   }
-                  {...register("password")}
+                  {...register("password", {
+                    onChange: () => {
+                      clearServerFeedback();
+                      clearErrors("password");
+                    },
+                  })}
                 />
                 <button
                   type="button"

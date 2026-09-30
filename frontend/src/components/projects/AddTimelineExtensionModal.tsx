@@ -1,7 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 import { DetailModal } from "../ui/DetailModal";
+import { useLiveFieldValidation } from "../../hooks/useLiveFieldValidation";
 import type { Milestone, MilestoneExtensionPayload } from "../../types/project";
+import { validateExtensionFormFields } from "../../utils/formValidation";
 
 import "./ProjectEntityModal.css";
 
@@ -32,10 +34,17 @@ export const AddTimelineExtensionModal = ({
   const [newEndDate, setNewEndDate] = useState("");
   const [reason, setReason] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { fieldErrors, touchAndValidate, validateSubmit, resetFieldValidation } =
+    useLiveFieldValidation();
 
-  const currentEndDate = milestone?.effective_end_date || milestone?.planned_end_date || null;
+  const minEndDate = milestone?.effective_end_date || milestone?.planned_end_date || null;
+
+  const validateWith = (overrides: Partial<{ newEndDate: string }> = {}) =>
+    validateExtensionFormFields({
+      newEndDate: overrides.newEndDate ?? newEndDate,
+      minEndDate,
+    });
 
   useEffect(() => {
     if (!isOpen) {
@@ -44,21 +53,12 @@ export const AddTimelineExtensionModal = ({
     setNewEndDate("");
     setReason("");
     setErrorMessage(null);
-    setFieldErrors({});
-  }, [isOpen]);
+    resetFieldValidation();
+  }, [isOpen, resetFieldValidation]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const nextErrors: Record<string, string> = {};
-    if (!newEndDate) {
-      nextErrors.new_end_date = "New end date is required.";
-    } else if (
-      currentEndDate &&
-      new Date(newEndDate).getTime() <= new Date(currentEndDate).getTime()
-    ) {
-      nextErrors.new_end_date = "New end date must be after the current end date.";
-    }
-    setFieldErrors(nextErrors);
+    const nextErrors = validateSubmit(() => validateWith());
     if (Object.keys(nextErrors).length > 0) {
       return;
     }
@@ -92,16 +92,21 @@ export const AddTimelineExtensionModal = ({
 
         <div className="project-entity-modal__readonly">
           <span className="project-entity-modal__label">Current End Date</span>
-          <p className="project-entity-modal__readonly-value">{formatDate(currentEndDate)}</p>
+          <p className="project-entity-modal__readonly-value">{formatDate(minEndDate)}</p>
         </div>
 
         <label className="project-entity-modal__field">
           <span className="project-entity-modal__label">New End Date</span>
           <input
-            className="form-control"
+            className={`form-control${fieldErrors.new_end_date ? " is-invalid" : ""}`}
             type="date"
             value={newEndDate}
-            onChange={(event) => setNewEndDate(event.target.value)}
+            onChange={(event) => {
+              const value = event.target.value;
+              setNewEndDate(value);
+              touchAndValidate("new_end_date", () => validateWith({ newEndDate: value }));
+            }}
+            onBlur={() => touchAndValidate("new_end_date", () => validateWith())}
           />
           {fieldErrors.new_end_date ? (
             <span className="project-entity-modal__error">{fieldErrors.new_end_date}</span>

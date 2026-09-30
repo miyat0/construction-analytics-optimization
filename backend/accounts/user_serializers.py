@@ -14,6 +14,8 @@ PASSWORD_PATTERN_ERRORS = (
 )
 PHONE_NUMBER_PATTERN = r"^\d{10}$"
 PHONE_NUMBER_ERROR_MESSAGE = "Phone number must contain exactly 10 digits."
+PHONE_NUMBER_REQUIRED_MESSAGE = "Phone number is required."
+PHONE_NUMBER_INVALID_MESSAGE = "Enter a valid phone number."
 
 
 def validate_strong_password(password):
@@ -27,10 +29,19 @@ def validate_strong_password(password):
 
 
 def normalize_phone_number(phone_number):
-    normalized_phone = phone_number.strip()
+    if phone_number is None:
+        raise serializers.ValidationError(PHONE_NUMBER_REQUIRED_MESSAGE)
 
-    if not re.fullmatch(PHONE_NUMBER_PATTERN, normalized_phone):
+    normalized_phone = str(phone_number).strip()
+
+    if not normalized_phone:
+        raise serializers.ValidationError(PHONE_NUMBER_REQUIRED_MESSAGE)
+
+    if not normalized_phone.isdigit() or len(normalized_phone) != 10:
         raise serializers.ValidationError(PHONE_NUMBER_ERROR_MESSAGE)
+
+    if len(set(normalized_phone)) == 1:
+        raise serializers.ValidationError(PHONE_NUMBER_INVALID_MESSAGE)
 
     return normalized_phone
 
@@ -44,7 +55,7 @@ class UserListQuerySerializer(serializers.Serializer):
 class UserCreateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=150)
     email = serializers.EmailField()
-    phone_number = serializers.CharField(max_length=10)
+    phone_number = serializers.CharField(max_length=20, allow_blank=True)
     role_id = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all())
     password = serializers.CharField(max_length=128, trim_whitespace=False, write_only=True)
 
@@ -74,7 +85,7 @@ class UserCreateSerializer(serializers.Serializer):
 class UserUpdateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=150, required=False)
     email = serializers.EmailField(required=False)
-    phone_number = serializers.CharField(max_length=10, required=False)
+    phone_number = serializers.CharField(max_length=20, required=False, allow_blank=True)
     role_id = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all(), required=False)
     password = serializers.CharField(
         max_length=128,

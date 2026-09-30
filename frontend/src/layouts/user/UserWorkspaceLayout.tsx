@@ -3,13 +3,14 @@ import { Outlet, useNavigate } from "react-router-dom";
 
 import { ROLE_NAMES } from "../../types/auth";
 import { useAuth } from "../../hooks/useAuth";
-import { UserSidebar } from "../../components/user/UserSidebar";
+import { AppSidebar } from "../../components/navigation/AppSidebar";
 import {
   AdminChromeProvider,
   useOptionalAdminChrome,
 } from "../../contexts/AdminChromeContext";
 
 import "../../components/admin/AdminTopbar.css";
+import "../DashboardShell.css";
 import "./UserWorkspaceLayout.css";
 
 const getWorkspaceTitle = (roleName?: string | null): string => {
@@ -164,22 +165,22 @@ export const UserWorkspaceLayout = () => {
 
   return (
     <AdminChromeProvider>
-      <div className="user-workspace-layout">
+      <div className="dashboard-shell user-workspace-layout">
         {isMobileNavOpen ? (
           <button
             type="button"
-            className="user-sidebar__backdrop"
+            className="dashboard-shell__backdrop"
             aria-label="Close navigation"
             onClick={() => setIsMobileNavOpen(false)}
           />
         ) : null}
-        <UserSidebar
+        <AppSidebar
           isMobileOpen={isMobileNavOpen}
           onNavigate={() => setIsMobileNavOpen(false)}
         />
-        <div className="user-workspace-layout__main">
+        <div className="dashboard-shell__main user-workspace-layout__main">
           <UserWorkspaceHeader onOpenNav={() => setIsMobileNavOpen(true)} />
-          <div className="user-workspace-layout__body">
+          <div className="dashboard-shell__body user-workspace-layout__body">
             <Outlet />
           </div>
         </div>

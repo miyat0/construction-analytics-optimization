@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 
+import { useLiveFieldValidation } from "../../hooks/useLiveFieldValidation";
 import type {
   MilestoneTask,
   ProjectLookupUser,
   TaskAssignment,
   TaskWorkerAssignmentPayload,
 } from "../../types/project";
+import { validateAssignmentFormFields } from "../../utils/formValidation";
 
 import "./TaskAssignmentManager.css";
 
@@ -28,6 +30,12 @@ type AssignmentFormState = {
   is_active: boolean;
 };
 
+type AssignmentLiveOverrides = Partial<{
+  taskSelected: boolean;
+  workerId: string;
+  dutyInstructions: string;
+}>;
+
 const defaultAssignmentFormState: AssignmentFormState = {
   worker_id: "",
   duty_instructions: "",
@@ -47,12 +55,24 @@ export const TaskAssignmentManager = ({
   const [formState, setFormState] = useState<AssignmentFormState>(defaultAssignmentFormState);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [processingAssignmentId, setProcessingAssignmentId] = useState<number | null>(null);
+  const { fieldErrors, touchAndValidate, validateSubmit, resetFieldValidation } =
+    useLiveFieldValidation();
 
   const selectedTask = useMemo(() => {
     return tasks.find((task) => task.task_id === selectedTaskId) ?? null;
   }, [selectedTaskId, tasks]);
 
+  const validateWith = (overrides: AssignmentLiveOverrides = {}) =>
+    validateAssignmentFormFields({
+      taskSelected: overrides.taskSelected ?? Boolean(selectedTaskId),
+      workerId: overrides.workerId ?? formState.worker_id,
+      dutyInstructions: overrides.dutyInstructions ?? formState.duty_instructions,
+    });
+
   useEffect(() => {
+    resetFieldValidation();
+    setErrorMessage(null);
+
     if (!editingAssignment) {
       setFormState(defaultAssignmentFormState);
       return;
@@ -65,40 +85,39 @@ export const TaskAssignmentManager = ({
       duty_instructions: editingAssignment.duty_instructions,
       is_active: editingAssignment.is_active,
     });
-  }, [editingAssignment]);
+  }, [editingAssignment, resetFieldValidation]);
 
   const updateField = <K extends keyof AssignmentFormState>(
     field: K,
     value: AssignmentFormState[K],
+    live?: { fields: string | string[]; overrides?: AssignmentLiveOverrides },
   ) => {
     setFormState((currentState) => ({
       ...currentState,
       [field]: value,
     }));
+    if (live) {
+      touchAndValidate(live.fields, () => validateWith(live.overrides ?? {}));
+    }
   };
 
   const resetForm = () => {
     setEditingAssignment(null);
     setFormState(defaultAssignmentFormState);
     setErrorMessage(null);
+    resetFieldValidation();
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMessage(null);
 
+    const nextErrors = validateSubmit(() => validateWith());
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
     if (!selectedTaskId) {
-      setErrorMessage("Select a task before assigning workers.");
-      return;
-    }
-
-    if (!formState.worker_id) {
-      setErrorMessage("Choose the worker who should receive this duty.");
-      return;
-    }
-
-    if (!formState.duty_instructions.trim()) {
-      setErrorMessage("Define the specific duty/work expected from this worker.");
       return;
     }
 
@@ -144,9 +163,17 @@ export const TaskAssignmentManager = ({
       <label className="task-assignment-manager__field">
         <span className="task-assignment-manager__label">Task</span>
         <select
-          className="form-select admin-control"
+          className={`form-select admin-control${fieldErrors.task_id ? " is-invalid" : ""}`}
           value={selectedTaskId ?? ""}
-          onChange={(event) => onSelectTask(event.target.value ? Number(event.target.value) : 0)}
+          onChange={(event) => {
+            onSelectTask(event.target.value ? Number(event.target.value) : 0);
+            touchAndValidate("task_id", () =>
+              validateWith({
+                taskSelected: Boolean(event.target.value),
+              }),
+            );
+          }}
+          onBlur={() => touchAndValidate("task_id", () => validateWith())}
         >
           <option value="">Select a task</option>
           {tasks.map((task) => (
@@ -155,6 +182,9 @@ export const TaskAssignmentManager = ({
             </option>
           ))}
         </select>
+        {fieldErrors.task_id ? (
+          <span className="task-assignment-manager__field-error">{fieldErrors.task_id}</span>
+        ) : null}
       </label>
 
       {selectedTask ? (
@@ -203,9 +233,16 @@ export const TaskAssignmentManager = ({
             <label className="task-assignment-manager__field">
               <span className="task-assignment-manager__label">Worker</span>
               <select
-                className="form-select admin-control"
+                className={`form-select admin-control${fieldErrors.worker_id ? " is-invalid" : ""}`}
                 value={formState.worker_id}
-                onChange={(event) => updateField("worker_id", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("worker_id", value, {
+                    fields: "worker_id",
+                    overrides: { workerId: value },
+                  });
+                }}
+                onBlur={() => touchAndValidate("worker_id", () => validateWith())}
               >
                 <option value="">Select a worker</option>
                 {workers.map((worker) => (
@@ -214,17 +251,34 @@ export const TaskAssignmentManager = ({
                   </option>
                 ))}
               </select>
+              {fieldErrors.worker_id ? (
+                <span className="task-assignment-manager__field-error">
+                  {fieldErrors.worker_id}
+                </span>
+              ) : null}
             </label>
 
             <label className="task-assignment-manager__field task-assignment-manager__field--full">
               <span className="task-assignment-manager__label">Duty Instructions</span>
               <textarea
-                className="form-control"
+                className={`form-control${fieldErrors.duty_instructions ? " is-invalid" : ""}`}
                 rows={2}
                 value={formState.duty_instructions}
-                onChange={(event) => updateField("duty_instructions", event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  updateField("duty_instructions", value, {
+                    fields: "duty_instructions",
+                    overrides: { dutyInstructions: value },
+                  });
+                }}
+                onBlur={() => touchAndValidate("duty_instructions", () => validateWith())}
                 placeholder="Duty instructions"
               />
+              {fieldErrors.duty_instructions ? (
+                <span className="task-assignment-manager__field-error">
+                  {fieldErrors.duty_instructions}
+                </span>
+              ) : null}
             </label>
           </div>
 

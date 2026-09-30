@@ -53,6 +53,8 @@ export const WorkerDashboardPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isClockOutDialogOpen, setIsClockOutDialogOpen] = useState(false);
+  const [isClockInDialogOpen, setIsClockInDialogOpen] = useState(false);
+  const [selectedClockInAssignmentId, setSelectedClockInAssignmentId] = useState<number | "">("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
@@ -116,18 +118,21 @@ export const WorkerDashboardPage = () => {
   const todayLabel = formatHeaderDate(new Date());
   const greeting = getGreeting();
   const previewTasks = taskAssignments.slice(0, 3);
+  const activeAssignments = useMemo(
+    () => taskAssignments.filter((assignment) => assignment.is_active),
+    [taskAssignments],
+  );
 
-  const handleClockIn = async () => {
+  const performClockIn = async (assignmentId?: number) => {
     setIsSubmitting(true);
     setErrorMessage(null);
     setSuccessMessage(null);
 
     try {
-      const activeAssignments = taskAssignments.filter((assignment) => assignment.is_active);
-      const assignmentId =
-        activeAssignments.length === 1 ? activeAssignments[0].assignment_id : undefined;
       await clockInWorker(assignmentId);
       setSuccessMessage("Clocked in.");
+      setIsClockInDialogOpen(false);
+      setSelectedClockInAssignmentId("");
       await loadDashboard();
     } catch (error) {
       if (isAxiosError<ApiErrorResponse>(error)) {
@@ -142,6 +147,21 @@ export const WorkerDashboardPage = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleClockIn = async () => {
+    if (activeAssignments.length === 0) {
+      await performClockIn();
+      return;
+    }
+
+    if (activeAssignments.length === 1) {
+      await performClockIn(activeAssignments[0].assignment_id);
+      return;
+    }
+
+    setSelectedClockInAssignmentId(activeAssignments[0]?.assignment_id ?? "");
+    setIsClockInDialogOpen(true);
   };
 
   const handleClockOut = async () => {
@@ -298,6 +318,62 @@ export const WorkerDashboardPage = () => {
           </article>
         </section>
       </div>
+
+      {isClockInDialogOpen ? (
+        <div className="worker-page__dialog-backdrop" role="presentation">
+          <div
+            className="worker-page__dialog"
+            aria-labelledby="worker-clock-in-title"
+            aria-modal="true"
+            role="dialog"
+          >
+            <h2 id="worker-clock-in-title">Select task for this shift</h2>
+            <p>Choose which assigned task these man-hours should link to.</p>
+            <label className="worker-page__dialog-field">
+              <span>Task assignment</span>
+              <select
+                className="form-select"
+                value={selectedClockInAssignmentId}
+                onChange={(event) =>
+                  setSelectedClockInAssignmentId(
+                    event.target.value ? Number(event.target.value) : "",
+                  )
+                }
+              >
+                {activeAssignments.map((assignment) => (
+                  <option key={assignment.assignment_id} value={assignment.assignment_id}>
+                    {assignment.task.title} · {assignment.task.project_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="worker-page__dialog-actions">
+              <button
+                type="button"
+                className="worker-page__dialog-btn worker-page__dialog-btn--secondary"
+                disabled={isSubmitting}
+                onClick={() => setIsClockInDialogOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="worker-page__dialog-btn worker-page__dialog-btn--primary"
+                disabled={isSubmitting || selectedClockInAssignmentId === ""}
+                onClick={() =>
+                  void performClockIn(
+                    typeof selectedClockInAssignmentId === "number"
+                      ? selectedClockInAssignmentId
+                      : undefined,
+                  )
+                }
+              >
+                {isSubmitting ? "Saving..." : "Clock In"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {isClockOutDialogOpen ? (
         <div className="worker-page__dialog-backdrop" role="presentation">

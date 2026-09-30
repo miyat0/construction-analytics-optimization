@@ -7,12 +7,14 @@ import {
 } from "../../components/projects/ProjectCreateContextPanel";
 import { ProjectCreatePageHeader } from "../../components/projects/ProjectCreatePageHeader";
 import { useProjectCreateChrome } from "../../contexts/AdminChromeContext";
+import { useLiveFieldValidation } from "../../hooks/useLiveFieldValidation";
 import {
   createMilestoneExtension,
   getProject,
   listProjectMilestones,
 } from "../../services/projectApi";
 import type { Milestone, ProjectDetail } from "../../types/project";
+import { validateExtensionFormFields } from "../../utils/formValidation";
 import {
   getProjectMilestonePath,
   resolveProjectScopeFromPath,
@@ -38,12 +40,22 @@ export const CreateExtensionPage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [newEndDate, setNewEndDate] = useState("");
   const [reason, setReason] = useState("");
+  const { fieldErrors, touchAndValidate, validateSubmit } = useLiveFieldValidation();
 
   const projectName = project?.project_name ?? "";
   const selectedMilestone = useMemo(
     () => milestones.find((item) => item.milestone_id === parsedMilestoneId) ?? null,
     [milestones, parsedMilestoneId],
   );
+
+  const minEndDate =
+    selectedMilestone?.effective_end_date || selectedMilestone?.planned_end_date || null;
+
+  const validateWith = (overrides: Partial<{ newEndDate: string }> = {}) =>
+    validateExtensionFormFields({
+      newEndDate: overrides.newEndDate ?? newEndDate,
+      minEndDate,
+    });
 
   const contextLine = [projectName, selectedMilestone?.title].filter(Boolean).join(" · ");
   const breadcrumb = selectedMilestone?.title
@@ -105,8 +117,8 @@ export const CreateExtensionPage = () => {
     event.preventDefault();
     setErrorMessage(null);
 
-    if (!newEndDate) {
-      setErrorMessage("Choose the revised completion date.");
+    const nextErrors = validateSubmit(() => validateWith());
+    if (Object.keys(nextErrors).length > 0) {
       return;
     }
 
@@ -148,11 +160,19 @@ export const CreateExtensionPage = () => {
             <label className="project-create-page__field">
               <span className="project-create-page__label">New End Date</span>
               <input
-                className="form-control"
+                className={`form-control${fieldErrors.new_end_date ? " is-invalid" : ""}`}
                 type="date"
                 value={newEndDate}
-                onChange={(event) => setNewEndDate(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setNewEndDate(value);
+                  touchAndValidate("new_end_date", () => validateWith({ newEndDate: value }));
+                }}
+                onBlur={() => touchAndValidate("new_end_date", () => validateWith())}
               />
+              {fieldErrors.new_end_date ? (
+                <span className="invalid-feedback d-block">{fieldErrors.new_end_date}</span>
+              ) : null}
             </label>
 
             <label className="project-create-page__field project-create-page__field--full">
